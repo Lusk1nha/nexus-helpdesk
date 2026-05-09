@@ -1,5 +1,4 @@
 services:
-  # --- Database Service (Postgres) ---
   db:
     image: postgres:17
     container_name: nexus_helpdesk_db
@@ -12,16 +11,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/create-test-database.sql:/docker-entrypoint-initdb.d/init.sql
-    networks:
-      - app-network
-    
 
-  # Definição da Rede
-networks:
-  app-network:
-    driver: bridge
-
-# Definição do Volume Persistente
 volumes:
   postgres_data:
-  redis_data:
