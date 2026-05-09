@@ -1,0 +1,22 @@
+{
+  "name": "nexus-helpdesk",
+  "version": "1.0.0",
+  "description": "Nexus Helpdesk - Application to manage helpdesk tickets",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "format": "turbo format"
+  },
+  "packageManager": "pnpm@10.7.1",
+  "dependencies": {
+    "prettier": "^3.0.0",
+    "prettier-plugin-tailwindcss": "^0.7.2",
+    "turbo": "^2.9.6",
+    "typescript": "^6.0.3"
+  }
+}

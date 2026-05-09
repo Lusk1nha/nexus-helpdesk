@@ -1,0 +1,8 @@
+# Ignora node_modules na raiz e em QUALQUER subpasta
+**/node_modules
+**/dist
+**/build
+**/coverage
+.git
+.env
+.DS_Store
