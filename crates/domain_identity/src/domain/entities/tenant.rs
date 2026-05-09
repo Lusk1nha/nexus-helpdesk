@@ -1,6 +1,6 @@
+use super::role::Role;
 use time::OffsetDateTime;
 use uuid::Uuid;
-use super::role::Role;
 
 #[derive(Debug, Clone)]
 pub struct Tenant {
@@ -26,6 +26,10 @@ impl Tenant {
             updated_at: now,
         }
     }
+
+    pub fn deactivate(&mut self) {
+        self.is_active = false;
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -36,4 +40,27 @@ pub struct TenantUser {
     pub is_active: bool,
     pub created_at: OffsetDateTime,
     pub updated_at: OffsetDateTime,
+}
+
+impl TenantUser {
+    pub fn new(tenant_id: Uuid, user_id: Uuid, role: Role) -> Self {
+        let now = OffsetDateTime::now_utc();
+
+        Self {
+            tenant_id,
+            user_id,
+            role,
+            is_active: true,
+            created_at: now,
+            updated_at: now,
+        }
+    }
+
+    pub fn change_role(&mut self, new_role: Role) {
+        self.role = new_role;
+    }
+
+    pub fn deactivate(&mut self) {
+        self.is_active = false;
+    }
 }

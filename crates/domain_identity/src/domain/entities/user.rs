@@ -27,4 +27,8 @@ impl User {
             updated_at: now,
         }
     }
+
+    pub fn deactivate(&mut self) {
+        self.is_active = false;
+    }
 }

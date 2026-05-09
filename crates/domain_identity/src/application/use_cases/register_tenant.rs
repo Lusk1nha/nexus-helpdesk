@@ -55,14 +55,7 @@ impl RegisterTenantUseCase {
         let hashed_password = self.password_hasher.hash(&command.admin_plain_password)?;
         let credential = Credential::new(user.id, hashed_password);
 
-        let relation = TenantUser {
-            tenant_id: tenant.id,
-            user_id: user.id,
-            role: Role::Admin,
-            is_active: true,
-            created_at: time::OffsetDateTime::now_utc(),
-            updated_at: time::OffsetDateTime::now_utc(),
-        };
+        let relation = TenantUser::new(tenant.id, user.id, Role::Admin);
 
         // ==========================================
         // 5. O VERDADEIRO UNIT OF WORK EM AÇÃO

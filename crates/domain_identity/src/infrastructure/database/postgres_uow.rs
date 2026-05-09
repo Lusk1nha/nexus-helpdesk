@@ -1,112 +1,87 @@
 use async_trait::async_trait;
-use sqlx::PgPool;
+use sqlx::{PgPool, Postgres, Transaction};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
-use crate::domain::entities::{Credential, Tenant, TenantUser, User};
 use crate::domain::error::DomainError;
-use crate::domain::ports::IdentityUnitOfWork;
+use crate::domain::ports::{
+    CredentialRepository, TenantRepository, UnitOfWork, UnitOfWorkManager, UserRepository,
+};
 
-pub struct PgIdentityUnitOfWork {
+// Importamos os repositórios reais da nossa infraestrutura
+use super::{PgCredentialRepository, PgTenantRepository, PgUserRepository};
+
+// ==========================================
+// 1. O Gerenciador (Cria as transações)
+// ==========================================
+
+pub struct PgUnitOfWorkManager {
     pool: PgPool,
 }
 
-impl PgIdentityUnitOfWork {
+impl PgUnitOfWorkManager {
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
     }
 }
 
 #[async_trait]
-impl IdentityUnitOfWork for PgIdentityUnitOfWork {
-    async fn commit_tenant_registration(
-        &self,
-        tenant: &Tenant,
-        user: &User,
-        credential: &Credential,
-        relation: &TenantUser,
-    ) -> Result<(), DomainError> {
-        // 1. Inicia a transação. O banco "trava" o estado para essa conexão.
-        let mut tx = self.pool.begin().await.map_err(|e| {
+impl UnitOfWorkManager for PgUnitOfWorkManager {
+    async fn begin(&self) -> Result<Box<dyn UnitOfWork>, DomainError> {
+        let tx = self.pool.begin().await.map_err(|e| {
             DomainError::DatabaseError(format!("Falha ao iniciar transação: {}", e))
         })?;
 
-        // 2. Insere o Tenant
-        sqlx::query!(
-            r#"
-            INSERT INTO tenants (id, name, slug, plan, is_active, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-            "#,
-            tenant.id,
-            tenant.name,
-            tenant.slug,
-            tenant.plan,
-            tenant.is_active,
-            tenant.created_at,
-            tenant.updated_at,
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| DomainError::DatabaseError(format!("Erro ao salvar tenant: {}", e)))?;
+        let shared_tx = Arc::new(Mutex::new(Some(tx)));
 
-        // 3. Insere o Usuário
-        sqlx::query!(
-            r#"
-            INSERT INTO users (id, email, full_name, avatar_url, timezone, is_active, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-            "#,
-            user.id,
-            user.email,
-            user.full_name,
-            user.avatar_url,
-            user.timezone,
-            user.is_active,
-            user.created_at,
-            user.updated_at,
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| DomainError::DatabaseError(format!("Erro ao salvar usuário: {}", e)))?;
+        Ok(Box::new(PgUnitOfWork { tx: shared_tx }))
+    }
+}
 
-        // 4. Insere a Credencial
-        sqlx::query!(
-            r#"
-            INSERT INTO credentials (user_id, password_hash, failed_attempts, last_login_at, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6)
-            "#,
-            credential.user_id,
-            credential.password_hash,
-            credential.failed_attempts,
-            credential.last_login_at,
-            credential.created_at,
-            credential.updated_at,
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| DomainError::DatabaseError(format!("Erro ao salvar credencial: {}", e)))?;
+// ==========================================
+// 2. O Unit Of Work (Orquestra os repositórios)
+// ==========================================
 
-        // 5. Insere o Vínculo (Tenant_User)
-        let role_str = relation.role.to_string();
-        sqlx::query!(
-            r#"
-            INSERT INTO tenant_users (tenant_id, user_id, role, is_active, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6)
-            "#,
-            relation.tenant_id,
-            relation.user_id,
-            role_str,
-            relation.is_active,
-            relation.created_at,
-            relation.updated_at,
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| {
-            DomainError::DatabaseError(format!("Erro ao vincular usuário ao tenant: {}", e))
-        })?;
+pub struct PgUnitOfWork {
+    tx: Arc<Mutex<Option<Transaction<'static, Postgres>>>>,
+}
 
-        tx.commit().await.map_err(|e| {
-            DomainError::DatabaseError(format!("Falha ao commitar transação: {}", e))
-        })?;
+#[async_trait]
+impl UnitOfWork for PgUnitOfWork {
+    // Injeta a transação compartilhada nos repositórios
+    fn users(&mut self) -> Box<dyn UserRepository + '_> {
+        Box::new(PgUserRepository::with_transaction(self.tx.clone()))
+    }
 
+    fn tenants(&mut self) -> Box<dyn TenantRepository + '_> {
+        Box::new(PgTenantRepository::with_transaction(self.tx.clone()))
+    }
+
+    fn credentials(&mut self) -> Box<dyn CredentialRepository + '_> {
+        Box::new(PgCredentialRepository::with_transaction(self.tx.clone()))
+    }
+
+    // Finaliza com sucesso
+    async fn commit(self: Box<Self>) -> Result<(), DomainError> {
+        let mut guard = self.tx.lock().await;
+
+        if let Some(tx) = guard.take() {
+            tx.commit().await.map_err(|e| {
+                DomainError::DatabaseError(format!("Erro ao commitar Unit Of Work: {}", e))
+            })?;
+        }
+        Ok(())
+    }
+
+    // Aborta as alterações
+    async fn rollback(self: Box<Self>) -> Result<(), DomainError> {
+        let mut guard = self.tx.lock().await;
+
+        if let Some(tx) = guard.take() {
+            tx.rollback().await.map_err(|e| {
+                DomainError::DatabaseError(format!("Erro ao fazer rollback do Unit Of Work: {}", e))
+            })?;
+        }
         Ok(())
     }
 }
