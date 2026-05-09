@@ -1,7 +1,18 @@
 [workspace]
 resolver = "2"
-members = ["apps/api", "crates/*"]
+members = ["crates/*"]
 
 [workspace.dependencies]
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = { version = "1.0.149" }
+
+uuid = { version = "1.23.1", features = ["v4", "serde"] }
+async-trait = "0.1.89"
+sqlx = { version = "0.8.6", features = [
+  "postgres",
+  "uuid",
+  "runtime-tokio",
+  "time",
+] }
+
+thiserror = "2.0.18"
