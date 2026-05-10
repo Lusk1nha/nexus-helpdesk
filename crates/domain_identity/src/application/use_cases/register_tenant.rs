@@ -45,7 +45,7 @@ impl RegisterTenantUseCase {
         }
 
         // 2. Geração do Slug (Ex: "Minha Empresa LTDA" -> "minha-empresa-ltda")
-        let slug = command.tenant_name.to_lowercase().replace(" ", "-");
+        let slug = slug::slugify(&command.tenant_name);
 
         // 3. Construção das Entidades do Domínio
         let tenant = Tenant::new(command.tenant_name, slug);

@@ -133,4 +133,51 @@ impl TenantRepository for PgTenantRepository {
 
         Ok(result)
     }
+
+    async fn find_tenant_user_by_user_id(
+        &self,
+        user_id: Uuid,
+    ) -> Result<Option<TenantUser>, DomainError> {
+        // CORREÇÃO: A query deve apontar para tenant_users, não para tenants
+        // E precisamos garantir que o campo role seja tratado corretamente
+        let query = sqlx::query!(
+            r#"
+            SELECT tenant_id, user_id, role, is_active, created_at, updated_at
+            FROM tenant_users 
+            WHERE user_id = $1 AND is_active = true
+            LIMIT 1
+            "#,
+            user_id
+        );
+
+        let row = match &self.conn {
+            DatabaseConnection::Pool(pool) => query.fetch_optional(pool).await,
+            DatabaseConnection::Transaction(tx_mutex) => {
+                let mut guard = tx_mutex.lock().await;
+                query.fetch_optional(&mut **guard.as_mut().unwrap()).await
+            }
+        }
+        .map_err(|e| DomainError::DatabaseError(e.to_string()))?;
+
+        // Mapeamento manual para garantir que a String do DB vire o Enum Role do Domínio
+        match row {
+            Some(r) => {
+                let relation = TenantUser {
+                    tenant_id: r.tenant_id,
+                    user_id: r.user_id,
+                    // Assume que seu Enum Role implementa FromStr ou TrialFrom<String>
+                    // Ou converta manualmente aqui:
+                    role: r
+                        .role
+                        .parse()
+                        .map_err(|_| DomainError::DatabaseError("Role inválida no banco".into()))?,
+                    is_active: r.is_active,
+                    created_at: r.created_at,
+                    updated_at: r.updated_at,
+                };
+                Ok(Some(relation))
+            }
+            None => Ok(None),
+        }
+    }
 }

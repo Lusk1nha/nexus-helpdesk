@@ -44,4 +44,9 @@ pub trait TenantRepository: Send + Sync {
 
     /// Busca as informações de um Tenant pelo seu ID.
     async fn find_by_id(&self, id: Uuid) -> Result<Option<Tenant>, DomainError>;
+
+    async fn find_tenant_user_by_user_id(
+        &self,
+        id: Uuid,
+    ) -> Result<Option<TenantUser>, DomainError>;
 }
