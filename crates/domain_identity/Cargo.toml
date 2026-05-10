@@ -16,3 +16,9 @@ time = { workspace = true }
 tokio = { workspace = true }
 
 argon2 = "0.5.3"
+
+[dev-dependencies]
+fake = { version = "5.1.0", features = ["derive"] }
+testcontainers = "0.27.3"
+testcontainers-modules = { version = "0.15.0", features = ['postgres'] }
+pretty_assertions = "1.4.1"
