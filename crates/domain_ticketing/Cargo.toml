@@ -17,6 +17,13 @@ time = { workspace = true }
 
 tokio = { workspace = true }
 tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
 reqwest = { workspace = true, features = ["json"] }
 
 shared_kernel = { path = "../shared_kernel" }
+
+
+[dev-dependencies]
+testcontainers = "0.27.3"
+testcontainers-modules = { version = "0.15.0", features = ['postgres'] }
+pretty_assertions = "1.4.1"

@@ -2,60 +2,17 @@ use domain_identity::application::use_cases::register_tenant::{
     RegisterTenantCommand, RegisterTenantUseCase,
 };
 use domain_identity::domain::error::DomainError;
-use domain_identity::domain::ports::UserRepository;
-use domain_identity::infrastructure::database::{PgUnitOfWorkManager, PgUserRepository};
+use domain_identity::infrastructure::database::PgUnitOfWorkManager;
 use domain_identity::infrastructure::security::Argon2Hasher;
 
-use sqlx::{PgPool, postgres::PgPoolOptions};
+use domain_identity::domain::ports::UnitOfWorkManager;
+
 use std::sync::Arc;
-use testcontainers::runners::AsyncRunner;
-use testcontainers_modules::postgres::Postgres;
 
 use pretty_assertions::assert_eq;
 
-// ==========================================
-// SETUP DO TESTCONTAINERS
-// ==========================================
-async fn setup_isolated_db() -> (PgPool, testcontainers::ContainerAsync<Postgres>) {
-    // 1. Inicia o container do PostgreSQL em background
-    let container = Postgres::default()
-        .start()
-        .await
-        .expect("Falha ao iniciar container do Postgres");
-
-    // 2. Pega o IP e a porta aleatória que o Docker mapeou para o host
-    let host_ip = container
-        .get_host()
-        .await
-        .expect("Falha ao pegar IP do host");
-    let host_port = container
-        .get_host_port_ipv4(5432)
-        .await
-        .expect("Falha ao pegar porta");
-
-    // A imagem padrão do `testcontainers-modules::postgres` usa user/pass/db como "postgres"
-    let connection_string = format!(
-        "postgres://postgres:postgres@{}:{}/postgres",
-        host_ip, host_port
-    );
-
-    // 3. Cria o Pool do SQLx apontando para o container efêmero
-    let pool = PgPoolOptions::new()
-        .max_connections(5)
-        .connect(&connection_string)
-        .await
-        .expect("Falha ao conectar no banco efêmero");
-
-    // 4. Roda as migrations nesse banco novo
-    sqlx::migrate!("../../migrations")
-        .run(&pool)
-        .await
-        .expect("Falha ao rodar migrations no testcontainer");
-
-    // RETORNO IMPORTANTE: Retornamos o container junto com o pool.
-    // Se o container for "dropado" (sair de escopo), o Docker encerra ele na mesma hora!
-    (pool, container)
-}
+mod common;
+use common::setup_isolated_db;
 
 // ==========================================
 // TESTES DE INTEGRAÇÃO
@@ -67,11 +24,10 @@ async fn test_register_tenant_success_saves_all_data() {
     let (pool, _container) = setup_isolated_db().await;
 
     // 1. Setup
-    let user_repo = Arc::new(PgUserRepository::new(pool.clone()));
     let uow_manager = Arc::new(PgUnitOfWorkManager::new(pool.clone()));
     let password_hasher = Arc::new(Argon2Hasher::new());
 
-    let use_case = RegisterTenantUseCase::new(user_repo.clone(), uow_manager, password_hasher);
+    let use_case = RegisterTenantUseCase::new(uow_manager.clone(), password_hasher);
 
     let command = RegisterTenantCommand {
         tenant_name: "Nexus Corp LTDA".to_string(),
@@ -92,7 +48,13 @@ async fn test_register_tenant_success_saves_all_data() {
     assert_eq!(user.email, "admin@empresa.com");
 
     // 4. Verifica banco
-    let saved_user = user_repo.find_by_email("admin@empresa.com").await.unwrap();
+    let mut uow = uow_manager.begin().await.unwrap();
+    let saved_user = uow
+        .users()
+        .find_by_email("admin@empresa.com")
+        .await
+        .unwrap();
+
     assert!(saved_user.is_some());
 }
 
@@ -101,11 +63,10 @@ async fn test_register_tenant_fails_if_email_already_exists() {
     let (pool, _container) = setup_isolated_db().await;
 
     // 1. Setup
-    let user_repo = Arc::new(PgUserRepository::new(pool.clone()));
     let uow_manager = Arc::new(PgUnitOfWorkManager::new(pool.clone()));
     let password_hasher = Arc::new(Argon2Hasher::new());
 
-    let use_case = RegisterTenantUseCase::new(user_repo.clone(), uow_manager, password_hasher);
+    let use_case = RegisterTenantUseCase::new(uow_manager, password_hasher);
 
     let command_1 = RegisterTenantCommand {
         tenant_name: "Empresa Um".to_string(),
