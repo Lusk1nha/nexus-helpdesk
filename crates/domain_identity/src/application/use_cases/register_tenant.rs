@@ -68,6 +68,7 @@ impl RegisterTenantUseCase {
         uow.tenants().create(&tenant).await?;
         uow.users().create(&user).await?;
         uow.credentials().create(&credential).await?;
+
         uow.tenants().add_user_to_tenant(&relation).await?;
 
         // Se tudo deu certo, efetiva as mudanças no banco de dados

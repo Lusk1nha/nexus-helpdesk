@@ -50,9 +50,14 @@ impl IntoResponse for ApiError {
     }
 }
 
-// Permite usar o operador `?` nos handlers para converter DomainError automaticamente
 impl From<DomainError> for ApiError {
     fn from(err: DomainError) -> Self {
         ApiError::Domain(err)
+    }
+}
+
+impl From<validator::ValidationErrors> for ApiError {
+    fn from(err: validator::ValidationErrors) -> Self {
+        ApiError::Validation(err)
     }
 }

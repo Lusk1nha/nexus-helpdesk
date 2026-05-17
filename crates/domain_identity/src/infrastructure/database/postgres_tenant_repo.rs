@@ -7,7 +7,7 @@ use uuid::Uuid;
 use crate::domain::entities::{Tenant, TenantUser};
 use crate::domain::error::DomainError;
 use crate::domain::ports::TenantRepository;
-use crate::infrastructure::database::DatabaseConnection;
+use shared_kernel::DatabaseConnection;
 
 pub struct PgTenantRepository {
     conn: DatabaseConnection,

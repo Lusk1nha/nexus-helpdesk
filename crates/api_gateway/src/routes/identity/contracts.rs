@@ -1,6 +1,29 @@
+use domain_identity::domain::entities::{Tenant, User};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
+
+use crate::utils::jwt::Claims;
+
+#[derive(Serialize)]
+pub struct GetMeResponse {
+    pub user_id: Uuid,
+    pub tenant_id: Uuid,
+    pub role: String,
+    pub message: String,
+}
+
+// Ensinamos o Rust a converter Claims em GetMeResponse
+impl From<Claims> for GetMeResponse {
+    fn from(claims: Claims) -> Self {
+        Self {
+            user_id: claims.sub,
+            tenant_id: claims.tenant_id,
+            role: claims.role,
+            message: "Você está autenticado e acessando os dados da sua empresa!".to_string(),
+        }
+    }
+}
 
 #[derive(Deserialize, Validate)]
 pub struct RegisterTenantPayload {
@@ -25,4 +48,14 @@ pub struct RegisterTenantResponse {
     pub tenant_id: Uuid,
     pub user_id: Uuid,
     pub message: String,
+}
+
+impl From<(Tenant, User)> for RegisterTenantResponse {
+    fn from((tenant, user): (Tenant, User)) -> Self {
+        Self {
+            tenant_id: tenant.id,
+            user_id: user.id,
+            message: "Empresa registrada com sucesso!".to_string(),
+        }
+    }
 }

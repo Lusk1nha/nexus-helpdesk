@@ -36,6 +36,7 @@ checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
 name = "api_gateway"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "axum",
  "chrono",
  "domain_identity",
@@ -593,10 +594,25 @@ dependencies = [
  "fake",
  "pretty_assertions",
  "serde",
+ "shared_kernel",
  "slug",
  "sqlx",
  "testcontainers",
  "testcontainers-modules",
+ "thiserror",
+ "time",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
+name = "domain_ticketing"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "serde",
+ "shared_kernel",
+ "sqlx",
  "thiserror",
  "time",
  "tokio",
@@ -2325,6 +2341,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f40ca3c46823713e0d4209592e8d6e826aa57e928f09752619fc696c499637f6"
 dependencies = [
  "lazy_static",
+]
+
+[[package]]
+name = "shared_kernel"
+version = "0.1.0"
+dependencies = [
+ "sqlx",
+ "tokio",
 ]
 
 [[package]]

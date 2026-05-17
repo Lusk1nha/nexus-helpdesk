@@ -7,7 +7,7 @@ use uuid::Uuid;
 use crate::domain::entities::Credential;
 use crate::domain::error::DomainError;
 use crate::domain::ports::CredentialRepository;
-use crate::infrastructure::database::DatabaseConnection;
+use shared_kernel::DatabaseConnection;
 
 pub struct PgCredentialRepository {
     conn: DatabaseConnection,
@@ -47,7 +47,9 @@ impl CredentialRepository for PgCredentialRepository {
             DatabaseConnection::Pool(pool) => query.execute(pool).await,
             DatabaseConnection::Transaction(tx_mutex) => {
                 let mut guard = tx_mutex.lock().await;
-                let tx = guard.as_mut().expect("Transação finalizada inesperadamente");
+                let tx = guard
+                    .as_mut()
+                    .expect("Transação finalizada inesperadamente");
                 query.execute(&mut **tx).await
             }
         }

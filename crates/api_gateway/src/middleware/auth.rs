@@ -1,5 +1,7 @@
+// crates/api_gateway/src/middleware/auth.rs
+
 use axum::{
-    Json, async_trait,
+    Json,
     extract::FromRequestParts,
     http::{StatusCode, header::AUTHORIZATION, request::Parts},
 };
@@ -11,7 +13,7 @@ use crate::utils::jwt::{Claims, verify_jwt};
 // Wrapper para usar o Extractor nos handlers
 pub struct AuthUser(pub Claims);
 
-#[async_trait]
+// Remova o #[async_trait] daqui!
 impl FromRequestParts<AppState> for AuthUser {
     type Rejection = (StatusCode, Json<serde_json::Value>);
 
@@ -19,7 +21,6 @@ impl FromRequestParts<AppState> for AuthUser {
         parts: &mut Parts,
         state: &AppState,
     ) -> Result<Self, Self::Rejection> {
-        // 1. Extrai o header Authorization
         let auth_header = parts
             .headers
             .get(AUTHORIZATION)

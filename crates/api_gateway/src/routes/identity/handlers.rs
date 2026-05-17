@@ -2,15 +2,24 @@ use axum::{Json, extract::State, http::StatusCode};
 use validator::Validate;
 
 use super::contracts::{RegisterTenantPayload, RegisterTenantResponse};
-use crate::{app_state::AppState, error::ApiError};
+use crate::{
+    app_state::AppState, error::ApiError, middleware::auth::AuthUser,
+    routes::identity::contracts::GetMeResponse,
+};
 use domain_identity::application::use_cases::register_tenant::RegisterTenantCommand;
+
+pub async fn get_me_handler(
+    AuthUser(claims): AuthUser,
+) -> Result<(StatusCode, Json<GetMeResponse>), ApiError> {
+    Ok((StatusCode::OK, Json(claims.into())))
+}
 
 pub async fn register_tenant_handler(
     State(state): State<AppState>,
     Json(payload): Json<RegisterTenantPayload>,
 ) -> Result<(StatusCode, Json<RegisterTenantResponse>), ApiError> {
     // 1. Validação do Payload (Fail Fast)
-    payload.validate().map_err(ApiError::Validation)?;
+    payload.validate()?;
 
     // 2. Mapeamento para o Command do Domínio
     let command = RegisterTenantCommand {
@@ -21,14 +30,8 @@ pub async fn register_tenant_handler(
     };
 
     // 3. Execução do Use Case (Erros sobem automaticamente via '?')
-    let (tenant, user) = state.register_tenant_use_case.execute(command).await?;
+    let result_tuple = state.register_tenant_use_case.execute(command).await?;
 
-    // 4. Montagem da Resposta
-    let response = RegisterTenantResponse {
-        tenant_id: tenant.id,
-        user_id: user.id,
-        message: "Empresa registrada com sucesso!".to_string(),
-    };
-
-    Ok((StatusCode::CREATED, Json(response)))
+    // 4. Retorno usando .into() para converter (Tenant, User) na Resposta tipada
+    Ok((StatusCode::CREATED, Json(result_tuple.into())))
 }

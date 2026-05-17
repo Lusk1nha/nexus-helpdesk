@@ -13,7 +13,8 @@ pub struct LoginCommand {
 pub struct LoginUseCase {
     user_repo: Arc<dyn UserRepository>,
     credential_repo: Arc<dyn CredentialRepository>,
-    tenant_repo: Arc<dyn TenantRepository>, // Precisamos saber de qual empresa ele é
+
+    tenant_repo: Arc<dyn TenantRepository>,
     password_hasher: Arc<dyn PasswordHasher>,
 }
 

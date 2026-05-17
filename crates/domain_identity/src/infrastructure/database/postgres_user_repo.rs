@@ -7,7 +7,7 @@ use uuid::Uuid;
 use crate::domain::entities::User;
 use crate::domain::error::DomainError;
 use crate::domain::ports::UserRepository;
-use crate::infrastructure::database::DatabaseConnection;
+use shared_kernel::database::DatabaseConnection;
 
 pub struct PgUserRepository {
     conn: DatabaseConnection,

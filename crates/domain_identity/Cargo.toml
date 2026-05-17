@@ -18,6 +18,8 @@ tokio = { workspace = true }
 argon2 = "0.5.3"
 slug = "0.1.6"
 
+shared_kernel = { path = "../shared_kernel" }
+
 [dev-dependencies]
 fake = { version = "5.1.0", features = ["derive"] }
 testcontainers = "0.27.3"
