@@ -1,15 +1,16 @@
 use crate::domain::error::DomainError;
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum Role {
     Admin,
     Agent,
     Customer,
 }
 
-// Convertendo para String (Útil para salvar no PostgreSQL ou enviar no JWT)
 impl fmt::Display for Role {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let role_str = match self {
@@ -21,7 +22,6 @@ impl fmt::Display for Role {
     }
 }
 
-// Lendo do Banco de Dados ou da API de forma segura
 impl FromStr for Role {
     type Err = DomainError;
 

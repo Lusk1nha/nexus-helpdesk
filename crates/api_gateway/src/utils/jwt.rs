@@ -1,31 +1,33 @@
+// crates/api_gateway/src/utils/jwt.rs
+
+use domain_identity::domain::entities::role::Role;
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use uuid::Uuid; // 🚀 Importe o seu Enum real aqui
 
-// O que vai dentro do Token. Isso trafega no Frontend (NÃO coloque senhas aqui)
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
-    pub sub: Uuid,       // user_id
-    pub tenant_id: Uuid, // Importante para o Multi-Tenancy!
-    pub role: String,
-    pub exp: usize, // Data de expiração
+    pub sub: Uuid,
+    pub tenant_id: Uuid,
+    pub role: Role,
+    pub exp: usize,
 }
 
 pub fn sign_jwt(
     user_id: Uuid,
     tenant_id: Uuid,
-    role: &str,
+    role: Role,
     secret: &str,
 ) -> Result<String, jsonwebtoken::errors::Error> {
     let expiration = chrono::Utc::now()
-        .checked_add_signed(chrono::Duration::hours(24)) // Token dura 24 horas
+        .checked_add_signed(chrono::Duration::hours(24))
         .expect("Timestamp inválido")
         .timestamp();
 
     let claims = Claims {
         sub: user_id,
         tenant_id,
-        role: role.to_string(),
+        role,
         exp: expiration as usize,
     };
 

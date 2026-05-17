@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::domain::entities::{Credential, Role, Tenant, TenantUser, User};
 use crate::domain::error::DomainError;
-use crate::domain::ports::{PasswordHasher, UnitOfWorkManager, UserRepository};
+use crate::domain::ports::{PasswordHasher, UnitOfWorkManager};
 
 pub struct RegisterTenantCommand {
     pub tenant_name: String,
@@ -12,19 +12,16 @@ pub struct RegisterTenantCommand {
 }
 
 pub struct RegisterTenantUseCase {
-    user_repo: Arc<dyn UserRepository>,
     uow_manager: Arc<dyn UnitOfWorkManager>,
     password_hasher: Arc<dyn PasswordHasher>,
 }
 
 impl RegisterTenantUseCase {
     pub fn new(
-        user_repo: Arc<dyn UserRepository>,
         uow_manager: Arc<dyn UnitOfWorkManager>,
         password_hasher: Arc<dyn PasswordHasher>,
     ) -> Self {
         Self {
-            user_repo,
             uow_manager,
             password_hasher,
         }
@@ -34,9 +31,11 @@ impl RegisterTenantUseCase {
         &self,
         command: RegisterTenantCommand,
     ) -> Result<(Tenant, User), DomainError> {
+        let mut uow = self.uow_manager.begin().await?;
+
         // 1. Regra de Negócio: E-mail único (Validação rápida, fora da transação)
-        if self
-            .user_repo
+        if uow
+            .users()
             .find_by_email(&command.admin_email)
             .await?
             .is_some()
@@ -61,17 +60,12 @@ impl RegisterTenantUseCase {
         // 5. O VERDADEIRO UNIT OF WORK EM AÇÃO
         // ==========================================
 
-        // Inicia a transação genérica no banco de dados
-        let mut uow = self.uow_manager.begin().await?;
-
-        // Acessa os repositórios que estão "amarrados" a essa transação específica
         uow.tenants().create(&tenant).await?;
         uow.users().create(&user).await?;
         uow.credentials().create(&credential).await?;
 
         uow.tenants().add_user_to_tenant(&relation).await?;
 
-        // Se tudo deu certo, efetiva as mudanças no banco de dados
         uow.commit().await?;
 
         Ok((tenant, user))

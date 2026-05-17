@@ -59,7 +59,6 @@ impl CredentialRepository for PgCredentialRepository {
     }
 
     async fn update(&self, credential: &Credential) -> Result<(), DomainError> {
-        // Deixamos o updated_at para a Trigger do Postgres
         let query = sqlx::query!(
             r#"
             UPDATE credentials 

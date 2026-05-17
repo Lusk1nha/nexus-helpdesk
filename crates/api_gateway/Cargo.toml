@@ -20,8 +20,15 @@ dotenvy = { workspace = true }
 async-trait = { workspace = true }
 
 validator = { version = "0.20.0", features = ["derive"] }
-jsonwebtoken = "10.3.0"
+jsonwebtoken = { version = "10.3.0", default-features = false, features = [
+    "rust_crypto",
+] }
 chrono = "0.4.44"
+
+# 📚 Swagger / OpenAPI
+utoipa = { version = "5.5.0", features = ["axum_extras", "uuid"] }
+utoipa-swagger-ui = { version = "9.0.2", features = ["axum"] }
 
 # Dependências Locais (Outros Crates)
 domain_identity = { path = "../domain_identity" }
+domain_ticketing = { path = "../domain_ticketing" }

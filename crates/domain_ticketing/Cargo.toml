@@ -5,6 +5,8 @@ edition = "2024"
 
 [dependencies]
 serde = { workspace = true }
+serde_json = { workspace = true }
+
 uuid = { workspace = true }
 
 async-trait = { workspace = true }
@@ -14,5 +16,7 @@ thiserror = { workspace = true }
 time = { workspace = true }
 
 tokio = { workspace = true }
+tracing = { workspace = true }
+reqwest = { workspace = true, features = ["json"] }
 
 shared_kernel = { path = "../shared_kernel" }

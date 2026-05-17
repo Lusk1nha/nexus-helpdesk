@@ -1,19 +1,19 @@
-// crates/api_gateway/src/middleware/auth.rs
-
 use axum::{
     Json,
     extract::FromRequestParts,
     http::{StatusCode, header::AUTHORIZATION, request::Parts},
 };
+use domain_identity::domain::entities::Role;
 use serde_json::json;
 
 use crate::app_state::AppState;
 use crate::utils::jwt::{Claims, verify_jwt};
 
-// Wrapper para usar o Extractor nos handlers
+// ==========================================
+// 🛡️ Extractor 1: Usuário Autenticado Comum
+// ==========================================
 pub struct AuthUser(pub Claims);
 
-// Remova o #[async_trait] daqui!
 impl FromRequestParts<AppState> for AuthUser {
     type Rejection = (StatusCode, Json<serde_json::Value>);
 
@@ -34,7 +34,6 @@ impl FromRequestParts<AppState> for AuthUser {
                 )
             })?;
 
-        // 2. Valida a assinatura criptográfica e a expiração
         let claims = verify_jwt(auth_header, &state.config.jwt_secret).map_err(|_| {
             (
                 StatusCode::UNAUTHORIZED,
@@ -42,7 +41,37 @@ impl FromRequestParts<AppState> for AuthUser {
             )
         })?;
 
-        // 3. Devolve os dados seguros do usuário para o Handler
         Ok(AuthUser(claims))
+    }
+}
+
+// ==========================================
+// 👑 Extractor 2: Apenas Administradores / Owners
+// ==========================================
+pub struct AdminUser(pub Claims);
+
+impl FromRequestParts<AppState> for AdminUser {
+    type Rejection = (StatusCode, Json<serde_json::Value>);
+
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &AppState,
+    ) -> Result<Self, Self::Rejection> {
+        let AuthUser(claims) = AuthUser::from_request_parts(parts, state).await?;
+
+        match claims.role {
+            Role::Admin => {}
+            _ => {
+                return Err((
+                    StatusCode::FORBIDDEN,
+                    Json(json!({
+                        "error": "Forbidden",
+                        "message": "Acesso negado: Esta operação exige privilégios de administrador."
+                    })),
+                ));
+            }
+        }
+
+        Ok(AdminUser(claims))
     }
 }
