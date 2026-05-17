@@ -3,6 +3,16 @@ resolver = "2"
 members = ["crates/*"]
 
 [workspace.dependencies]
+# Axum & Web
+axum = "0.8.9"
+tower = "0.5.3"
+tower-http = { version = "0.6.10", features = ["cors", "trace"] }
+
+# Observabilidade & Utilitários
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+dotenvy = "0.15.7"
+
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = { version = "1.0.149" }
 
@@ -15,4 +25,8 @@ sqlx = { version = "0.8.6", features = [
   "time",
 ] }
 
+time = { version = "0.3.47", features = ["serde"] }
+tokio = { version = "1.52.3", features = ["full"] }
+
 thiserror = "2.0.18"
+reqwest = "0.13.3"

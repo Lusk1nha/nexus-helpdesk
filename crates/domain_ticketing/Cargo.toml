@@ -1,0 +1,22 @@
+[package]
+name = "domain_ticketing"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+uuid = { workspace = true }
+
+async-trait = { workspace = true }
+sqlx = { workspace = true }
+
+thiserror = { workspace = true }
+time = { workspace = true }
+
+tokio = { workspace = true }
+tracing = { workspace = true }
+reqwest = { workspace = true, features = ["json"] }
+
+shared_kernel = { path = "../shared_kernel" }
