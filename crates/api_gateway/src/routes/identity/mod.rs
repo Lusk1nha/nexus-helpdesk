@@ -16,4 +16,8 @@ pub fn routes() -> Router<AppState> {
             "/admin/users/{id}/unlock-and-reset",
             post(handlers::admin_reset_user_password_handler),
         )
+        .route(
+            "/users",
+            post(handlers::invite_user_handler).get(handlers::list_users_handler),
+        )
 }

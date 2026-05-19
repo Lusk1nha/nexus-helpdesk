@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                u.id        AS user_id,\n                u.email,\n                u.full_name,\n                u.avatar_url,\n                u.timezone,\n                u.is_active AS user_is_active,\n                u.created_at AS user_created_at,\n                u.updated_at AS user_updated_at,\n                tu.role,\n                tu.is_active AS tu_is_active,\n                tu.created_at AS tu_created_at,\n                tu.updated_at AS tu_updated_at\n            FROM users u\n            JOIN tenant_users tu ON tu.user_id = u.id\n            WHERE tu.tenant_id = $1 AND tu.is_active = true\n            ORDER BY tu.created_at ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "email",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "full_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "avatar_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "timezone",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "user_is_active",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "user_created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "user_updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "role",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 9,
+        "name": "tu_is_active",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
+        "name": "tu_created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "tu_updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "7a9ff53683ebfe990360f7a84240debd9d32e198a47a0f0a45f95ee193989819"
+}

@@ -4,7 +4,7 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use uuid::Uuid;
 
-use crate::domain::entities::{Tenant, TenantUser};
+use crate::domain::entities::{Tenant, TenantUser, User};
 use crate::domain::error::DomainError;
 use crate::domain::ports::TenantRepository;
 use shared_kernel::DatabaseConnection;
@@ -179,5 +179,113 @@ impl TenantRepository for PgTenantRepository {
             }
             None => Ok(None),
         }
+    }
+
+    async fn find_tenant_user(
+        &self,
+        tenant_id: Uuid,
+        user_id: Uuid,
+    ) -> Result<Option<TenantUser>, DomainError> {
+        let query = sqlx::query!(
+            r#"
+            SELECT tenant_id, user_id, role, is_active, created_at, updated_at
+            FROM tenant_users
+            WHERE tenant_id = $1 AND user_id = $2 AND is_active = true
+            LIMIT 1
+            "#,
+            tenant_id,
+            user_id
+        );
+
+        let row = match &self.conn {
+            DatabaseConnection::Pool(pool) => query.fetch_optional(pool).await,
+            DatabaseConnection::Transaction(tx_mutex) => {
+                let mut guard = tx_mutex.lock().await;
+                query.fetch_optional(&mut **guard.as_mut().unwrap()).await
+            }
+        }
+        .map_err(|e| DomainError::DatabaseError(e.to_string()))?;
+
+        match row {
+            Some(r) => Ok(Some(TenantUser {
+                tenant_id: r.tenant_id,
+                user_id: r.user_id,
+                role: r
+                    .role
+                    .parse()
+                    .map_err(|_| DomainError::DatabaseError("Role inválida no banco".into()))?,
+                is_active: r.is_active,
+                created_at: r.created_at,
+                updated_at: r.updated_at,
+            })),
+            None => Ok(None),
+        }
+    }
+
+    async fn list_members(
+        &self,
+        tenant_id: Uuid,
+    ) -> Result<Vec<(User, TenantUser)>, DomainError> {
+        let query = sqlx::query!(
+            r#"
+            SELECT
+                u.id        AS user_id,
+                u.email,
+                u.full_name,
+                u.avatar_url,
+                u.timezone,
+                u.is_active AS user_is_active,
+                u.created_at AS user_created_at,
+                u.updated_at AS user_updated_at,
+                tu.role,
+                tu.is_active AS tu_is_active,
+                tu.created_at AS tu_created_at,
+                tu.updated_at AS tu_updated_at
+            FROM users u
+            JOIN tenant_users tu ON tu.user_id = u.id
+            WHERE tu.tenant_id = $1 AND tu.is_active = true
+            ORDER BY tu.created_at ASC
+            "#,
+            tenant_id
+        );
+
+        let rows = match &self.conn {
+            DatabaseConnection::Pool(pool) => query.fetch_all(pool).await,
+            DatabaseConnection::Transaction(tx_mutex) => {
+                let mut guard = tx_mutex.lock().await;
+                query.fetch_all(&mut **guard.as_mut().unwrap()).await
+            }
+        }
+        .map_err(|e| DomainError::DatabaseError(e.to_string()))?;
+
+        let mut result = Vec::new();
+        for r in rows {
+            let user = User {
+                id: r.user_id,
+                email: r.email,
+                full_name: r.full_name,
+                avatar_url: r.avatar_url,
+                timezone: r.timezone,
+                is_active: r.user_is_active,
+                created_at: r.user_created_at,
+                updated_at: r.user_updated_at,
+            };
+
+            let tenant_user = TenantUser {
+                tenant_id,
+                user_id: r.user_id,
+                role: r
+                    .role
+                    .parse()
+                    .map_err(|_| DomainError::DatabaseError("Role inválida no banco".into()))?,
+                is_active: r.tu_is_active,
+                created_at: r.tu_created_at,
+                updated_at: r.tu_updated_at,
+            };
+
+            result.push((user, tenant_user));
+        }
+
+        Ok(result)
     }
 }

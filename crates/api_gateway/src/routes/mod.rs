@@ -1,5 +1,3 @@
-
-
 use axum::Router;
 use utoipa::{
     Modify, OpenApi,
@@ -12,35 +10,44 @@ use crate::app_state::AppState;
 pub mod identity;
 pub mod ticketing;
 
-// 1. Definição da Documentação OpenAPI
 #[derive(OpenApi)]
 #[openapi(
     paths(
-        // Rotas do Ticketing
+        // Ticketing
         ticketing::handlers::create_ticket_handler,
-        
-        // 🚀 Novas Rotas de Identity adicionadas aqui:
+        ticketing::handlers::list_tickets_handler,
+        ticketing::handlers::get_ticket_handler,
+        ticketing::handlers::update_ticket_status_handler,
+        ticketing::handlers::list_ticket_messages_handler,
+        ticketing::handlers::add_message_handler,
+        // Identity
         identity::handlers::register_tenant_handler,
         identity::handlers::login_handler,
         identity::handlers::get_me_handler,
-        identity::handlers::admin_reset_user_password_handler
+        identity::handlers::admin_reset_user_password_handler,
+        identity::handlers::invite_user_handler,
+        identity::handlers::list_users_handler,
     ),
     components(
         schemas(
-            // Schemas do Ticketing
+            // Ticketing
             ticketing::contracts::CreateTicketPayload,
             ticketing::contracts::CreateTicketResponse,
-            
-            // 🚀 Novos Schemas de Identity adicionados aqui:
+            ticketing::contracts::TicketResponse,
+            ticketing::contracts::UpdateTicketStatusPayload,
+            ticketing::contracts::MessageResponse,
+            ticketing::contracts::AddMessagePayload,
+            // Identity
             identity::contracts::RegisterTenantPayload,
             identity::contracts::RegisterTenantResponse,
-            identity::contracts::GetMeResponse,
-
             identity::contracts::LoginPayload,
             identity::contracts::LoginResponse,
-            
+            identity::contracts::GetMeResponse,
             identity::contracts::AdminResetPasswordPayload,
             identity::contracts::ResetPasswordResponse,
+            identity::contracts::InviteUserPayload,
+            identity::contracts::InviteUserResponse,
+            identity::contracts::TenantMemberResponse,
         )
     ),
     tags(
@@ -51,7 +58,6 @@ pub mod ticketing;
 )]
 struct ApiDoc;
 
-// Adiciona o cadeado de Autenticação JWT no Swagger UI
 struct SecurityAddon;
 impl Modify for SecurityAddon {
     fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
@@ -70,13 +76,10 @@ impl Modify for SecurityAddon {
 }
 
 pub fn create_router(state: AppState) -> Router {
-    // Gera o JSON do OpenAPI em tempo de compilação
     let openapi = ApiDoc::openapi();
 
     Router::new()
-        // Serve a interface gráfica do Swagger UI
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", openapi))
-        // Suas rotas normais
         .nest("/api/v1/identity", identity::routes())
         .nest("/api/v1/tickets", ticketing::routes())
         .with_state(state)

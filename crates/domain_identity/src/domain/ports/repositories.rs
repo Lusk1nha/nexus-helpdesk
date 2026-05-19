@@ -45,8 +45,22 @@ pub trait TenantRepository: Send + Sync {
     /// Busca as informações de um Tenant pelo seu ID.
     async fn find_by_id(&self, id: Uuid) -> Result<Option<Tenant>, DomainError>;
 
+    /// Busca o vínculo de um usuário com qualquer tenant (usado no login).
     async fn find_tenant_user_by_user_id(
         &self,
         id: Uuid,
     ) -> Result<Option<TenantUser>, DomainError>;
+
+    /// Busca o vínculo de um usuário com um tenant específico.
+    async fn find_tenant_user(
+        &self,
+        tenant_id: Uuid,
+        user_id: Uuid,
+    ) -> Result<Option<TenantUser>, DomainError>;
+
+    /// Lista todos os membros ativos de um tenant com seus dados de usuário.
+    async fn list_members(
+        &self,
+        tenant_id: Uuid,
+    ) -> Result<Vec<(User, TenantUser)>, DomainError>;
 }

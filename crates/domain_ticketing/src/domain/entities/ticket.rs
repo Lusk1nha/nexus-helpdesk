@@ -64,4 +64,41 @@ impl Ticket {
         self.status = TicketStatus::Open;
         self.updated_at = OffsetDateTime::now_utc();
     }
+
+    pub fn resolve(&mut self) {
+        self.status = TicketStatus::Resolved;
+        self.updated_at = OffsetDateTime::now_utc();
+    }
+
+    pub fn close(&mut self) {
+        self.status = TicketStatus::Closed;
+        self.updated_at = OffsetDateTime::now_utc();
+    }
+
+    pub fn can_transition_to(&self, target: &TicketStatus) -> bool {
+        use TicketStatus::*;
+        matches!(
+            (&self.status, target),
+            (Open, Closed)
+                | (AwaitingAgentApproval, Resolved)
+                | (AwaitingAgentApproval, Open)
+                | (AwaitingAgentApproval, Closed)
+                | (Resolved, Closed)
+        )
+    }
+}
+
+impl std::str::FromStr for TicketStatus {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "open" => Ok(TicketStatus::Open),
+            "processing_ai" => Ok(TicketStatus::ProcessingAI),
+            "awaiting_agent_approval" => Ok(TicketStatus::AwaitingAgentApproval),
+            "resolved" => Ok(TicketStatus::Resolved),
+            "closed" => Ok(TicketStatus::Closed),
+            _ => Err(()),
+        }
+    }
 }

@@ -3,8 +3,9 @@ use uuid::Uuid;
 use validator::Validate;
 
 use super::contracts::{
-    AdminResetPasswordPayload, GetMeResponse, LoginPayload, LoginResponse, RegisterTenantPayload,
-    RegisterTenantResponse, ResetPasswordResponse,
+    AdminResetPasswordPayload, GetMeResponse, InviteUserPayload, InviteUserResponse, LoginPayload,
+    LoginResponse, RegisterTenantPayload, RegisterTenantResponse, ResetPasswordResponse,
+    TenantMemberResponse,
 };
 use crate::{
     app_state::AppState,
@@ -14,7 +15,8 @@ use crate::{
 };
 
 use domain_identity::application::use_cases::{
-    LoginCommand, ResetPasswordCommand, register_tenant::RegisterTenantCommand,
+    invite_user::InviteUserCommand, list_users::ListUsersCommand, LoginCommand,
+    ResetPasswordCommand, register_tenant::RegisterTenantCommand,
 };
 
 #[utoipa::path(
@@ -143,4 +145,64 @@ pub async fn admin_reset_user_password_handler(
                     .to_string(),
         }),
     ))
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/v1/identity/users",
+    request_body = InviteUserPayload,
+    responses(
+        (status = 201, description = "Usuário convidado com sucesso", body = InviteUserResponse),
+        (status = 400, description = "Erro de validação"),
+        (status = 401, description = "Não autorizado"),
+        (status = 403, description = "Acesso negado (somente admin)"),
+        (status = 409, description = "E-mail já em uso")
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn invite_user_handler(
+    State(state): State<AppState>,
+    AdminUser(admin_claims): AdminUser,
+    Json(payload): Json<InviteUserPayload>,
+) -> Result<(StatusCode, Json<InviteUserResponse>), ApiError> {
+    payload.validate()?;
+
+    let role = payload
+        .role
+        .parse::<domain_identity::domain::entities::Role>()
+        .map_err(|_| ApiError::Identity(domain_identity::domain::error::DomainError::InvalidRole(payload.role.clone())))?;
+
+    let command = InviteUserCommand {
+        operator_tenant_id: admin_claims.tenant_id,
+        email: payload.email,
+        full_name: payload.full_name,
+        role,
+        temporary_password: payload.temporary_password,
+    };
+
+    let user = state.identity.invite_user.execute(command).await?;
+    Ok((StatusCode::CREATED, Json(user.into())))
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/v1/identity/users",
+    responses(
+        (status = 200, description = "Lista de membros do tenant", body = Vec<TenantMemberResponse>),
+        (status = 401, description = "Não autorizado"),
+        (status = 403, description = "Acesso negado (somente admin)")
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn list_users_handler(
+    State(state): State<AppState>,
+    AdminUser(admin_claims): AdminUser,
+) -> Result<(StatusCode, Json<Vec<TenantMemberResponse>>), ApiError> {
+    let command = ListUsersCommand {
+        tenant_id: admin_claims.tenant_id,
+    };
+
+    let members = state.identity.list_users.execute(command).await?;
+    let body: Vec<TenantMemberResponse> = members.into_iter().map(Into::into).collect();
+    Ok((StatusCode::OK, Json(body)))
 }
