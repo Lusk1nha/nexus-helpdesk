@@ -32,3 +32,12 @@ utoipa-swagger-ui = { version = "9.0.2", features = ["axum"] }
 # Dependências Locais (Outros Crates)
 domain_identity = { path = "../domain_identity" }
 domain_ticketing = { path = "../domain_ticketing" }
+
+[dev-dependencies]
+testcontainers = "0.27.3"
+testcontainers-modules = { version = "0.15.0", features = ["postgres"] }
+http-body-util = "0.1"
+tower = { version = "0.5.3", features = ["util"] }
+tokio = { workspace = true }
+sqlx = { workspace = true }
+serde_json = { workspace = true }

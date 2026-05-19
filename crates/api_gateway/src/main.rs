@@ -1,5 +1,3 @@
-// crates/api_gateway/src/main.rs
-
 use axum::http::{HeaderValue, Method};
 use sqlx::{PgPool, postgres::PgPoolOptions};
 use std::net::SocketAddr;
@@ -8,15 +6,9 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use domain_ticketing::application::workers::ai_worker::{AiTask, AiWorker};
 
-mod app_state;
-mod config;
-mod error;
-mod middleware;
-mod routes;
-mod utils;
-
-use app_state::AppState;
-use config::AppConfig;
+use api_gateway::app_state::AppState;
+use api_gateway::config::AppConfig;
+use api_gateway::routes;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -48,10 +40,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-
-// ==========================================
-// 🛠️ FUNÇÕES DE BOOTSTRAP (Escondendo a complexidade)
-// ==========================================
 
 fn setup_telemetry() {
     dotenvy::dotenv().ok();
