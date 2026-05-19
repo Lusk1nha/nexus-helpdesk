@@ -14,26 +14,30 @@ use api_gateway::routes;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // 1. Inicializa o ecossistema (Logs e Env)
-    setup_telemetry();
-    let config = AppConfig::from_env();
+    // 1. Load .env into the process environment before anything reads it
+    dotenvy::dotenv().ok();
 
-    // 2. Conecta ao Banco de Dados
+    // 2. Set up structured logging
+    setup_telemetry();
+
+    // 3. Load and validate all configuration (panics early with a clear message
+    //    if a required variable is missing)
+    let config = AppConfig::load();
+
+    // 4. Connect to the database
     let db_pool = setup_database(&config.database_url).await?;
 
-    // 3. Inicializa os Workers em Background e pega o canal de comunicação
-    let ai_task_sender = spawn_background_workers(db_pool.clone());
+    // 5. Spin up background workers (AI queue)
+    let ai_task_sender = spawn_background_workers(db_pool.clone(), config.ollama_url.clone());
 
-    // 4. Configura o Estado da Aplicação
+    // 6. Build application state and router
     let state = AppState::new(db_pool, config.clone(), ai_task_sender);
-
-    // 5. Constrói o Roteador (incluindo o Swagger!)
     let app = routes::create_router(state)
         .layer(TraceLayer::new_for_http())
         .layer(setup_cors(&config.frontend_url));
 
-    // 6. Inicia o Servidor
-    let addr = SocketAddr::from((config.host, config.port));
+    // 7. Bind and serve
+    let addr: SocketAddr = format!("{}:{}", config.host, config.port).parse()?;
     tracing::info!("🚀 Nexus API Gateway escutando em http://{}", addr);
     tracing::info!("📚 Swagger UI disponível em http://{}/swagger-ui", addr);
 
@@ -44,7 +48,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn setup_telemetry() {
-    dotenvy::dotenv().ok();
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
@@ -63,28 +66,23 @@ async fn setup_database(database_url: &str) -> Result<PgPool, sqlx::Error> {
 }
 
 fn setup_cors(frontend_url: &str) -> CorsLayer {
-    let cors_origin = frontend_url
+    let origin = frontend_url
         .parse::<HeaderValue>()
-        .expect("FRONTEND_URL configurada de forma inválida");
+        .expect("FRONTEND_URL inválida");
 
     CorsLayer::new()
-        .allow_origin(cors_origin)
-        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
+        .allow_origin(origin)
+        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::PATCH])
         .allow_headers(tower_http::cors::Any)
 }
 
-fn spawn_background_workers(db_pool: PgPool) -> tokio::sync::mpsc::Sender<AiTask> {
-    let (ai_task_sender, ai_task_receiver) = tokio::sync::mpsc::channel::<AiTask>(100);
-
-    let ollama_url = std::env::var("OLLAMA_URL")
-        .unwrap_or_else(|_| "http://127.0.0.1:11434".to_string());
-
+fn spawn_background_workers(
+    db_pool: PgPool,
+    ollama_url: String,
+) -> tokio::sync::mpsc::Sender<AiTask> {
+    let (sender, receiver) = tokio::sync::mpsc::channel::<AiTask>(100);
     let uow_manager = Arc::new(PgTicketingUoWManager::new(db_pool));
-    let ai_worker = AiWorker::new(ai_task_receiver, uow_manager, ollama_url);
-
-    tokio::spawn(async move {
-        ai_worker.start().await;
-    });
-
-    ai_task_sender
+    let worker = AiWorker::new(receiver, uow_manager, ollama_url);
+    tokio::spawn(async move { worker.start().await });
+    sender
 }

@@ -20,6 +20,7 @@ dotenvy = { workspace = true }
 async-trait = { workspace = true }
 
 time = { workspace = true }
+config = "0.15.23"
 validator = { version = "0.20.0", features = ["derive"] }
 jsonwebtoken = { version = "10.3.0", default-features = false, features = [
     "rust_crypto",

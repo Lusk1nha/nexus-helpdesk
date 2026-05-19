@@ -180,8 +180,12 @@ pub async fn spawn_test_app() -> TestApp {
         database_url: connection_string,
         jwt_secret: "test_secret_key_for_testing_only_32chars!".to_string(),
         port: 0,
-        host: [127, 0, 0, 1],
+        host: "127.0.0.1".to_string(),
         frontend_url: "http://localhost:5173".to_string(),
+        // Point to an unreachable address — tests use a dummy AI channel drain,
+        // so the worker is never invoked during API tests.
+        ollama_url: "http://127.0.0.1:1".to_string(),
+        qdrant_url: "http://127.0.0.1:1".to_string(),
     };
 
     let (ai_sender, mut ai_receiver) = tokio::sync::mpsc::channel::<AiTask>(100);
