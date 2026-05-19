@@ -27,6 +27,9 @@ pub mod ticketing;
         identity::handlers::admin_reset_user_password_handler,
         identity::handlers::invite_user_handler,
         identity::handlers::list_users_handler,
+        identity::handlers::change_user_role_handler,
+        identity::handlers::update_user_status_handler,
+        identity::handlers::get_tenant_handler,
     ),
     components(
         schemas(
@@ -48,6 +51,9 @@ pub mod ticketing;
             identity::contracts::InviteUserPayload,
             identity::contracts::InviteUserResponse,
             identity::contracts::TenantMemberResponse,
+            identity::contracts::ChangeUserRolePayload,
+            identity::contracts::UpdateUserStatusPayload,
+            identity::contracts::TenantResponse,
         )
     ),
     tags(

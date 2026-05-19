@@ -9,7 +9,8 @@ use domain_ticketing::application::{
 use domain_ticketing::infrastructure::database::postgres_uow::PgTicketingUoWManager;
 
 use domain_identity::application::use_cases::{
-    InviteUserUseCase, ListUsersUseCase, LoginUseCase, RegisterTenantUseCase, ResetPasswordUseCase,
+    ChangeUserRoleUseCase, GetTenantUseCase, InviteUserUseCase, ListUsersUseCase, LoginUseCase,
+    RegisterTenantUseCase, ResetPasswordUseCase, UpdateUserStatusUseCase,
 };
 use domain_identity::infrastructure::{
     database::postgres_uow::PgUnitOfWorkManager, security::argon2_hasher::Argon2Hasher,
@@ -23,6 +24,9 @@ pub struct IdentityUseCases {
     pub reset_password: Arc<ResetPasswordUseCase>,
     pub invite_user: Arc<InviteUserUseCase>,
     pub list_users: Arc<ListUsersUseCase>,
+    pub change_user_role: Arc<ChangeUserRoleUseCase>,
+    pub update_user_status: Arc<UpdateUserStatusUseCase>,
+    pub get_tenant: Arc<GetTenantUseCase>,
 }
 
 pub struct TicketingUseCases {
@@ -64,7 +68,11 @@ impl AppState {
             identity_uow_manager.clone(),
             password_hasher,
         ));
-        let list_users = Arc::new(ListUsersUseCase::new(identity_uow_manager));
+        let list_users = Arc::new(ListUsersUseCase::new(identity_uow_manager.clone()));
+        let change_user_role = Arc::new(ChangeUserRoleUseCase::new(identity_uow_manager.clone()));
+        let update_user_status =
+            Arc::new(UpdateUserStatusUseCase::new(identity_uow_manager.clone()));
+        let get_tenant = Arc::new(GetTenantUseCase::new(identity_uow_manager));
 
         let identity_cases = Arc::new(IdentityUseCases {
             register_tenant,
@@ -72,6 +80,9 @@ impl AppState {
             reset_password,
             invite_user,
             list_users,
+            change_user_role,
+            update_user_status,
+            get_tenant,
         });
 
         // Ticketing use cases

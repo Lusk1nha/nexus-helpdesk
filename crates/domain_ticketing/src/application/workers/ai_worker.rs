@@ -36,22 +36,22 @@ impl AiWorker {
     }
 
     pub async fn start(mut self) {
-        info!("🤖 AI Worker iniciado. Aguardando tickets na fila...");
+        info!(ollama_url = %self.ollama_url, "AI Worker started");
 
         while let Some(task) = self.receiver.recv().await {
-            info!("📥 Ticket recebido pelo AI Worker: {}", task.ticket_id);
+            info!(ticket_id = %task.ticket_id, tenant_id = %task.tenant_id, "ticket received by AI worker");
             self.process_ticket(task).await;
         }
 
-        info!("🛑 AI Worker desligado (Canal foi fechado).");
+        info!("AI Worker stopped: channel closed");
     }
 
     async fn process_ticket(&self, task: AiTask) {
-        // 1. Mark the ticket as being processed by AI
         if let Err(e) = self.transition_to_processing(task.ticket_id).await {
             error!(
-                "Falha ao marcar ticket {} como processing_ai: {}",
-                task.ticket_id, e
+                ticket_id = %task.ticket_id,
+                error = %e,
+                "failed to mark ticket as processing_ai"
             );
             return;
         }
@@ -86,43 +86,41 @@ impl AiWorker {
                             .unwrap_or("Sem resposta.")
                             .to_string();
 
-                        info!(
-                            "✅ Resposta da IA gerada para o ticket {}.",
-                            task.ticket_id
-                        );
-
-                        // 3a. Persist the AI message + transition to AwaitingAgentApproval
                         if let Err(e) =
                             self.persist_ai_response(task.ticket_id, ai_reply).await
                         {
                             error!(
-                                "Falha ao persistir resposta da IA para o ticket {}: {}",
-                                task.ticket_id, e
+                                ticket_id = %task.ticket_id,
+                                error = %e,
+                                "failed to persist AI response"
                             );
                             let _ = self.revert_to_open(task.ticket_id).await;
+                        } else {
+                            info!(
+                                ticket_id = %task.ticket_id,
+                                "AI response saved, ticket awaiting agent approval"
+                            );
                         }
                     }
                     Err(e) => {
-                        error!(
-                            "Falha ao deserializar resposta do Ollama para o ticket {}: {}",
-                            task.ticket_id, e
-                        );
+                        error!(ticket_id = %task.ticket_id, error = %e, "failed to parse Ollama response");
                         let _ = self.revert_to_open(task.ticket_id).await;
                     }
                 }
             }
             Ok(res) => {
                 error!(
-                    "Ollama retornou HTTP {} para o ticket {}.",
-                    res.status(),
-                    task.ticket_id
+                    ticket_id = %task.ticket_id,
+                    http_status = %res.status(),
+                    "Ollama returned error HTTP status"
                 );
                 let _ = self.revert_to_open(task.ticket_id).await;
             }
             Err(e) => {
                 warn!(
-                    "Conexão com Ollama falhou para o ticket {} (ele está rodando?): {}",
-                    task.ticket_id, e
+                    ticket_id = %task.ticket_id,
+                    error = %e,
+                    "connection to Ollama failed"
                 );
                 let _ = self.revert_to_open(task.ticket_id).await;
             }

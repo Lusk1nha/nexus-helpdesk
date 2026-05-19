@@ -185,3 +185,47 @@ impl From<(User, TenantUser)> for TenantMemberResponse {
         }
     }
 }
+
+// ─── Change role ──────────────────────────────────────────────────────────────
+
+#[derive(Deserialize, Validate, ToSchema)]
+pub struct ChangeUserRolePayload {
+    #[validate(length(min = 1, message = "O papel (role) é obrigatório."))]
+    #[schema(example = "agent")]
+    pub role: String,
+}
+
+// ─── Update status ────────────────────────────────────────────────────────────
+
+#[derive(Deserialize, ToSchema)]
+pub struct UpdateUserStatusPayload {
+    #[schema(example = true)]
+    pub active: bool,
+}
+
+// ─── Tenant info ──────────────────────────────────────────────────────────────
+
+#[derive(Serialize, ToSchema)]
+pub struct TenantResponse {
+    pub id: Uuid,
+    pub name: String,
+    pub slug: String,
+    #[schema(example = "free")]
+    pub plan: String,
+    pub is_active: bool,
+    #[schema(value_type = String)]
+    pub created_at: OffsetDateTime,
+}
+
+impl From<Tenant> for TenantResponse {
+    fn from(t: Tenant) -> Self {
+        Self {
+            id: t.id,
+            name: t.name,
+            slug: t.slug,
+            plan: t.plan,
+            is_active: t.is_active,
+            created_at: t.created_at,
+        }
+    }
+}

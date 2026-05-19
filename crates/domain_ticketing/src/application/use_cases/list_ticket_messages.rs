@@ -19,6 +19,11 @@ impl ListTicketMessagesUseCase {
         Self { uow_manager }
     }
 
+    #[tracing::instrument(
+        name = "list_ticket_messages",
+        skip(self, command),
+        fields(ticket_id = %command.ticket_id, tenant_id = %command.tenant_id)
+    )]
     pub async fn execute(
         &self,
         command: ListTicketMessagesCommand,
@@ -32,11 +37,14 @@ impl ListTicketMessagesUseCase {
             .ok_or(DomainError::TicketNotFound)?;
 
         if ticket.tenant_id != command.tenant_id {
+            tracing::warn!(ticket_id = %command.ticket_id, "cross-tenant message list rejected");
             return Err(DomainError::UnauthorizedTenantAccess);
         }
 
         let messages = uow.messages().find_by_ticket_id(command.ticket_id).await?;
         uow.commit().await?;
+
+        tracing::info!(ticket_id = %command.ticket_id, count = messages.len(), "messages listed");
         Ok(messages)
     }
 }

@@ -23,6 +23,15 @@ impl AddMessageToTicketUseCase {
         Self { uow_manager }
     }
 
+    #[tracing::instrument(
+        name = "add_message",
+        skip(self, command),
+        fields(
+            ticket_id = %command.ticket_id,
+            tenant_id = %command.tenant_id,
+            sender_id = %command.sender_id,
+        )
+    )]
     pub async fn execute(
         &self,
         command: AddMessageCommand,
@@ -40,6 +49,7 @@ impl AddMessageToTicketUseCase {
             .ok_or(DomainError::TicketNotFound)?;
 
         if ticket.tenant_id != command.tenant_id {
+            tracing::warn!(ticket_id = %command.ticket_id, "cross-tenant message add rejected");
             return Err(DomainError::UnauthorizedTenantAccess);
         }
 
@@ -56,6 +66,12 @@ impl AddMessageToTicketUseCase {
 
         uow.messages().add_message(&message).await?;
         uow.commit().await?;
+
+        tracing::info!(
+            ticket_id = %command.ticket_id,
+            message_id = %message.id,
+            "message added to ticket"
+        );
         Ok(message)
     }
 }

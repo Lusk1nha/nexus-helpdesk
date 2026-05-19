@@ -29,6 +29,7 @@ impl Tenant {
 
     pub fn deactivate(&mut self) {
         self.is_active = false;
+        self.updated_at = OffsetDateTime::now_utc();
     }
 }
 
@@ -45,7 +46,6 @@ pub struct TenantUser {
 impl TenantUser {
     pub fn new(tenant_id: Uuid, user_id: Uuid, role: Role) -> Self {
         let now = OffsetDateTime::now_utc();
-
         Self {
             tenant_id,
             user_id,
@@ -58,9 +58,16 @@ impl TenantUser {
 
     pub fn change_role(&mut self, new_role: Role) {
         self.role = new_role;
+        self.updated_at = OffsetDateTime::now_utc();
     }
 
     pub fn deactivate(&mut self) {
         self.is_active = false;
+        self.updated_at = OffsetDateTime::now_utc();
+    }
+
+    pub fn reactivate(&mut self) {
+        self.is_active = true;
+        self.updated_at = OffsetDateTime::now_utc();
     }
 }

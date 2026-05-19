@@ -27,47 +27,45 @@ impl RegisterTenantUseCase {
         }
     }
 
+    #[tracing::instrument(
+        name = "register_tenant",
+        skip(self, command),
+        fields(tenant_name = %command.tenant_name, admin_email = %command.admin_email)
+    )]
     pub async fn execute(
         &self,
         command: RegisterTenantCommand,
     ) -> Result<(Tenant, User), DomainError> {
         let mut uow = self.uow_manager.begin().await?;
 
-        // 1. Regra de Negócio: E-mail único (Validação rápida, fora da transação)
         if uow
             .users()
             .find_by_email(&command.admin_email)
             .await?
             .is_some()
         {
+            tracing::warn!(email = %command.admin_email, "registration rejected: email already exists");
             return Err(DomainError::UserAlreadyExists);
         }
 
-        // 2. Geração do Slug (Ex: "Minha Empresa LTDA" -> "minha-empresa-ltda")
         let slug = slug::slugify(&command.tenant_name);
-
-        // 3. Construção das Entidades do Domínio
         let tenant = Tenant::new(command.tenant_name, slug);
         let user = User::new(command.admin_email, command.admin_full_name);
-
-        // 4. Segurança e Vínculos
         let hashed_password = self.password_hasher.hash(&command.admin_plain_password)?;
         let credential = Credential::new(user.id, hashed_password);
-
         let relation = TenantUser::new(tenant.id, user.id, Role::Admin);
-
-        // ==========================================
-        // 5. O VERDADEIRO UNIT OF WORK EM AÇÃO
-        // ==========================================
 
         uow.tenants().create(&tenant).await?;
         uow.users().create(&user).await?;
         uow.credentials().create(&credential).await?;
-
         uow.tenants().add_user_to_tenant(&relation).await?;
-
         uow.commit().await?;
 
+        tracing::info!(
+            tenant_id = %tenant.id,
+            user_id = %user.id,
+            "tenant registered"
+        );
         Ok((tenant, user))
     }
 }

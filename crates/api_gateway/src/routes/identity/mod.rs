@@ -1,7 +1,7 @@
 use crate::app_state::AppState;
 use axum::{
     Router,
-    routing::{get, post},
+    routing::{get, patch, post},
 };
 
 pub mod contracts;
@@ -20,4 +20,13 @@ pub fn routes() -> Router<AppState> {
             "/users",
             post(handlers::invite_user_handler).get(handlers::list_users_handler),
         )
+        .route(
+            "/users/{id}/role",
+            patch(handlers::change_user_role_handler),
+        )
+        .route(
+            "/users/{id}/status",
+            patch(handlers::update_user_status_handler),
+        )
+        .route("/tenant", get(handlers::get_tenant_handler))
 }

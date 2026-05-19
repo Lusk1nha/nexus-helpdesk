@@ -1,36 +1,39 @@
 use std::sync::Arc;
 use uuid::Uuid;
 
-use crate::domain::entities::{TenantUser, User};
+use crate::domain::entities::Tenant;
 use crate::domain::error::DomainError;
 use crate::domain::ports::UnitOfWorkManager;
 
-pub struct ListUsersCommand {
+pub struct GetTenantCommand {
     pub tenant_id: Uuid,
 }
 
-pub struct ListUsersUseCase {
+pub struct GetTenantUseCase {
     uow_manager: Arc<dyn UnitOfWorkManager>,
 }
 
-impl ListUsersUseCase {
+impl GetTenantUseCase {
     pub fn new(uow_manager: Arc<dyn UnitOfWorkManager>) -> Self {
         Self { uow_manager }
     }
 
     #[tracing::instrument(
-        name = "list_users",
+        name = "get_tenant",
         skip(self, command),
         fields(tenant_id = %command.tenant_id)
     )]
-    pub async fn execute(
-        &self,
-        command: ListUsersCommand,
-    ) -> Result<Vec<(User, TenantUser)>, DomainError> {
+    pub async fn execute(&self, command: GetTenantCommand) -> Result<Tenant, DomainError> {
         let mut uow = self.uow_manager.begin().await?;
-        let members = uow.tenants().list_members(command.tenant_id).await?;
+
+        let tenant = uow
+            .tenants()
+            .find_by_id(command.tenant_id)
+            .await?
+            .ok_or(DomainError::TenantNotFound)?;
+
         uow.commit().await?;
-        tracing::info!(count = members.len(), "users listed");
-        Ok(members)
+        tracing::info!("tenant retrieved");
+        Ok(tenant)
     }
 }

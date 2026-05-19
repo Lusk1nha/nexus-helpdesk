@@ -24,6 +24,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //    if a required variable is missing)
     let config = AppConfig::load();
 
+    tracing::info!(
+        host = %config.host,
+        port = config.port,
+        frontend_url = %config.frontend_url,
+        ollama_url = %config.ollama_url,
+        qdrant_url = %config.qdrant_url,
+        "configuration loaded"
+    );
+
     // 4. Connect to the database
     let db_pool = setup_database(&config.database_url).await?;
 

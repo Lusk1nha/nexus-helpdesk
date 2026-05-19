@@ -51,6 +51,9 @@ pub trait TenantRepository: Send + Sync {
         id: Uuid,
     ) -> Result<Option<TenantUser>, DomainError>;
 
+    /// Atualiza o vínculo de um usuário com um tenant (role, is_active).
+    async fn update_tenant_user(&self, relation: &TenantUser) -> Result<(), DomainError>;
+
     /// Busca o vínculo de um usuário com um tenant específico.
     async fn find_tenant_user(
         &self,

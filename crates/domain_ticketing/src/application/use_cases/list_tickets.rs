@@ -19,6 +19,11 @@ impl ListTicketsUseCase {
         Self { uow_manager }
     }
 
+    #[tracing::instrument(
+        name = "list_tickets",
+        skip(self, command),
+        fields(tenant_id = %command.tenant_id)
+    )]
     pub async fn execute(&self, command: ListTicketsCommand) -> Result<Vec<Ticket>, DomainError> {
         let mut uow = self.uow_manager.begin().await?;
 
@@ -29,6 +34,7 @@ impl ListTicketsUseCase {
         }
 
         uow.commit().await?;
+        tracing::info!(count = tickets.len(), "tickets listed");
         Ok(tickets)
     }
 }

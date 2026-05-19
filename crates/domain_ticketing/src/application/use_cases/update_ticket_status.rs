@@ -20,6 +20,15 @@ impl UpdateTicketStatusUseCase {
         Self { uow_manager }
     }
 
+    #[tracing::instrument(
+        name = "update_ticket_status",
+        skip(self, command),
+        fields(
+            ticket_id = %command.ticket_id,
+            tenant_id = %command.tenant_id,
+            new_status = %command.new_status.to_string(),
+        )
+    )]
     pub async fn execute(
         &self,
         command: UpdateTicketStatusCommand,
@@ -33,6 +42,7 @@ impl UpdateTicketStatusUseCase {
             .ok_or(DomainError::TicketNotFound)?;
 
         if ticket.tenant_id != command.tenant_id {
+            tracing::warn!(ticket_id = %command.ticket_id, "cross-tenant status update rejected");
             return Err(DomainError::UnauthorizedTenantAccess);
         }
 
@@ -41,19 +51,26 @@ impl UpdateTicketStatusUseCase {
         }
 
         if !ticket.can_transition_to(&command.new_status) {
+            tracing::warn!(
+                ticket_id = %command.ticket_id,
+                from = %ticket.status.to_string(),
+                to = %command.new_status.to_string(),
+                "invalid ticket status transition"
+            );
             return Err(DomainError::InvalidStatusTransition {
                 from: ticket.status.to_string(),
                 to: command.new_status.to_string(),
             });
         }
 
+        let prev_status = ticket.status.to_string();
         match &command.new_status {
             TicketStatus::Open => ticket.revert_to_open(),
             TicketStatus::Resolved => ticket.resolve(),
             TicketStatus::Closed => ticket.close(),
             other => {
                 return Err(DomainError::InvalidStatusTransition {
-                    from: ticket.status.to_string(),
+                    from: prev_status,
                     to: other.to_string(),
                 });
             }
@@ -61,6 +78,13 @@ impl UpdateTicketStatusUseCase {
 
         uow.tickets().update(&ticket).await?;
         uow.commit().await?;
+
+        tracing::info!(
+            ticket_id = %ticket.id,
+            from = %prev_status,
+            to = %ticket.status.to_string(),
+            "ticket status updated"
+        );
         Ok(ticket)
     }
 }

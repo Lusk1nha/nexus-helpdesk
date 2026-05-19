@@ -1,5 +1,3 @@
-// crates/domain_identity/src/application/use_cases/login.rs
-
 use crate::domain::entities::{TenantUser, User};
 use crate::domain::error::DomainError;
 use crate::domain::ports::{PasswordHasher, UnitOfWorkManager};
@@ -26,17 +24,20 @@ impl LoginUseCase {
         }
     }
 
+    #[tracing::instrument(
+        name = "login",
+        skip(self, command),
+        fields(email = %command.email)
+    )]
     pub async fn execute(&self, command: LoginCommand) -> Result<(User, TenantUser), DomainError> {
         let mut uow = self.uow_manager.begin().await?;
 
-        // 1. Busca o usuário
         let user = uow
             .users()
             .find_by_email(&command.email)
             .await?
             .ok_or(DomainError::InvalidCredentials)?;
 
-        // 2. Busca a credencial
         let mut credential = uow
             .credentials()
             .find_by_user_id(user.id)
@@ -44,39 +45,46 @@ impl LoginUseCase {
             .ok_or(DomainError::InvalidCredentials)?;
 
         if credential.is_locked() {
+            tracing::warn!(user_id = %user.id, "login rejected: account locked");
             return Err(DomainError::InvalidCredentials);
         }
 
-        // 3. Verifica a senha
         if !self
             .password_hasher
             .verify(&command.plain_password, &credential.password_hash)?
         {
-            // 🔒 Incrementa falha e salva no banco antes de retornar erro
             credential.register_failed_attempt();
             uow.credentials().update(&credential).await?;
             uow.commit().await?;
-
+            tracing::warn!(
+                user_id = %user.id,
+                failed_attempts = credential.failed_attempts,
+                "login rejected: wrong password"
+            );
             return Err(DomainError::InvalidCredentials);
         }
 
-        // 4. Se a senha está correta, busca o vínculo com o Tenant
         let tenant_user = uow
             .tenants()
             .find_tenant_user_by_user_id(user.id)
             .await?
             .ok_or(DomainError::InvalidCredentials)?;
 
-        // 🛡️ Regra de Negócio: Impede login se o vínculo com o tenant estiver inativo
         if !tenant_user.is_active {
+            tracing::warn!(user_id = %user.id, "login rejected: user deactivated in tenant");
             return Err(DomainError::InvalidCredentials);
         }
 
         credential.reset_attempts();
         uow.credentials().update(&credential).await?;
-
         uow.commit().await?;
 
+        tracing::info!(
+            user_id = %user.id,
+            tenant_id = %tenant_user.tenant_id,
+            role = %tenant_user.role,
+            "login successful"
+        );
         Ok((user, tenant_user))
     }
 }

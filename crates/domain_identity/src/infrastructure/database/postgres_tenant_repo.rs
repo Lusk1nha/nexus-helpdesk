@@ -181,16 +181,45 @@ impl TenantRepository for PgTenantRepository {
         }
     }
 
+    async fn update_tenant_user(&self, relation: &TenantUser) -> Result<(), DomainError> {
+        let role_str = relation.role.to_string();
+
+        let query = sqlx::query!(
+            r#"
+            UPDATE tenant_users
+            SET role = $1, is_active = $2, updated_at = $3
+            WHERE tenant_id = $4 AND user_id = $5
+            "#,
+            role_str,
+            relation.is_active,
+            relation.updated_at,
+            relation.tenant_id,
+            relation.user_id,
+        );
+
+        match &self.conn {
+            DatabaseConnection::Pool(pool) => query.execute(pool).await,
+            DatabaseConnection::Transaction(tx_mutex) => {
+                let mut guard = tx_mutex.lock().await;
+                query.execute(&mut **guard.as_mut().unwrap()).await
+            }
+        }
+        .map_err(|e| DomainError::DatabaseError(e.to_string()))?;
+
+        Ok(())
+    }
+
     async fn find_tenant_user(
         &self,
         tenant_id: Uuid,
         user_id: Uuid,
     ) -> Result<Option<TenantUser>, DomainError> {
+        // No is_active filter here — admin operations need to find deactivated users too.
         let query = sqlx::query!(
             r#"
             SELECT tenant_id, user_id, role, is_active, created_at, updated_at
             FROM tenant_users
-            WHERE tenant_id = $1 AND user_id = $2 AND is_active = true
+            WHERE tenant_id = $1 AND user_id = $2
             LIMIT 1
             "#,
             tenant_id,
