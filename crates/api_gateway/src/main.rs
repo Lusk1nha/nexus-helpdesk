@@ -1,10 +1,12 @@
 use axum::http::{HeaderValue, Method};
 use sqlx::{PgPool, postgres::PgPoolOptions};
 use std::net::SocketAddr;
+use std::sync::Arc;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use domain_ticketing::application::workers::ai_worker::{AiTask, AiWorker};
+use domain_ticketing::infrastructure::database::postgres_uow::PgTicketingUoWManager;
 
 use api_gateway::app_state::AppState;
 use api_gateway::config::AppConfig;
@@ -20,7 +22,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let db_pool = setup_database(&config.database_url).await?;
 
     // 3. Inicializa os Workers em Background e pega o canal de comunicação
-    let ai_task_sender = spawn_background_workers();
+    let ai_task_sender = spawn_background_workers(db_pool.clone());
 
     // 4. Configura o Estado da Aplicação
     let state = AppState::new(db_pool, config.clone(), ai_task_sender);
@@ -71,10 +73,15 @@ fn setup_cors(frontend_url: &str) -> CorsLayer {
         .allow_headers(tower_http::cors::Any)
 }
 
-fn spawn_background_workers() -> tokio::sync::mpsc::Sender<AiTask> {
+fn spawn_background_workers(db_pool: PgPool) -> tokio::sync::mpsc::Sender<AiTask> {
     let (ai_task_sender, ai_task_receiver) = tokio::sync::mpsc::channel::<AiTask>(100);
 
-    let ai_worker = AiWorker::new(ai_task_receiver);
+    let ollama_url = std::env::var("OLLAMA_URL")
+        .unwrap_or_else(|_| "http://127.0.0.1:11434".to_string());
+
+    let uow_manager = Arc::new(PgTicketingUoWManager::new(db_pool));
+    let ai_worker = AiWorker::new(ai_task_receiver, uow_manager, ollama_url);
+
     tokio::spawn(async move {
         ai_worker.start().await;
     });

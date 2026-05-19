@@ -59,4 +59,9 @@ impl Ticket {
         self.status = TicketStatus::AwaitingAgentApproval;
         self.updated_at = OffsetDateTime::now_utc();
     }
+
+    pub fn revert_to_open(&mut self) {
+        self.status = TicketStatus::Open;
+        self.updated_at = OffsetDateTime::now_utc();
+    }
 }

@@ -1,42 +1,45 @@
-use serde_json::json;
+use std::sync::Arc;
 use tokio::sync::mpsc::Receiver;
-use tracing::{error, info};
+use tracing::{error, info, warn};
 use uuid::Uuid;
 
-// A mesma task que o CreateTicketUseCase envia para a fila
+use crate::domain::entities::message::TicketMessage;
+use crate::domain::error::DomainError;
+use crate::domain::ports::TicketingUnitOfWorkManager;
+
 #[derive(Debug, Clone)]
 pub struct AiTask {
     pub ticket_id: Uuid,
     pub tenant_id: Uuid,
-    pub context: String, // A descrição do chamado do cliente
+    pub context: String,
 }
 
 pub struct AiWorker {
     receiver: Receiver<AiTask>,
     http_client: reqwest::Client,
-    // Futuramente: Você pode injetar o TicketRepository aqui
-    // para mudar o status de 'ProcessingAI' para 'AwaitingAgentApproval'
+    uow_manager: Arc<dyn TicketingUnitOfWorkManager>,
+    ollama_url: String,
 }
 
 impl AiWorker {
-    pub fn new(receiver: Receiver<AiTask>) -> Self {
+    pub fn new(
+        receiver: Receiver<AiTask>,
+        uow_manager: Arc<dyn TicketingUnitOfWorkManager>,
+        ollama_url: String,
+    ) -> Self {
         Self {
             receiver,
             http_client: reqwest::Client::new(),
+            uow_manager,
+            ollama_url,
         }
     }
 
-    /// O Loop Infinito que roda em background
     pub async fn start(mut self) {
         info!("🤖 AI Worker iniciado. Aguardando tickets na fila...");
 
-        // Fica bloqueado aqui (sem gastar CPU) até chegar uma mensagem no canal
         while let Some(task) = self.receiver.recv().await {
             info!("📥 Ticket recebido pelo AI Worker: {}", task.ticket_id);
-
-            // Usamos o 'tokio::spawn' novamente dentro do worker se quisermos
-            // processar múltiplos chamados simultaneamente no Ollama (cuidado com a VRAM da GPU!)
-            // Por enquanto, faremos sequencial para não estourar o Ollama local.
             self.process_ticket(task).await;
         }
 
@@ -44,67 +47,129 @@ impl AiWorker {
     }
 
     async fn process_ticket(&self, task: AiTask) {
-        info!("🧠 Consultando LLM para o ticket: {}...", task.ticket_id);
+        // 1. Mark the ticket as being processed by AI
+        if let Err(e) = self.transition_to_processing(task.ticket_id).await {
+            error!(
+                "Falha ao marcar ticket {} como processing_ai: {}",
+                task.ticket_id, e
+            );
+            return;
+        }
 
-        // Prompt de Sistema rigoroso (System Prompt)
+        // 2. Call the LLM
         let system_prompt = "Você é um agente de suporte ao cliente nível 1. \
             Analise o problema relatado e forneça uma resposta educada, técnica e direta. \
             Não invente links ou prometa coisas que não pode cumprir.";
 
-        // Montando o Payload para o Ollama (ex: usando o modelo llama3 ou phi3)
-        let ollama_payload = json!({
-            "model": "phi3", // Substitua pelo modelo que você rodou no 'ollama run'
+        let payload = serde_json::json!({
+            "model": "phi3",
             "messages": [
                 { "role": "system", "content": system_prompt },
-                { "role": "user", "content": task.context }
+                { "role": "user", "content": &task.context }
             ],
-            "stream": false // Para simplificar, pegamos a resposta inteira de uma vez
+            "stream": false
         });
 
-        // Disparo HTTP para o Ollama local
-        // Assumindo porta padrão 11434 do Ollama
-        let response = self
+        let ollama_result = self
             .http_client
-            .post("http://127.0.0.1:11434/api/chat")
-            .json(&ollama_payload)
+            .post(format!("{}/api/chat", self.ollama_url))
+            .json(&payload)
             .send()
             .await;
 
-        match response {
+        match ollama_result {
             Ok(res) if res.status().is_success() => {
-                if let Ok(body) = res.json::<serde_json::Value>().await {
-                    let ai_reply = body["message"]["content"]
-                        .as_str()
-                        .unwrap_or("Sem resposta.");
-                    info!(
-                        "✅ Resposta da IA gerada com sucesso para o ticket {}!",
-                        task.ticket_id
-                    );
+                match res.json::<serde_json::Value>().await {
+                    Ok(body) => {
+                        let ai_reply = body["message"]["content"]
+                            .as_str()
+                            .unwrap_or("Sem resposta.")
+                            .to_string();
 
-                    // AQUI NO FUTURO:
-                    // 1. Salvar `ai_reply` no `PgMessageRepository` como SenderType::AI
-                    // 2. Mudar status do Ticket para `AwaitingAgentApproval`
+                        info!(
+                            "✅ Resposta da IA gerada para o ticket {}.",
+                            task.ticket_id
+                        );
 
-                    // Apenas para debug temporário:
-                    println!(
-                        "--- SUGESTÃO DA IA ---\n{}\n----------------------",
-                        ai_reply
-                    );
+                        // 3a. Persist the AI message + transition to AwaitingAgentApproval
+                        if let Err(e) =
+                            self.persist_ai_response(task.ticket_id, ai_reply).await
+                        {
+                            error!(
+                                "Falha ao persistir resposta da IA para o ticket {}: {}",
+                                task.ticket_id, e
+                            );
+                            let _ = self.revert_to_open(task.ticket_id).await;
+                        }
+                    }
+                    Err(e) => {
+                        error!(
+                            "Falha ao deserializar resposta do Ollama para o ticket {}: {}",
+                            task.ticket_id, e
+                        );
+                        let _ = self.revert_to_open(task.ticket_id).await;
+                    }
                 }
             }
             Ok(res) => {
                 error!(
-                    "❌ Ollama retornou erro HTTP {}: {:?}",
+                    "Ollama retornou HTTP {} para o ticket {}.",
                     res.status(),
-                    res.text().await
+                    task.ticket_id
                 );
+                let _ = self.revert_to_open(task.ticket_id).await;
             }
             Err(e) => {
-                error!(
-                    "❌ Falha na conexão com o Ollama local. Ele está rodando? Erro: {}",
-                    e
+                warn!(
+                    "Conexão com Ollama falhou para o ticket {} (ele está rodando?): {}",
+                    task.ticket_id, e
                 );
+                let _ = self.revert_to_open(task.ticket_id).await;
             }
         }
+    }
+
+    async fn transition_to_processing(&self, ticket_id: Uuid) -> Result<(), DomainError> {
+        let mut uow = self.uow_manager.begin().await?;
+        let mut ticket = uow
+            .tickets()
+            .find_by_id(ticket_id)
+            .await?
+            .ok_or(DomainError::TicketNotFound)?;
+        ticket.mark_as_processing();
+        uow.tickets().update(&ticket).await?;
+        uow.commit().await
+    }
+
+    async fn persist_ai_response(
+        &self,
+        ticket_id: Uuid,
+        reply: String,
+    ) -> Result<(), DomainError> {
+        let mut uow = self.uow_manager.begin().await?;
+        let mut ticket = uow
+            .tickets()
+            .find_by_id(ticket_id)
+            .await?
+            .ok_or(DomainError::TicketNotFound)?;
+
+        let message = TicketMessage::new_ai_response(ticket_id, reply);
+        uow.messages().add_message(&message).await?;
+
+        ticket.await_human_approval();
+        uow.tickets().update(&ticket).await?;
+        uow.commit().await
+    }
+
+    async fn revert_to_open(&self, ticket_id: Uuid) -> Result<(), DomainError> {
+        let mut uow = self.uow_manager.begin().await?;
+        let mut ticket = uow
+            .tickets()
+            .find_by_id(ticket_id)
+            .await?
+            .ok_or(DomainError::TicketNotFound)?;
+        ticket.revert_to_open();
+        uow.tickets().update(&ticket).await?;
+        uow.commit().await
     }
 }
