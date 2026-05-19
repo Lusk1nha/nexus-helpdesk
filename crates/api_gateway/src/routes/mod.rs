@@ -20,6 +20,8 @@ pub mod ticketing;
         ticketing::handlers::update_ticket_status_handler,
         ticketing::handlers::list_ticket_messages_handler,
         ticketing::handlers::add_message_handler,
+        ticketing::handlers::approve_ai_response_handler,
+        ticketing::handlers::reject_ai_response_handler,
         // Identity
         identity::handlers::register_tenant_handler,
         identity::handlers::login_handler,

@@ -9,14 +9,15 @@ use validator::Validate;
 
 use crate::utils::jwt::Claims;
 
+// ─── Me ───────────────────────────────────────────────────────────────────────
+
 #[derive(Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct GetMeResponse {
     pub user_id: Uuid,
     pub tenant_id: Uuid,
-
     #[schema(value_type = String, example = "admin")]
     pub role: Role,
-
     #[schema(example = "Você está autenticado e acessando os dados da sua empresa!")]
     pub message: String,
 }
@@ -32,12 +33,12 @@ impl From<Claims> for GetMeResponse {
     }
 }
 
+// ─── Register ─────────────────────────────────────────────────────────────────
+
 #[derive(Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct RegisterTenantPayload {
-    #[validate(length(
-        min = 3,
-        message = "O nome da empresa deve ter no mínimo 3 caracteres."
-    ))]
+    #[validate(length(min = 3, message = "O nome da empresa deve ter no mínimo 3 caracteres."))]
     #[schema(example = "Nexus Corp")]
     pub tenant_name: String,
 
@@ -55,6 +56,7 @@ pub struct RegisterTenantPayload {
 }
 
 #[derive(Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct RegisterTenantResponse {
     pub tenant_id: Uuid,
     pub user_id: Uuid,
@@ -72,7 +74,10 @@ impl From<(Tenant, User)> for RegisterTenantResponse {
     }
 }
 
+// ─── Login ────────────────────────────────────────────────────────────────────
+
 #[derive(Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct LoginPayload {
     #[validate(email(message = "Formato de e-mail inválido."))]
     #[schema(example = "lucas@nexuscorp.com")]
@@ -84,18 +89,19 @@ pub struct LoginPayload {
 }
 
 #[derive(Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct LoginResponse {
     pub token: String,
-
     pub user_id: Uuid,
     pub tenant_id: Uuid,
-
     #[schema(value_type = String, example = "admin")]
     pub role: Role,
 }
 
-// --- DTOs do Endpoint Administrativo de Desbloqueio/Reset ---
+// ─── Admin reset password ─────────────────────────────────────────────────────
+
 #[derive(Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct AdminResetPasswordPayload {
     #[validate(custom(function = "validate_optional_password"))]
     #[schema(example = "NovaSenhaTemporaria123!", nullable = true)]
@@ -103,14 +109,12 @@ pub struct AdminResetPasswordPayload {
 }
 
 #[derive(Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct ResetPasswordResponse {
-    #[schema(
-        example = "Usuário desbloqueado e credenciais atualizadas pelo administrador com sucesso."
-    )]
+    #[schema(example = "Usuário desbloqueado e credenciais atualizadas pelo administrador com sucesso.")]
     pub message: String,
 }
 
-// A sua função de validação bate perfeitamente com a assinatura esperada (&str)
 fn validate_optional_password(password: &str) -> Result<(), validator::ValidationError> {
     if password.trim().len() < 8 {
         let mut error = validator::ValidationError::new("length");
@@ -122,9 +126,10 @@ fn validate_optional_password(password: &str) -> Result<(), validator::Validatio
     Ok(())
 }
 
-// ─── Invite User ─────────────────────────────────────────────────────────────
+// ─── Invite user ─────────────────────────────────────────────────────────────
 
 #[derive(Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct InviteUserPayload {
     #[validate(email(message = "Formato de e-mail inválido."))]
     #[schema(example = "agente@acme.com")]
@@ -144,6 +149,7 @@ pub struct InviteUserPayload {
 }
 
 #[derive(Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct InviteUserResponse {
     pub user_id: Uuid,
     #[schema(example = "Usuário convidado com sucesso.")]
@@ -159,9 +165,10 @@ impl From<User> for InviteUserResponse {
     }
 }
 
-// ─── List Users ───────────────────────────────────────────────────────────────
+// ─── List users ───────────────────────────────────────────────────────────────
 
 #[derive(Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct TenantMemberResponse {
     pub user_id: Uuid,
     pub email: String,
@@ -189,6 +196,7 @@ impl From<(User, TenantUser)> for TenantMemberResponse {
 // ─── Change role ──────────────────────────────────────────────────────────────
 
 #[derive(Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct ChangeUserRolePayload {
     #[validate(length(min = 1, message = "O papel (role) é obrigatório."))]
     #[schema(example = "agent")]
@@ -198,6 +206,7 @@ pub struct ChangeUserRolePayload {
 // ─── Update status ────────────────────────────────────────────────────────────
 
 #[derive(Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct UpdateUserStatusPayload {
     #[schema(example = true)]
     pub active: bool,
@@ -206,6 +215,7 @@ pub struct UpdateUserStatusPayload {
 // ─── Tenant info ──────────────────────────────────────────────────────────────
 
 #[derive(Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct TenantResponse {
     pub id: Uuid,
     pub name: String,

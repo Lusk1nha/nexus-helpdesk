@@ -15,4 +15,6 @@ pub fn routes() -> Router<AppState> {
         .route("/{id}/status", patch(handlers::update_ticket_status_handler))
         .route("/{id}/messages", get(handlers::list_ticket_messages_handler))
         .route("/{id}/messages", post(handlers::add_message_handler))
+        .route("/{id}/approve-ai", post(handlers::approve_ai_response_handler))
+        .route("/{id}/reject-ai", post(handlers::reject_ai_response_handler))
 }

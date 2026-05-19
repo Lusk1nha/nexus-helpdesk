@@ -9,6 +9,7 @@ use validator::Validate;
 // ─── Create ──────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateTicketPayload {
     #[validate(length(min = 3, message = "O título deve ter no mínimo 3 caracteres."))]
     #[schema(example = "Impressora não liga")]
@@ -20,6 +21,7 @@ pub struct CreateTicketPayload {
 }
 
 #[derive(Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateTicketResponse {
     pub ticket_id: Uuid,
     #[schema(example = "open")]
@@ -41,6 +43,7 @@ impl From<Ticket> for CreateTicketResponse {
 // ─── Get / List ───────────────────────────────────────────────────────────────
 
 #[derive(Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct TicketResponse {
     pub id: Uuid,
     pub tenant_id: Uuid,
@@ -73,6 +76,7 @@ impl From<Ticket> for TicketResponse {
 // ─── Update status ────────────────────────────────────────────────────────────
 
 #[derive(Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct UpdateTicketStatusPayload {
     #[validate(length(min = 1, message = "O status não pode estar vazio."))]
     #[schema(example = "resolved")]
@@ -82,6 +86,7 @@ pub struct UpdateTicketStatusPayload {
 // ─── Messages ─────────────────────────────────────────────────────────────────
 
 #[derive(Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct MessageResponse {
     pub id: Uuid,
     pub ticket_id: Uuid,
@@ -109,6 +114,7 @@ impl From<TicketMessage> for MessageResponse {
 }
 
 #[derive(Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct AddMessagePayload {
     #[validate(length(min = 1, message = "A mensagem não pode estar vazia."))]
     #[schema(example = "Obrigado! O problema foi resolvido após reiniciar o serviço.")]

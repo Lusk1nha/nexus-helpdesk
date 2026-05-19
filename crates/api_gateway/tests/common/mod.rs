@@ -114,18 +114,18 @@ impl TestApp {
             .post_json(
                 "/api/v1/identity/register",
                 serde_json::json!({
-                    "tenant_name": "Test Corp",
-                    "admin_full_name": "Admin User",
-                    "admin_email": email,
-                    "admin_password": password
+                    "tenantName": "Test Corp",
+                    "adminFullName": "Admin User",
+                    "adminEmail": email,
+                    "adminPassword": password
                 }),
             )
             .await;
 
         assert_eq!(status, StatusCode::CREATED, "register failed: {body}");
         (
-            body["tenant_id"].as_str().unwrap().to_string(),
-            body["user_id"].as_str().unwrap().to_string(),
+            body["data"]["tenantId"].as_str().unwrap().to_string(),
+            body["data"]["userId"].as_str().unwrap().to_string(),
         )
     }
 
@@ -139,7 +139,7 @@ impl TestApp {
             .await;
 
         assert_eq!(status, StatusCode::OK, "login failed: {body}");
-        body["token"].as_str().unwrap().to_string()
+        body["data"]["token"].as_str().unwrap().to_string()
     }
 }
 

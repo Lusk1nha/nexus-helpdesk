@@ -13,17 +13,18 @@ async fn register_tenant_returns_201_with_ids() {
         .post_json(
             "/api/v1/identity/register",
             serde_json::json!({
-                "tenant_name": "Acme Corp",
-                "admin_full_name": "John Doe",
-                "admin_email": "john@acme.com",
-                "admin_password": "StrongPass123!"
+                "tenantName": "Acme Corp",
+                "adminFullName": "John Doe",
+                "adminEmail": "john@acme.com",
+                "adminPassword": "StrongPass123!"
             }),
         )
         .await;
 
     assert_eq!(status, StatusCode::CREATED);
-    assert!(body["tenant_id"].is_string());
-    assert!(body["user_id"].is_string());
+    assert!(body["data"]["tenantId"].is_string());
+    assert!(body["data"]["userId"].is_string());
+    assert!(body["meta"]["timestamp"].is_string());
 }
 
 #[tokio::test]
@@ -35,30 +36,31 @@ async fn register_duplicate_email_returns_409() {
         .post_json(
             "/api/v1/identity/register",
             serde_json::json!({
-                "tenant_name": "Another Corp",
-                "admin_full_name": "Jane Doe",
-                "admin_email": "dup@example.com",
-                "admin_password": "AnotherPass123!"
+                "tenantName": "Another Corp",
+                "adminFullName": "Jane Doe",
+                "adminEmail": "dup@example.com",
+                "adminPassword": "AnotherPass123!"
             }),
         )
         .await;
 
     assert_eq!(status, StatusCode::CONFLICT);
-    assert!(body["message"].as_str().unwrap().contains("e-mail"));
+    assert!(body["error"]["message"].as_str().unwrap().contains("e-mail"));
+    assert_eq!(body["error"]["code"].as_str().unwrap(), "CONFLICT");
 }
 
 #[tokio::test]
 async fn register_with_short_password_returns_400() {
     let app = spawn_test_app().await;
 
-    let (status, _body) = app
+    let (status, _) = app
         .post_json(
             "/api/v1/identity/register",
             serde_json::json!({
-                "tenant_name": "Corp X",
-                "admin_full_name": "User X",
-                "admin_email": "user@corpx.com",
-                "admin_password": "short"
+                "tenantName": "Corp X",
+                "adminFullName": "User X",
+                "adminEmail": "user@corpx.com",
+                "adminPassword": "short"
             }),
         )
         .await;
@@ -70,14 +72,14 @@ async fn register_with_short_password_returns_400() {
 async fn register_with_invalid_email_returns_400() {
     let app = spawn_test_app().await;
 
-    let (status, _body) = app
+    let (status, _) = app
         .post_json(
             "/api/v1/identity/register",
             serde_json::json!({
-                "tenant_name": "Corp Y",
-                "admin_full_name": "User Y",
-                "admin_email": "not-an-email",
-                "admin_password": "StrongPass123!"
+                "tenantName": "Corp Y",
+                "adminFullName": "User Y",
+                "adminEmail": "not-an-email",
+                "adminPassword": "StrongPass123!"
             }),
         )
         .await;
@@ -103,11 +105,11 @@ async fn login_with_valid_credentials_returns_200_with_token() {
         .await;
 
     assert_eq!(status, StatusCode::OK);
-    assert!(body["token"].is_string());
-    assert!(!body["token"].as_str().unwrap().is_empty());
-    assert!(body["user_id"].is_string());
-    assert!(body["tenant_id"].is_string());
-    assert_eq!(body["role"].as_str().unwrap(), "admin");
+    assert!(body["data"]["token"].is_string());
+    assert!(!body["data"]["token"].as_str().unwrap().is_empty());
+    assert!(body["data"]["userId"].is_string());
+    assert!(body["data"]["tenantId"].is_string());
+    assert_eq!(body["data"]["role"].as_str().unwrap(), "admin");
 }
 
 #[tokio::test]
@@ -126,20 +128,17 @@ async fn login_with_wrong_password_returns_401() {
         .await;
 
     assert_eq!(status, StatusCode::UNAUTHORIZED);
-    assert!(body["message"].is_string());
+    assert!(body["error"]["message"].is_string());
 }
 
 #[tokio::test]
 async fn login_with_unknown_email_returns_401() {
     let app = spawn_test_app().await;
 
-    let (status, _body) = app
+    let (status, _) = app
         .post_json(
             "/api/v1/identity/login",
-            serde_json::json!({
-                "email": "ghost@nowhere.com",
-                "password": "SomePass123!"
-            }),
+            serde_json::json!({ "email": "ghost@nowhere.com", "password": "SomePass123!" }),
         )
         .await;
 
@@ -157,27 +156,21 @@ async fn get_me_with_valid_token_returns_200() {
     let (status, body) = app.get_json("/api/v1/identity/me", Some(&token)).await;
 
     assert_eq!(status, StatusCode::OK);
-    assert!(body["user_id"].is_string());
-    assert!(body["tenant_id"].is_string());
-    assert_eq!(body["role"].as_str().unwrap(), "admin");
+    assert!(body["data"]["userId"].is_string());
+    assert!(body["data"]["tenantId"].is_string());
+    assert_eq!(body["data"]["role"].as_str().unwrap(), "admin");
 }
 
 #[tokio::test]
 async fn get_me_without_token_returns_401() {
     let app = spawn_test_app().await;
-
-    let (status, _body) = app.get_json("/api/v1/identity/me", None).await;
-
+    let (status, _) = app.get_json("/api/v1/identity/me", None).await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 }
 
 #[tokio::test]
 async fn get_me_with_invalid_token_returns_401() {
     let app = spawn_test_app().await;
-
-    let (status, _body) = app
-        .get_json("/api/v1/identity/me", Some("this.is.not.a.valid.jwt"))
-        .await;
-
+    let (status, _) = app.get_json("/api/v1/identity/me", Some("this.is.not.valid")).await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 }

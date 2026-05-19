@@ -16,14 +16,14 @@ async fn change_user_role_returns_204() {
             "/api/v1/identity/users",
             serde_json::json!({
                 "email": "agent@corp.com",
-                "full_name": "Agent User",
+                "fullName": "Agent User",
                 "role": "agent",
-                "temporary_password": "TempPass123!"
+                "temporaryPassword": "TempPass123!"
             }),
             &admin_token,
         )
         .await;
-    let user_id = invited["user_id"].as_str().unwrap();
+    let user_id = invited["data"]["userId"].as_str().unwrap();
 
     let (status, _) = app
         .patch_json_authed(
@@ -66,16 +66,15 @@ async fn deactivate_user_prevents_login() {
             "/api/v1/identity/users",
             serde_json::json!({
                 "email": "deact@corp.com",
-                "full_name": "To Deactivate",
+                "fullName": "To Deactivate",
                 "role": "agent",
-                "temporary_password": "TempPass123!"
+                "temporaryPassword": "TempPass123!"
             }),
             &admin_token,
         )
         .await;
-    let user_id = invited["user_id"].as_str().unwrap();
+    let user_id = invited["data"]["userId"].as_str().unwrap();
 
-    // Confirm the user can log in before deactivation
     let (pre_status, _) = app
         .post_json(
             "/api/v1/identity/login",
@@ -84,7 +83,6 @@ async fn deactivate_user_prevents_login() {
         .await;
     assert_eq!(pre_status, StatusCode::OK);
 
-    // Deactivate
     let (status, _) = app
         .patch_json_authed(
             &format!("/api/v1/identity/users/{user_id}/status"),
@@ -94,7 +92,6 @@ async fn deactivate_user_prevents_login() {
         .await;
     assert_eq!(status, StatusCode::NO_CONTENT);
 
-    // Login must now be rejected
     let (post_status, _) = app
         .post_json(
             "/api/v1/identity/login",
@@ -115,29 +112,26 @@ async fn reactivate_user_restores_login() {
             "/api/v1/identity/users",
             serde_json::json!({
                 "email": "react@corp.com",
-                "full_name": "To Reactivate",
+                "fullName": "To Reactivate",
                 "role": "agent",
-                "temporary_password": "TempPass123!"
+                "temporaryPassword": "TempPass123!"
             }),
             &admin_token,
         )
         .await;
-    let user_id = invited["user_id"].as_str().unwrap();
+    let user_id = invited["data"]["userId"].as_str().unwrap();
 
-    // Deactivate then reactivate
     app.patch_json_authed(
         &format!("/api/v1/identity/users/{user_id}/status"),
         serde_json::json!({ "active": false }),
         &admin_token,
-    )
-    .await;
+    ).await;
 
     app.patch_json_authed(
         &format!("/api/v1/identity/users/{user_id}/status"),
         serde_json::json!({ "active": true }),
         &admin_token,
-    )
-    .await;
+    ).await;
 
     let (status, _) = app
         .post_json(
@@ -154,14 +148,14 @@ async fn reactivate_user_restores_login() {
 async fn get_tenant_returns_tenant_info() {
     let app = spawn_test_app().await;
 
-    let (_, reg) = app
+    let (_, _) = app
         .post_json(
             "/api/v1/identity/register",
             serde_json::json!({
-                "tenant_name": "Acme Corp",
-                "admin_full_name": "Admin",
-                "admin_email": "getme@acme.com",
-                "admin_password": "StrongPass123!"
+                "tenantName": "Acme Corp",
+                "adminFullName": "Admin",
+                "adminEmail": "getme@acme.com",
+                "adminPassword": "StrongPass123!"
             }),
         )
         .await;
@@ -170,9 +164,8 @@ async fn get_tenant_returns_tenant_info() {
     let (status, body) = app.get_json("/api/v1/identity/tenant", Some(&token)).await;
 
     assert_eq!(status, StatusCode::OK);
-    assert_eq!(body["name"].as_str().unwrap(), "Acme Corp");
-    assert!(body["id"].is_string());
-    assert_eq!(body["plan"].as_str().unwrap(), "free");
-    assert!(body["is_active"].as_bool().unwrap());
-    drop(reg);
+    assert_eq!(body["data"]["name"].as_str().unwrap(), "Acme Corp");
+    assert!(body["data"]["id"].is_string());
+    assert_eq!(body["data"]["plan"].as_str().unwrap(), "free");
+    assert!(body["data"]["isActive"].as_bool().unwrap());
 }

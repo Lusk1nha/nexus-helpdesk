@@ -13,7 +13,7 @@ pub enum ApiError {
 
 impl IntoResponse for ApiError {
     fn into_response(self) -> axum::response::Response {
-        let (status, error_message) = match self {
+        let (status, message) = match self {
             ApiError::Validation(errs) => {
                 let msg = errs
                     .field_errors()
@@ -48,10 +48,7 @@ impl IntoResponse for ApiError {
             ),
             ApiError::Identity(IdentityError::DatabaseError(msg)) => {
                 tracing::error!(domain = "identity", error = %msg, "database error");
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "Erro interno do servidor.".to_string(),
-                )
+                (StatusCode::INTERNAL_SERVER_ERROR, "Erro interno do servidor.".to_string())
             }
             ApiError::Identity(err) => (StatusCode::BAD_REQUEST, err.to_string()),
 
@@ -59,10 +56,9 @@ impl IntoResponse for ApiError {
             | ApiError::Ticketing(TicketingError::MessageNotFound) => {
                 (StatusCode::NOT_FOUND, "Recurso não encontrado.".to_string())
             }
-            ApiError::Ticketing(err @ TicketingError::UnauthorizedTenantAccess) => (
-                StatusCode::FORBIDDEN,
-                err.to_string(),
-            ),
+            ApiError::Ticketing(err @ TicketingError::UnauthorizedTenantAccess) => {
+                (StatusCode::FORBIDDEN, err.to_string())
+            }
             ApiError::Ticketing(TicketingError::AiEngineError(msg)) => {
                 tracing::error!(domain = "ticketing", error = %msg, "AI engine error");
                 (
@@ -72,25 +68,28 @@ impl IntoResponse for ApiError {
             }
             ApiError::Ticketing(TicketingError::DatabaseError(msg)) => {
                 tracing::error!(domain = "ticketing", error = %msg, "database error");
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "Erro interno do servidor.".to_string(),
-                )
+                (StatusCode::INTERNAL_SERVER_ERROR, "Erro interno do servidor.".to_string())
             }
             ApiError::Ticketing(err) => (StatusCode::BAD_REQUEST, err.to_string()),
 
             ApiError::Internal(msg) => {
                 tracing::error!(error = %msg, "unhandled internal error");
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "Erro interno do servidor.".to_string(),
-                )
+                (StatusCode::INTERNAL_SERVER_ERROR, "Erro interno do servidor.".to_string())
             }
         };
 
+        // Derive a SCREAMING_SNAKE_CASE code from the canonical HTTP reason.
+        let code = status
+            .canonical_reason()
+            .unwrap_or("ERROR")
+            .to_uppercase()
+            .replace(' ', "_");
+
         let body = Json(json!({
-            "error": status.canonical_reason().unwrap_or("Error"),
-            "message": error_message
+            "error": {
+                "code": code,
+                "message": message
+            }
         }));
 
         (status, body).into_response()
