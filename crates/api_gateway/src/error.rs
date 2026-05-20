@@ -30,14 +30,12 @@ impl IntoResponse for ApiError {
                 StatusCode::CONFLICT,
                 "Este e-mail já está em uso.".to_string(),
             ),
-            ApiError::Identity(IdentityError::UserNotFound) => (
-                StatusCode::NOT_FOUND,
-                "Usuário não encontrado.".to_string(),
-            ),
-            ApiError::Identity(IdentityError::TenantNotFound) => (
-                StatusCode::NOT_FOUND,
-                "Empresa não encontrada.".to_string(),
-            ),
+            ApiError::Identity(IdentityError::UserNotFound) => {
+                (StatusCode::NOT_FOUND, "Usuário não encontrado.".to_string())
+            }
+            ApiError::Identity(IdentityError::TenantNotFound) => {
+                (StatusCode::NOT_FOUND, "Empresa não encontrada.".to_string())
+            }
             ApiError::Identity(IdentityError::InvalidCredentials) => (
                 StatusCode::UNAUTHORIZED,
                 "Credenciais inválidas.".to_string(),
@@ -48,7 +46,10 @@ impl IntoResponse for ApiError {
             ),
             ApiError::Identity(IdentityError::DatabaseError(msg)) => {
                 tracing::error!(domain = "identity", error = %msg, "database error");
-                (StatusCode::INTERNAL_SERVER_ERROR, "Erro interno do servidor.".to_string())
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Erro interno do servidor.".to_string(),
+                )
             }
             ApiError::Identity(err) => (StatusCode::BAD_REQUEST, err.to_string()),
 
@@ -68,13 +69,19 @@ impl IntoResponse for ApiError {
             }
             ApiError::Ticketing(TicketingError::DatabaseError(msg)) => {
                 tracing::error!(domain = "ticketing", error = %msg, "database error");
-                (StatusCode::INTERNAL_SERVER_ERROR, "Erro interno do servidor.".to_string())
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Erro interno do servidor.".to_string(),
+                )
             }
             ApiError::Ticketing(err) => (StatusCode::BAD_REQUEST, err.to_string()),
 
             ApiError::Internal(msg) => {
                 tracing::error!(error = %msg, "unhandled internal error");
-                (StatusCode::INTERNAL_SERVER_ERROR, "Erro interno do servidor.".to_string())
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Erro interno do servidor.".to_string(),
+                )
             }
         };
 

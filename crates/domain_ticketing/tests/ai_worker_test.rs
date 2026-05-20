@@ -12,7 +12,6 @@ use domain_ticketing::domain::entities::ticket::TicketStatus;
 use domain_ticketing::domain::ports::TicketingUnitOfWorkManager as _;
 use domain_ticketing::infrastructure::database::postgres_uow::PgTicketingUoWManager;
 
-
 #[tokio::test]
 async fn test_worker_reverts_ticket_to_open_when_ollama_is_unavailable() {
     let (pool, _container) = common::setup_isolated_db().await;
@@ -79,8 +78,8 @@ async fn test_worker_saves_ai_response_and_transitions_to_awaiting_approval() {
         return; // skipped unless explicitly opted in
     }
 
-    let ollama_url = std::env::var("OLLAMA_URL")
-        .unwrap_or_else(|_| "http://127.0.0.1:11434".to_string());
+    let ollama_url =
+        std::env::var("OLLAMA_URL").unwrap_or_else(|_| "http://127.0.0.1:11434".to_string());
 
     let (pool, _container) = common::setup_isolated_db().await;
 
@@ -121,11 +120,7 @@ async fn test_worker_saves_ai_response_and_transitions_to_awaiting_approval() {
 
     assert_eq!(saved.status, TicketStatus::AwaitingAgentApproval);
 
-    let messages = uow
-        .messages()
-        .find_by_ticket_id(ticket.id)
-        .await
-        .unwrap();
+    let messages = uow.messages().find_by_ticket_id(ticket.id).await.unwrap();
 
     // 1 customer message + 1 AI response
     assert_eq!(messages.len(), 2, "should have customer message + AI reply");

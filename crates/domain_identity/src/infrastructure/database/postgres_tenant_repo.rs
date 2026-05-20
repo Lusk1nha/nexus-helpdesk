@@ -251,10 +251,7 @@ impl TenantRepository for PgTenantRepository {
         }
     }
 
-    async fn list_members(
-        &self,
-        tenant_id: Uuid,
-    ) -> Result<Vec<(User, TenantUser)>, DomainError> {
+    async fn list_members(&self, tenant_id: Uuid) -> Result<Vec<(User, TenantUser)>, DomainError> {
         let query = sqlx::query!(
             r#"
             SELECT

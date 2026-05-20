@@ -3,7 +3,7 @@ use std::sync::Arc;
 use tokio::sync::mpsc::Sender;
 
 use domain_ticketing::application::{
-    AiTask, AddMessageToTicketUseCase, CreateTicketUseCase, GetTicketUseCase,
+    AddMessageToTicketUseCase, AiTask, CreateTicketUseCase, GetTicketUseCase,
     ListTicketMessagesUseCase, ListTicketsUseCase, UpdateTicketStatusUseCase,
 };
 use domain_ticketing::infrastructure::database::postgres_uow::PgTicketingUoWManager;
@@ -92,11 +92,13 @@ impl AppState {
         ));
         let get_ticket = Arc::new(GetTicketUseCase::new(ticketing_uow_manager.clone()));
         let list_tickets = Arc::new(ListTicketsUseCase::new(ticketing_uow_manager.clone()));
-        let update_ticket_status =
-            Arc::new(UpdateTicketStatusUseCase::new(ticketing_uow_manager.clone()));
-        let add_message = Arc::new(AddMessageToTicketUseCase::new(ticketing_uow_manager.clone()));
-        let list_ticket_messages =
-            Arc::new(ListTicketMessagesUseCase::new(ticketing_uow_manager));
+        let update_ticket_status = Arc::new(UpdateTicketStatusUseCase::new(
+            ticketing_uow_manager.clone(),
+        ));
+        let add_message = Arc::new(AddMessageToTicketUseCase::new(
+            ticketing_uow_manager.clone(),
+        ));
+        let list_ticket_messages = Arc::new(ListTicketMessagesUseCase::new(ticketing_uow_manager));
 
         let ticketing_cases = Arc::new(TicketingUseCases {
             create_ticket,

@@ -78,36 +78,32 @@ impl AiWorker {
             .await;
 
         match ollama_result {
-            Ok(res) if res.status().is_success() => {
-                match res.json::<serde_json::Value>().await {
-                    Ok(body) => {
-                        let ai_reply = body["message"]["content"]
-                            .as_str()
-                            .unwrap_or("Sem resposta.")
-                            .to_string();
+            Ok(res) if res.status().is_success() => match res.json::<serde_json::Value>().await {
+                Ok(body) => {
+                    let ai_reply = body["message"]["content"]
+                        .as_str()
+                        .unwrap_or("Sem resposta.")
+                        .to_string();
 
-                        if let Err(e) =
-                            self.persist_ai_response(task.ticket_id, ai_reply).await
-                        {
-                            error!(
-                                ticket_id = %task.ticket_id,
-                                error = %e,
-                                "failed to persist AI response"
-                            );
-                            let _ = self.revert_to_open(task.ticket_id).await;
-                        } else {
-                            info!(
-                                ticket_id = %task.ticket_id,
-                                "AI response saved, ticket awaiting agent approval"
-                            );
-                        }
-                    }
-                    Err(e) => {
-                        error!(ticket_id = %task.ticket_id, error = %e, "failed to parse Ollama response");
+                    if let Err(e) = self.persist_ai_response(task.ticket_id, ai_reply).await {
+                        error!(
+                            ticket_id = %task.ticket_id,
+                            error = %e,
+                            "failed to persist AI response"
+                        );
                         let _ = self.revert_to_open(task.ticket_id).await;
+                    } else {
+                        info!(
+                            ticket_id = %task.ticket_id,
+                            "AI response saved, ticket awaiting agent approval"
+                        );
                     }
                 }
-            }
+                Err(e) => {
+                    error!(ticket_id = %task.ticket_id, error = %e, "failed to parse Ollama response");
+                    let _ = self.revert_to_open(task.ticket_id).await;
+                }
+            },
             Ok(res) => {
                 error!(
                     ticket_id = %task.ticket_id,
@@ -139,11 +135,7 @@ impl AiWorker {
         uow.commit().await
     }
 
-    async fn persist_ai_response(
-        &self,
-        ticket_id: Uuid,
-        reply: String,
-    ) -> Result<(), DomainError> {
+    async fn persist_ai_response(&self, ticket_id: Uuid, reply: String) -> Result<(), DomainError> {
         let mut uow = self.uow_manager.begin().await?;
         let mut ticket = uow
             .tickets()

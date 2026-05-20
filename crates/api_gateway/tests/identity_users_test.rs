@@ -8,7 +8,8 @@ use common::spawn_test_app;
 #[tokio::test]
 async fn invite_user_as_admin_returns_201() {
     let app = spawn_test_app().await;
-    app.register_tenant("admin@corp.com", "StrongPass123!").await;
+    app.register_tenant("admin@corp.com", "StrongPass123!")
+        .await;
     let token = app.login("admin@corp.com", "StrongPass123!").await;
 
     let (status, body) = app
@@ -31,7 +32,8 @@ async fn invite_user_as_admin_returns_201() {
 #[tokio::test]
 async fn invite_user_duplicate_email_returns_409() {
     let app = spawn_test_app().await;
-    app.register_tenant("admin2@corp.com", "StrongPass123!").await;
+    app.register_tenant("admin2@corp.com", "StrongPass123!")
+        .await;
     let token = app.login("admin2@corp.com", "StrongPass123!").await;
 
     let payload = serde_json::json!({
@@ -41,7 +43,8 @@ async fn invite_user_duplicate_email_returns_409() {
         "temporaryPassword": "TempPass123!"
     });
 
-    app.post_json_authed("/api/v1/identity/users", payload.clone(), &token).await;
+    app.post_json_authed("/api/v1/identity/users", payload.clone(), &token)
+        .await;
 
     let (status, _) = app
         .post_json_authed("/api/v1/identity/users", payload, &token)
@@ -53,7 +56,8 @@ async fn invite_user_duplicate_email_returns_409() {
 #[tokio::test]
 async fn invite_user_without_admin_role_returns_403() {
     let app = spawn_test_app().await;
-    app.register_tenant("admin3@corp.com", "StrongPass123!").await;
+    app.register_tenant("admin3@corp.com", "StrongPass123!")
+        .await;
     let admin_token = app.login("admin3@corp.com", "StrongPass123!").await;
 
     app.post_json_authed(
@@ -65,7 +69,8 @@ async fn invite_user_without_admin_role_returns_403() {
             "temporaryPassword": "TempPass123!"
         }),
         &admin_token,
-    ).await;
+    )
+    .await;
 
     let customer_token = app.login("cust@corp.com", "TempPass123!").await;
 
@@ -90,7 +95,8 @@ async fn invite_user_without_admin_role_returns_403() {
 #[tokio::test]
 async fn list_users_as_admin_returns_all_tenant_members() {
     let app = spawn_test_app().await;
-    app.register_tenant("lister@corp.com", "StrongPass123!").await;
+    app.register_tenant("lister@corp.com", "StrongPass123!")
+        .await;
     let token = app.login("lister@corp.com", "StrongPass123!").await;
 
     for i in 1..=2u8 {
@@ -103,7 +109,8 @@ async fn list_users_as_admin_returns_all_tenant_members() {
                 "temporaryPassword": "TempPass123!"
             }),
             &token,
-        ).await;
+        )
+        .await;
     }
 
     let (status, body) = app.get_json("/api/v1/identity/users", Some(&token)).await;
@@ -117,17 +124,27 @@ async fn list_users_as_admin_returns_all_tenant_members() {
 async fn list_users_does_not_include_other_tenant_members() {
     let app = spawn_test_app().await;
 
-    let (s1, _) = app.post_json("/api/v1/identity/register", serde_json::json!({
-        "tenantName": "Alpha Corp", "adminFullName": "Admin A",
-        "adminEmail": "t1@corp.com", "adminPassword": "StrongPass123!"
-    })).await;
+    let (s1, _) = app
+        .post_json(
+            "/api/v1/identity/register",
+            serde_json::json!({
+                "tenantName": "Alpha Corp", "adminFullName": "Admin A",
+                "adminEmail": "t1@corp.com", "adminPassword": "StrongPass123!"
+            }),
+        )
+        .await;
     assert_eq!(s1, StatusCode::CREATED);
     let token1 = app.login("t1@corp.com", "StrongPass123!").await;
 
-    let (s2, _) = app.post_json("/api/v1/identity/register", serde_json::json!({
-        "tenantName": "Beta Corp", "adminFullName": "Admin B",
-        "adminEmail": "t2@other.com", "adminPassword": "StrongPass123!"
-    })).await;
+    let (s2, _) = app
+        .post_json(
+            "/api/v1/identity/register",
+            serde_json::json!({
+                "tenantName": "Beta Corp", "adminFullName": "Admin B",
+                "adminEmail": "t2@other.com", "adminPassword": "StrongPass123!"
+            }),
+        )
+        .await;
     assert_eq!(s2, StatusCode::CREATED);
     let token2 = app.login("t2@other.com", "StrongPass123!").await;
 
@@ -140,7 +157,8 @@ async fn list_users_does_not_include_other_tenant_members() {
             "temporaryPassword": "TempPass123!"
         }),
         &token2,
-    ).await;
+    )
+    .await;
 
     let (status, body) = app.get_json("/api/v1/identity/users", Some(&token1)).await;
 

@@ -62,8 +62,5 @@ pub trait TenantRepository: Send + Sync {
     ) -> Result<Option<TenantUser>, DomainError>;
 
     /// Lista todos os membros ativos de um tenant com seus dados de usuário.
-    async fn list_members(
-        &self,
-        tenant_id: Uuid,
-    ) -> Result<Vec<(User, TenantUser)>, DomainError>;
+    async fn list_members(&self, tenant_id: Uuid) -> Result<Vec<(User, TenantUser)>, DomainError>;
 }

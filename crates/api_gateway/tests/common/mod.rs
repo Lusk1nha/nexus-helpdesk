@@ -1,5 +1,9 @@
 use api_gateway::{app_state::AppState, config::AppConfig, routes::create_router};
-use axum::{Router, body::Body, http::{Request, StatusCode}};
+use axum::{
+    Router,
+    body::Body,
+    http::{Request, StatusCode},
+};
 use domain_ticketing::application::workers::ai_worker::AiTask;
 use http_body_util::BodyExt;
 use serde_json::Value;
@@ -38,7 +42,12 @@ impl TestApp {
     }
 
     #[allow(dead_code)]
-    pub async fn post_json_authed(&self, uri: &str, body: Value, token: &str) -> (StatusCode, Value) {
+    pub async fn post_json_authed(
+        &self,
+        uri: &str,
+        body: Value,
+        token: &str,
+    ) -> (StatusCode, Value) {
         let response = self
             .router
             .clone()
@@ -61,7 +70,12 @@ impl TestApp {
     }
 
     #[allow(dead_code)]
-    pub async fn patch_json_authed(&self, uri: &str, body: Value, token: &str) -> (StatusCode, Value) {
+    pub async fn patch_json_authed(
+        &self,
+        uri: &str,
+        body: Value,
+        token: &str,
+    ) -> (StatusCode, Value) {
         let response = self
             .router
             .clone()
@@ -105,11 +119,7 @@ impl TestApp {
     }
 
     /// Registers a tenant and returns (tenant_id, user_id).
-    pub async fn register_tenant(
-        &self,
-        email: &str,
-        password: &str,
-    ) -> (String, String) {
+    pub async fn register_tenant(&self, email: &str, password: &str) -> (String, String) {
         let (status, body) = self
             .post_json(
                 "/api/v1/identity/register",
@@ -189,9 +199,7 @@ pub async fn spawn_test_app() -> TestApp {
     };
 
     let (ai_sender, mut ai_receiver) = tokio::sync::mpsc::channel::<AiTask>(100);
-    tokio::spawn(async move {
-        while ai_receiver.recv().await.is_some() {}
-    });
+    tokio::spawn(async move { while ai_receiver.recv().await.is_some() {} });
 
     let state = AppState::new(pool.clone(), config, ai_sender);
     let router = create_router(state);

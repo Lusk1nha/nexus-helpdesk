@@ -32,10 +32,7 @@ impl AddMessageToTicketUseCase {
             sender_id = %command.sender_id,
         )
     )]
-    pub async fn execute(
-        &self,
-        command: AddMessageCommand,
-    ) -> Result<TicketMessage, DomainError> {
+    pub async fn execute(&self, command: AddMessageCommand) -> Result<TicketMessage, DomainError> {
         if command.content.trim().is_empty() {
             return Err(DomainError::EmptyMessageContent);
         }

@@ -81,7 +81,13 @@ fn setup_cors(frontend_url: &str) -> CorsLayer {
 
     CorsLayer::new()
         .allow_origin(origin)
-        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::PATCH])
+        .allow_methods([
+            Method::GET,
+            Method::POST,
+            Method::PUT,
+            Method::DELETE,
+            Method::PATCH,
+        ])
         .allow_headers(tower_http::cors::Any)
 }
 
@@ -91,7 +97,9 @@ fn spawn_background_workers(
 ) -> tokio::sync::mpsc::Sender<AiTask> {
     let (sender, receiver) = tokio::sync::mpsc::channel::<AiTask>(100);
     let uow_manager = Arc::new(PgTicketingUoWManager::new(db_pool));
+
     let worker = AiWorker::new(receiver, uow_manager, ollama_url);
     tokio::spawn(async move { worker.start().await });
+
     sender
 }

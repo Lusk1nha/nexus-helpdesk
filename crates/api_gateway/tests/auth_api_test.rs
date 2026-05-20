@@ -30,7 +30,8 @@ async fn register_tenant_returns_201_with_ids() {
 #[tokio::test]
 async fn register_duplicate_email_returns_409() {
     let app = spawn_test_app().await;
-    app.register_tenant("dup@example.com", "StrongPass123!").await;
+    app.register_tenant("dup@example.com", "StrongPass123!")
+        .await;
 
     let (status, body) = app
         .post_json(
@@ -45,7 +46,12 @@ async fn register_duplicate_email_returns_409() {
         .await;
 
     assert_eq!(status, StatusCode::CONFLICT);
-    assert!(body["error"]["message"].as_str().unwrap().contains("e-mail"));
+    assert!(
+        body["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("e-mail")
+    );
     assert_eq!(body["error"]["code"].as_str().unwrap(), "CONFLICT");
 }
 
@@ -92,7 +98,8 @@ async fn register_with_invalid_email_returns_400() {
 #[tokio::test]
 async fn login_with_valid_credentials_returns_200_with_token() {
     let app = spawn_test_app().await;
-    app.register_tenant("login@example.com", "StrongPass123!").await;
+    app.register_tenant("login@example.com", "StrongPass123!")
+        .await;
 
     let (status, body) = app
         .post_json(
@@ -115,7 +122,8 @@ async fn login_with_valid_credentials_returns_200_with_token() {
 #[tokio::test]
 async fn login_with_wrong_password_returns_401() {
     let app = spawn_test_app().await;
-    app.register_tenant("wrongpass@example.com", "CorrectPass123!").await;
+    app.register_tenant("wrongpass@example.com", "CorrectPass123!")
+        .await;
 
     let (status, body) = app
         .post_json(
@@ -150,7 +158,8 @@ async fn login_with_unknown_email_returns_401() {
 #[tokio::test]
 async fn get_me_with_valid_token_returns_200() {
     let app = spawn_test_app().await;
-    app.register_tenant("me@example.com", "StrongPass123!").await;
+    app.register_tenant("me@example.com", "StrongPass123!")
+        .await;
     let token = app.login("me@example.com", "StrongPass123!").await;
 
     let (status, body) = app.get_json("/api/v1/identity/me", Some(&token)).await;
@@ -171,6 +180,8 @@ async fn get_me_without_token_returns_401() {
 #[tokio::test]
 async fn get_me_with_invalid_token_returns_401() {
     let app = spawn_test_app().await;
-    let (status, _) = app.get_json("/api/v1/identity/me", Some("this.is.not.valid")).await;
+    let (status, _) = app
+        .get_json("/api/v1/identity/me", Some("this.is.not.valid"))
+        .await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 }

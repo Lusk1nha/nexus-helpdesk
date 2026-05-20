@@ -3,7 +3,6 @@ use thiserror::Error;
 #[derive(Error, Debug, Clone, PartialEq, Eq)]
 pub enum DomainError {
     // --- Erros de Regra de Negócio (Business Logic) ---
-    
     #[error("Este endereço de e-mail já está em uso.")]
     UserAlreadyExists,
 
@@ -21,7 +20,6 @@ pub enum DomainError {
 
     // --- Erros de Infraestrutura (Encapsulados) ---
     // Note que usamos String para não acoplar o domínio aos erros do SQLx ou Argon2
-    
     #[error("Erro interno no banco de dados: {0}")]
     DatabaseError(String),
 

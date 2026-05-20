@@ -1,4 +1,8 @@
-use axum::{Json, extract::{Path, Query, State}, http::StatusCode};
+use axum::{
+    Json,
+    extract::{Path, Query, State},
+    http::StatusCode,
+};
 use serde::Deserialize;
 use uuid::Uuid;
 use validator::Validate;
@@ -8,10 +12,7 @@ use super::contracts::{
     UpdateTicketStatusPayload,
 };
 use crate::{
-    app_state::AppState,
-    error::ApiError,
-    middleware::auth::AuthUser,
-    response::ApiResponse,
+    app_state::AppState, error::ApiError, middleware::auth::AuthUser, response::ApiResponse,
 };
 
 use domain_identity::domain::entities::role::Role;
@@ -54,7 +55,10 @@ pub async fn create_ticket_handler(
         .await?;
 
     tracing::info!(user_id = %claims.sub, ticket_id = %ticket.id, "ticket created via API");
-    Ok((StatusCode::CREATED, Json(ApiResponse::success(ticket.into()))))
+    Ok((
+        StatusCode::CREATED,
+        Json(ApiResponse::success(ticket.into())),
+    ))
 }
 
 // ─── List ─────────────────────────────────────────────────────────────────────
@@ -302,5 +306,8 @@ pub async fn add_message_handler(
         .await?;
 
     tracing::info!(user_id = %claims.sub, ticket_id = %ticket_id, message_id = %message.id, "message added via API");
-    Ok((StatusCode::CREATED, Json(ApiResponse::success(message.into()))))
+    Ok((
+        StatusCode::CREATED,
+        Json(ApiResponse::success(message.into())),
+    ))
 }

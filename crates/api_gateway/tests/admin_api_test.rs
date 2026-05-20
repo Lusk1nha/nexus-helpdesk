@@ -8,7 +8,8 @@ use common::spawn_test_app;
 #[tokio::test]
 async fn change_user_role_returns_204() {
     let app = spawn_test_app().await;
-    app.register_tenant("admin@corp.com", "StrongPass123!").await;
+    app.register_tenant("admin@corp.com", "StrongPass123!")
+        .await;
     let admin_token = app.login("admin@corp.com", "StrongPass123!").await;
 
     let (_, invited) = app
@@ -39,7 +40,8 @@ async fn change_user_role_returns_204() {
 #[tokio::test]
 async fn change_role_for_unknown_user_returns_404() {
     let app = spawn_test_app().await;
-    app.register_tenant("admin2@corp.com", "StrongPass123!").await;
+    app.register_tenant("admin2@corp.com", "StrongPass123!")
+        .await;
     let token = app.login("admin2@corp.com", "StrongPass123!").await;
 
     let (status, _) = app
@@ -58,7 +60,8 @@ async fn change_role_for_unknown_user_returns_404() {
 #[tokio::test]
 async fn deactivate_user_prevents_login() {
     let app = spawn_test_app().await;
-    app.register_tenant("admin3@corp.com", "StrongPass123!").await;
+    app.register_tenant("admin3@corp.com", "StrongPass123!")
+        .await;
     let admin_token = app.login("admin3@corp.com", "StrongPass123!").await;
 
     let (_, invited) = app
@@ -104,7 +107,8 @@ async fn deactivate_user_prevents_login() {
 #[tokio::test]
 async fn reactivate_user_restores_login() {
     let app = spawn_test_app().await;
-    app.register_tenant("admin4@corp.com", "StrongPass123!").await;
+    app.register_tenant("admin4@corp.com", "StrongPass123!")
+        .await;
     let admin_token = app.login("admin4@corp.com", "StrongPass123!").await;
 
     let (_, invited) = app
@@ -125,13 +129,15 @@ async fn reactivate_user_restores_login() {
         &format!("/api/v1/identity/users/{user_id}/status"),
         serde_json::json!({ "active": false }),
         &admin_token,
-    ).await;
+    )
+    .await;
 
     app.patch_json_authed(
         &format!("/api/v1/identity/users/{user_id}/status"),
         serde_json::json!({ "active": true }),
         &admin_token,
-    ).await;
+    )
+    .await;
 
     let (status, _) = app
         .post_json(

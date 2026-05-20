@@ -38,7 +38,10 @@ impl From<Claims> for GetMeResponse {
 #[derive(Deserialize, Validate, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct RegisterTenantPayload {
-    #[validate(length(min = 3, message = "O nome da empresa deve ter no mínimo 3 caracteres."))]
+    #[validate(length(
+        min = 3,
+        message = "O nome da empresa deve ter no mínimo 3 caracteres."
+    ))]
     #[schema(example = "Nexus Corp")]
     pub tenant_name: String,
 
@@ -111,7 +114,9 @@ pub struct AdminResetPasswordPayload {
 #[derive(Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ResetPasswordResponse {
-    #[schema(example = "Usuário desbloqueado e credenciais atualizadas pelo administrador com sucesso.")]
+    #[schema(
+        example = "Usuário desbloqueado e credenciais atualizadas pelo administrador com sucesso."
+    )]
     pub message: String,
 }
 
@@ -143,7 +148,10 @@ pub struct InviteUserPayload {
     #[schema(example = "agent")]
     pub role: String,
 
-    #[validate(length(min = 8, message = "A senha temporária deve ter no mínimo 8 caracteres."))]
+    #[validate(length(
+        min = 8,
+        message = "A senha temporária deve ter no mínimo 8 caracteres."
+    ))]
     #[schema(example = "SenhaTemp123!")]
     pub temporary_password: String,
 }

@@ -29,10 +29,7 @@ impl UpdateTicketStatusUseCase {
             new_status = %command.new_status.to_string(),
         )
     )]
-    pub async fn execute(
-        &self,
-        command: UpdateTicketStatusCommand,
-    ) -> Result<Ticket, DomainError> {
+    pub async fn execute(&self, command: UpdateTicketStatusCommand) -> Result<Ticket, DomainError> {
         let mut uow = self.uow_manager.begin().await?;
 
         let mut ticket = uow

@@ -1,4 +1,8 @@
-use axum::{Json, extract::{Path, State}, http::StatusCode};
+use axum::{
+    Json,
+    extract::{Path, State},
+    http::StatusCode,
+};
 use uuid::Uuid;
 use validator::Validate;
 
@@ -16,10 +20,9 @@ use crate::{
 };
 
 use domain_identity::application::use_cases::{
-    change_user_role::ChangeUserRoleCommand, get_tenant::GetTenantCommand,
-    invite_user::InviteUserCommand, list_users::ListUsersCommand,
-    update_user_status::UpdateUserStatusCommand, LoginCommand, ResetPasswordCommand,
-    register_tenant::RegisterTenantCommand,
+    LoginCommand, ResetPasswordCommand, change_user_role::ChangeUserRoleCommand,
+    get_tenant::GetTenantCommand, invite_user::InviteUserCommand, list_users::ListUsersCommand,
+    register_tenant::RegisterTenantCommand, update_user_status::UpdateUserStatusCommand,
 };
 
 // ─── Me ───────────────────────────────────────────────────────────────────────
@@ -158,7 +161,9 @@ pub async fn admin_reset_user_password_handler(
     Ok((
         StatusCode::OK,
         Json(ApiResponse::success(ResetPasswordResponse {
-            message: "Usuário desbloqueado e credenciais atualizadas pelo administrador com sucesso.".to_string(),
+            message:
+                "Usuário desbloqueado e credenciais atualizadas pelo administrador com sucesso."
+                    .to_string(),
         })),
     ))
 }
@@ -228,7 +233,9 @@ pub async fn list_users_handler(
     let members = state
         .identity
         .list_users
-        .execute(ListUsersCommand { tenant_id: admin_claims.tenant_id })
+        .execute(ListUsersCommand {
+            tenant_id: admin_claims.tenant_id,
+        })
         .await?;
 
     let body: Vec<TenantMemberResponse> = members.into_iter().map(Into::into).collect();
@@ -331,7 +338,9 @@ pub async fn get_tenant_handler(
     let tenant = state
         .identity
         .get_tenant
-        .execute(GetTenantCommand { tenant_id: admin_claims.tenant_id })
+        .execute(GetTenantCommand {
+            tenant_id: admin_claims.tenant_id,
+        })
         .await?;
 
     Ok((StatusCode::OK, Json(ApiResponse::success(tenant.into()))))
