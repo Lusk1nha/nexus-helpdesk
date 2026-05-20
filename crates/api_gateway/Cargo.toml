@@ -34,6 +34,8 @@ utoipa-swagger-ui = { version = "9.0.2", features = ["axum"] }
 # Dependências Locais (Outros Crates)
 domain_identity = { path = "../domain_identity" }
 domain_ticketing = { path = "../domain_ticketing" }
+ai_engine = { path = "../ai_engine" }
+reqwest = { workspace = true, features = ["json"] }
 
 [dev-dependencies]
 testcontainers = "0.27.3"

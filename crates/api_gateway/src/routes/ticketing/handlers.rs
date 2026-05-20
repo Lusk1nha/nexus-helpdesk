@@ -203,6 +203,55 @@ pub async fn approve_ai_response_handler(
         .await?;
 
     tracing::info!(user_id = %claims.sub, ticket_id = %ticket.id, "AI response approved");
+
+    // Fire-and-forget: index resolved Q&A in Qdrant for future RAG retrieval
+    {
+        let ai_engine = state.ai_engine.clone();
+        let messages_result = state
+            .ticketing
+            .list_ticket_messages
+            .execute(ListTicketMessagesCommand {
+                ticket_id: ticket.id,
+                tenant_id: ticket.tenant_id,
+            })
+            .await;
+
+        let tenant_id = ticket.tenant_id;
+        let ticket_id_copy = ticket.id;
+
+        let description = ticket.description.clone();
+
+        tokio::spawn(async move {
+            let ai_reply = messages_result
+                .ok()
+                .and_then(|msgs| {
+                    msgs.into_iter()
+                        .find(|m| matches!(m.sender_type, SenderType::AI))
+                        .map(|m| m.content)
+                })
+                .unwrap_or_default();
+
+            let doc = if ai_reply.is_empty() {
+                description
+            } else {
+                format!("Problema: {description}\nSolução: {ai_reply}")
+            };
+
+            if let Err(e) = ai_engine
+                .index_document(&doc, tenant_id, ticket_id_copy, "resolved_ticket")
+                .await
+            {
+                tracing::warn!(
+                    ticket_id = %ticket_id_copy,
+                    error = %e,
+                    "failed to index resolved ticket in Qdrant — non-fatal"
+                );
+            } else {
+                tracing::info!(ticket_id = %ticket_id_copy, "resolved Q&A pair indexed in Qdrant");
+            }
+        });
+    }
+
     Ok((StatusCode::OK, Json(ApiResponse::success(ticket.into()))))
 }
 

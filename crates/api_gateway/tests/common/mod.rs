@@ -1,3 +1,4 @@
+use ai_engine::AiEngine;
 use api_gateway::{app_state::AppState, config::AppConfig, routes::create_router};
 use axum::{
     Router,
@@ -8,6 +9,7 @@ use domain_ticketing::application::workers::ai_worker::AiTask;
 use http_body_util::BodyExt;
 use serde_json::Value;
 use sqlx::{PgPool, postgres::PgPoolOptions};
+use std::sync::Arc;
 use testcontainers::runners::AsyncRunner;
 use testcontainers_modules::postgres::Postgres;
 use tower::ServiceExt;
@@ -201,7 +203,18 @@ pub async fn spawn_test_app() -> TestApp {
     let (ai_sender, mut ai_receiver) = tokio::sync::mpsc::channel::<AiTask>(100);
     tokio::spawn(async move { while ai_receiver.recv().await.is_some() {} });
 
-    let state = AppState::new(pool.clone(), config, ai_sender);
+    // AiEngine pointing to unreachable addresses — tests never call the AI worker,
+    // so embedding/vector operations are never actually invoked.
+    let ai_engine = Arc::new(
+        AiEngine::new(
+            reqwest::Client::new(),
+            config.ollama_url.clone(),
+            &config.qdrant_url,
+        )
+        .expect("Failed to build test AiEngine"),
+    );
+
+    let state = AppState::new(pool.clone(), config, ai_sender, ai_engine);
     let router = create_router(state);
 
     TestApp {

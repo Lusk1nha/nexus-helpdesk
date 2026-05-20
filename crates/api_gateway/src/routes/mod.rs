@@ -8,11 +8,14 @@ use utoipa_swagger_ui::SwaggerUi;
 use crate::app_state::AppState;
 
 pub mod identity;
+pub mod knowledge;
 pub mod ticketing;
 
 #[derive(OpenApi)]
 #[openapi(
     paths(
+        // Knowledge
+        knowledge::handlers::ingest_knowledge_handler,
         // Ticketing
         ticketing::handlers::create_ticket_handler,
         ticketing::handlers::list_tickets_handler,
@@ -35,6 +38,9 @@ pub mod ticketing;
     ),
     components(
         schemas(
+            // Knowledge
+            knowledge::contracts::IngestKnowledgePayload,
+            knowledge::contracts::IngestKnowledgeResponse,
             // Ticketing
             ticketing::contracts::CreateTicketPayload,
             ticketing::contracts::CreateTicketResponse,
@@ -90,5 +96,6 @@ pub fn create_router(state: AppState) -> Router {
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", openapi))
         .nest("/api/v1/identity", identity::routes())
         .nest("/api/v1/tickets", ticketing::routes())
+        .nest("/api/v1/knowledge", knowledge::routes())
         .with_state(state)
 }

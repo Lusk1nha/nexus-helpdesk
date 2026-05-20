@@ -71,10 +71,12 @@ O projeto é dividido em *crates* focados em contextos delimitados:
 - [ ] Implementar middleware de autenticação (validação de JWT).
 - [ ] Implementar extrator de Tenant (descobrir de qual empresa é a requisição).
 
-### 🔜 Fase 4: Core de IA Avançado e RAG
-- [ ] Criar crate `ai_engine` para centralizar lógica vetorial.
-- [ ] Gerar *embeddings* via Ollama e injetar no banco de dados vetorial (Qdrant).
-- [ ] Implementar busca de contexto semântico (*Retrieval*) para enviar ao `AiWorker` antes de responder o ticket.
+### ✅ Fase 4: Core de IA Avançado e RAG
+- [x] Criar crate `ai_engine` para centralizar lógica vetorial.
+- [x] Gerar *embeddings* via Ollama (`nomic-embed-text`) e injetar no banco de dados vetorial (Qdrant).
+- [x] Implementar busca de contexto semântico (*Retrieval*) para enviar ao `AiWorker` antes de responder o ticket.
+- [x] Indexar tickets resolvidos automaticamente ao aprovar resposta da IA.
+- [x] Endpoint `POST /api/v1/knowledge` para agentes/admins injetarem artigos na base de conhecimento.
 
 ### 🔜 Fase 5: Frontend e UX
 - [ ] Configuração do cliente do `TanStack Query`.

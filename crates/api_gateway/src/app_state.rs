@@ -1,3 +1,4 @@
+use ai_engine::AiEngine;
 use sqlx::PgPool;
 use std::sync::Arc;
 use tokio::sync::mpsc::Sender;
@@ -43,10 +44,16 @@ pub struct AppState {
     pub config: Arc<AppConfig>,
     pub identity: Arc<IdentityUseCases>,
     pub ticketing: Arc<TicketingUseCases>,
+    pub ai_engine: Arc<AiEngine>,
 }
 
 impl AppState {
-    pub fn new(db_pool: PgPool, config: AppConfig, ai_queue_sender: Sender<AiTask>) -> Self {
+    pub fn new(
+        db_pool: PgPool,
+        config: AppConfig,
+        ai_queue_sender: Sender<AiTask>,
+        ai_engine: Arc<AiEngine>,
+    ) -> Self {
         let identity_uow_manager = Arc::new(PgUnitOfWorkManager::new(db_pool.clone()));
         let ticketing_uow_manager = Arc::new(PgTicketingUoWManager::new(db_pool));
         let password_hasher = Arc::new(Argon2Hasher::new());
@@ -113,6 +120,7 @@ impl AppState {
             config: Arc::new(config),
             identity: identity_cases,
             ticketing: ticketing_cases,
+            ai_engine,
         }
     }
 }

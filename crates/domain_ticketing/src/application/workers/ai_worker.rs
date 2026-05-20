@@ -3,6 +3,8 @@ use tokio::sync::mpsc::Receiver;
 use tracing::{error, info, warn};
 use uuid::Uuid;
 
+use ai_engine::AiEngine;
+
 use crate::domain::entities::message::TicketMessage;
 use crate::domain::error::DomainError;
 use crate::domain::ports::TicketingUnitOfWorkManager;
@@ -19,6 +21,7 @@ pub struct AiWorker {
     http_client: reqwest::Client,
     uow_manager: Arc<dyn TicketingUnitOfWorkManager>,
     ollama_url: String,
+    ai_engine: Arc<AiEngine>,
 }
 
 impl AiWorker {
@@ -26,12 +29,14 @@ impl AiWorker {
         receiver: Receiver<AiTask>,
         uow_manager: Arc<dyn TicketingUnitOfWorkManager>,
         ollama_url: String,
+        ai_engine: Arc<AiEngine>,
     ) -> Self {
         Self {
             receiver,
             http_client: reqwest::Client::new(),
             uow_manager,
             ollama_url,
+            ai_engine,
         }
     }
 
@@ -56,16 +61,55 @@ impl AiWorker {
             return;
         }
 
-        // 2. Call the LLM
+        // 2. Retrieve RAG context (non-fatal: degrades to zero-shot on failure)
+        let rag_context_block = match self
+            .ai_engine
+            .retrieve_context(&task.context, task.tenant_id, 3)
+            .await
+        {
+            Ok(docs) if !docs.is_empty() => {
+                let snippets: Vec<String> = docs
+                    .into_iter()
+                    .map(|d| format!("- {}", d.content))
+                    .collect();
+
+                tracing::info!(
+                    ticket_id = %task.ticket_id,
+                    snippets = snippets.len(),
+                    "RAG context retrieved"
+                );
+
+                format!(
+                    "\n\nContexto relevante da base de conhecimento:\n{}",
+                    snippets.join("\n")
+                )
+            }
+            Ok(_) => {
+                tracing::debug!(ticket_id = %task.ticket_id, "no RAG context found");
+                String::new()
+            }
+            Err(e) => {
+                warn!(
+                    ticket_id = %task.ticket_id,
+                    error = %e,
+                    "RAG retrieval failed, proceeding zero-shot"
+                );
+                String::new()
+            }
+        };
+
+        // 3. Call the LLM with the augmented prompt
         let system_prompt = "Você é um agente de suporte ao cliente nível 1. \
             Analise o problema relatado e forneça uma resposta educada, técnica e direta. \
             Não invente links ou prometa coisas que não pode cumprir.";
+
+        let augmented_user_message = format!("{}{}", task.context, rag_context_block);
 
         let payload = serde_json::json!({
             "model": "phi3",
             "messages": [
                 { "role": "system", "content": system_prompt },
-                { "role": "user", "content": &task.context }
+                { "role": "user", "content": augmented_user_message }
             ],
             "stream": false
         });
@@ -91,6 +135,7 @@ impl AiWorker {
                             error = %e,
                             "failed to persist AI response"
                         );
+
                         let _ = self.revert_to_open(task.ticket_id).await;
                     } else {
                         info!(

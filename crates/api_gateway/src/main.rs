@@ -1,3 +1,4 @@
+use ai_engine::AiEngine;
 use axum::http::{HeaderValue, Method};
 use sqlx::{PgPool, postgres::PgPoolOptions};
 use std::net::SocketAddr;
@@ -36,11 +37,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 4. Connect to the database
     let db_pool = setup_database(&config.database_url).await?;
 
+    // 4b. Initialize the AI engine (embedding + vector store)
+    let ai_engine = Arc::new(
+        AiEngine::new(
+            reqwest::Client::new(),
+            config.ollama_url.clone(),
+            &config.qdrant_url,
+        )
+        .expect("Failed to build AiEngine"),
+    );
+
+    ai_engine
+        .initialize()
+        .await
+        .expect("Failed to initialize Qdrant collection");
+
     // 5. Spin up background workers (AI queue)
-    let ai_task_sender = spawn_background_workers(db_pool.clone(), config.ollama_url.clone());
+    let ai_task_sender = spawn_background_workers(
+        db_pool.clone(),
+        config.ollama_url.clone(),
+        ai_engine.clone(),
+    );
 
     // 6. Build application state and router
-    let state = AppState::new(db_pool, config.clone(), ai_task_sender);
+    let state = AppState::new(db_pool, config.clone(), ai_task_sender, ai_engine);
     let app = routes::create_router(state)
         .layer(TraceLayer::new_for_http())
         .layer(setup_cors(&config.frontend_url));
@@ -94,11 +114,12 @@ fn setup_cors(frontend_url: &str) -> CorsLayer {
 fn spawn_background_workers(
     db_pool: PgPool,
     ollama_url: String,
+    ai_engine: Arc<AiEngine>,
 ) -> tokio::sync::mpsc::Sender<AiTask> {
     let (sender, receiver) = tokio::sync::mpsc::channel::<AiTask>(100);
     let uow_manager = Arc::new(PgTicketingUoWManager::new(db_pool));
 
-    let worker = AiWorker::new(receiver, uow_manager, ollama_url);
+    let worker = AiWorker::new(receiver, uow_manager, ollama_url, ai_engine);
     tokio::spawn(async move { worker.start().await });
 
     sender

@@ -4,6 +4,7 @@ use std::sync::Arc;
 use tokio::sync::mpsc;
 use uuid::Uuid;
 
+use ai_engine::AiEngine;
 use domain_ticketing::application::use_cases::create_ticket::{
     CreateTicketCommand, CreateTicketUseCase,
 };
@@ -11,6 +12,17 @@ use domain_ticketing::application::workers::ai_worker::AiWorker;
 use domain_ticketing::domain::entities::ticket::TicketStatus;
 use domain_ticketing::domain::ports::TicketingUnitOfWorkManager as _;
 use domain_ticketing::infrastructure::database::postgres_uow::PgTicketingUoWManager;
+
+fn dummy_ai_engine(ollama_url: &str) -> Arc<AiEngine> {
+    Arc::new(
+        AiEngine::new(
+            reqwest::Client::new(),
+            ollama_url.to_string(),
+            "http://127.0.0.1:1",
+        )
+        .expect("Failed to build test AiEngine"),
+    )
+}
 
 #[tokio::test]
 async fn test_worker_reverts_ticket_to_open_when_ollama_is_unavailable() {
@@ -43,7 +55,12 @@ async fn test_worker_reverts_ticket_to_open_when_ollama_is_unavailable() {
     // drains the one buffered task the channel will be empty and start() exits.
     drop(create_uc);
 
-    let worker = AiWorker::new(ai_receiver, uow_manager.clone(), bad_ollama_url);
+    let worker = AiWorker::new(
+        ai_receiver,
+        uow_manager.clone(),
+        bad_ollama_url.clone(),
+        dummy_ai_engine(&bad_ollama_url),
+    );
     let handle = tokio::spawn(async move { worker.start().await });
 
     // Worker processes the task (Ollama call fails fast on refused connection)
@@ -104,7 +121,12 @@ async fn test_worker_saves_ai_response_and_transitions_to_awaiting_approval() {
 
     drop(create_uc);
 
-    let worker = AiWorker::new(ai_receiver, uow_manager.clone(), ollama_url);
+    let worker = AiWorker::new(
+        ai_receiver,
+        uow_manager.clone(),
+        ollama_url.clone(),
+        dummy_ai_engine(&ollama_url),
+    );
     tokio::spawn(async move { worker.start().await })
         .await
         .expect("worker should not panic");
