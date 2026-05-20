@@ -13,9 +13,32 @@ pub mod ticketing;
 
 #[derive(OpenApi)]
 #[openapi(
+    // Adicionado: Informações gerais da API que aparecerão no cabeçalho do Swagger UI
+    info(
+        title = "Nexus Helpdesk API",
+        version = "1.0.0",
+        description = "API RESTful do Nexus Helpdesk.\n\nPlataforma SaaS Multi-Tenant B2B focada em suporte ao cliente com Inteligência Artificial (RAG) nativa.",
+        contact(
+            name = "Suporte Nexus",
+            email = "suporte@nexushelpdesk.local",
+            url = "http://localhost:8080"
+        ),
+        license(
+            name = "MIT",
+            url = "https://opensource.org/licenses/MIT"
+        )
+    ),
+    // Adicionado: Configuração de servidores (permite testar a API no Swagger em ambientes diferentes)
+    servers(
+        (url = "http://localhost:8080", description = "Ambiente de Desenvolvimento (Local)"),
+        (url = "https://api.nexushelpdesk.com", description = "Ambiente de Produção")
+    ),
     paths(
         // Knowledge
         knowledge::handlers::ingest_knowledge_handler,
+        knowledge::handlers::list_knowledge_handler,
+        knowledge::handlers::search_knowledge_handler,
+        knowledge::handlers::delete_knowledge_handler,
         // Ticketing
         ticketing::handlers::create_ticket_handler,
         ticketing::handlers::list_tickets_handler,
@@ -41,6 +64,10 @@ pub mod ticketing;
             // Knowledge
             knowledge::contracts::IngestKnowledgePayload,
             knowledge::contracts::IngestKnowledgeResponse,
+            knowledge::contracts::KnowledgeDocumentResponse,
+            knowledge::contracts::ListKnowledgeResponse,
+            knowledge::contracts::SearchKnowledgeResponse,
+            knowledge::contracts::SearchResultItem,
             // Ticketing
             ticketing::contracts::CreateTicketPayload,
             ticketing::contracts::CreateTicketResponse,
@@ -66,7 +93,8 @@ pub mod ticketing;
     ),
     tags(
         (name = "Identity", description = "Gerenciamento de Empresas, Usuários e Autenticação"),
-        (name = "Ticketing", description = "Gerenciamento de Chamados e Inteligência Artificial")
+        (name = "Ticketing", description = "Gerenciamento de Chamados e Inteligência Artificial"),
+        (name = "Knowledge", description = "Gerenciamento de Documentos de Conhecimento")
     ),
     modifiers(&SecurityAddon)
 )]

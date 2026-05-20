@@ -3,7 +3,7 @@ pub mod error;
 pub mod vector_store;
 
 pub use error::AiEngineError;
-pub use vector_store::RetrievedDocument;
+pub use vector_store::{KnowledgeEntry, RetrievedDocument};
 
 use std::sync::Arc;
 use uuid::Uuid;
@@ -46,13 +46,27 @@ impl AiEngine {
     pub async fn index_document(
         &self,
         content: &str,
+        title: &str,
         tenant_id: Uuid,
         source_ticket_id: Uuid,
         document_type: &str,
-    ) -> Result<(), AiEngineError> {
+        indexed_by: &str,
+    ) -> Result<String, AiEngineError> {
         let vector = self.embedder.embed(content).await?;
         self.store
-            .upsert(vector, content, tenant_id, source_ticket_id, document_type)
+            .upsert(vector, content, title, tenant_id, source_ticket_id, document_type, indexed_by)
             .await
+    }
+
+    pub async fn list_documents(
+        &self,
+        tenant_id: Uuid,
+        limit: u32,
+    ) -> Result<Vec<KnowledgeEntry>, AiEngineError> {
+        self.store.list(tenant_id, limit).await
+    }
+
+    pub async fn delete_document(&self, point_id: &str) -> Result<(), AiEngineError> {
+        self.store.delete(point_id).await
     }
 }

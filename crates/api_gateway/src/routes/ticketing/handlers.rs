@@ -28,6 +28,7 @@ use domain_ticketing::domain::entities::ticket::TicketStatus;
 
 #[utoipa::path(
     post, path = "/api/v1/tickets",
+    tag = "Ticketing",
     request_body = CreateTicketPayload,
     responses(
         (status = 201, description = "Ticket criado com sucesso", body = CreateTicketResponse),
@@ -70,6 +71,7 @@ pub struct ListTicketsQuery {
 
 #[utoipa::path(
     get, path = "/api/v1/tickets",
+    tag = "Ticketing",
     params(("status" = Option<String>, Query, description = "Filtrar por status")),
     responses(
         (status = 200, description = "Lista de tickets do tenant", body = Vec<TicketResponse>),
@@ -108,6 +110,7 @@ pub async fn list_tickets_handler(
 
 #[utoipa::path(
     get, path = "/api/v1/tickets/{id}",
+    tag = "Ticketing",
     params(("id" = Uuid, Path, description = "ID do ticket")),
     responses(
         (status = 200, description = "Detalhes do ticket", body = TicketResponse),
@@ -138,6 +141,7 @@ pub async fn get_ticket_handler(
 
 #[utoipa::path(
     patch, path = "/api/v1/tickets/{id}/status",
+    tag = "Ticketing",
     request_body = UpdateTicketStatusPayload,
     params(("id" = Uuid, Path, description = "ID do ticket")),
     responses(
@@ -178,6 +182,7 @@ pub async fn update_ticket_status_handler(
 
 #[utoipa::path(
     post, path = "/api/v1/tickets/{id}/approve-ai",
+    tag = "Ticketing",
     params(("id" = Uuid, Path, description = "ID do ticket em awaiting_agent_approval")),
     responses(
         (status = 200, description = "Resposta da IA aprovada — ticket resolvido", body = TicketResponse),
@@ -237,8 +242,9 @@ pub async fn approve_ai_response_handler(
                 format!("Problema: {description}\nSolução: {ai_reply}")
             };
 
+            let title = format!("Ticket resolvido #{}", ticket_id_copy);
             if let Err(e) = ai_engine
-                .index_document(&doc, tenant_id, ticket_id_copy, "resolved_ticket")
+                .index_document(&doc, &title, tenant_id, ticket_id_copy, "resolved_ticket", "system")
                 .await
             {
                 tracing::warn!(
@@ -257,6 +263,7 @@ pub async fn approve_ai_response_handler(
 
 #[utoipa::path(
     post, path = "/api/v1/tickets/{id}/reject-ai",
+    tag = "Ticketing",
     params(("id" = Uuid, Path, description = "ID do ticket em awaiting_agent_approval")),
     responses(
         (status = 200, description = "Resposta da IA rejeitada — ticket reaberto", body = TicketResponse),
@@ -289,6 +296,7 @@ pub async fn reject_ai_response_handler(
 
 #[utoipa::path(
     get, path = "/api/v1/tickets/{id}/messages",
+    tag = "Ticketing",
     params(("id" = Uuid, Path, description = "ID do ticket")),
     responses(
         (status = 200, description = "Mensagens do ticket", body = Vec<MessageResponse>),
@@ -318,6 +326,7 @@ pub async fn list_ticket_messages_handler(
 
 #[utoipa::path(
     post, path = "/api/v1/tickets/{id}/messages",
+    tag = "Ticketing",
     request_body = AddMessagePayload,
     params(("id" = Uuid, Path, description = "ID do ticket")),
     responses(

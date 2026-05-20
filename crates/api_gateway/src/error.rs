@@ -8,6 +8,8 @@ pub enum ApiError {
     Validation(validator::ValidationErrors),
     Identity(IdentityError),
     Ticketing(TicketingError),
+    Forbidden(String),
+    BadRequest(String),
     Internal(String),
 }
 
@@ -75,6 +77,10 @@ impl IntoResponse for ApiError {
                 )
             }
             ApiError::Ticketing(err) => (StatusCode::BAD_REQUEST, err.to_string()),
+
+            ApiError::Forbidden(msg) => (StatusCode::FORBIDDEN, msg),
+
+            ApiError::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),
 
             ApiError::Internal(msg) => {
                 tracing::error!(error = %msg, "unhandled internal error");

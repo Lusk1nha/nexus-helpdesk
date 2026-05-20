@@ -29,6 +29,7 @@ use domain_identity::application::use_cases::{
 
 #[utoipa::path(
     get, path = "/api/v1/identity/me",
+    tag = "Identity",
     responses(
         (status = 200, description = "Dados do usuário autenticado", body = GetMeResponse),
         (status = 401, description = "Token ausente, inválido ou expirado")
@@ -46,6 +47,7 @@ pub async fn get_me_handler(
 
 #[utoipa::path(
     post, path = "/api/v1/identity/register",
+    tag = "Identity",
     request_body = RegisterTenantPayload,
     responses(
         (status = 201, description = "Empresa e admin criados", body = RegisterTenantResponse),
@@ -79,6 +81,7 @@ pub async fn register_tenant_handler(
 
 #[utoipa::path(
     post, path = "/api/v1/identity/login",
+    tag = "Identity",
     request_body = LoginPayload,
     responses(
         (status = 200, description = "Login efetuado — retorna JWT", body = LoginResponse),
@@ -125,6 +128,7 @@ pub async fn login_handler(
 
 #[utoipa::path(
     post, path = "/api/v1/identity/admin/users/{id}/unlock-and-reset",
+    tag = "Identity",
     request_body = AdminResetPasswordPayload,
     params(("id" = Uuid, Path, description = "ID do usuário alvo")),
     responses(
@@ -172,6 +176,7 @@ pub async fn admin_reset_user_password_handler(
 
 #[utoipa::path(
     post, path = "/api/v1/identity/users",
+    tag = "Identity",
     request_body = InviteUserPayload,
     responses(
         (status = 201, description = "Usuário convidado", body = InviteUserResponse),
@@ -219,6 +224,7 @@ pub async fn invite_user_handler(
 
 #[utoipa::path(
     get, path = "/api/v1/identity/users",
+    tag = "Identity",
     responses(
         (status = 200, description = "Membros do tenant", body = Vec<TenantMemberResponse>),
         (status = 401, description = "Não autorizado"),
@@ -246,6 +252,7 @@ pub async fn list_users_handler(
 
 #[utoipa::path(
     patch, path = "/api/v1/identity/users/{id}/role",
+    tag = "Identity",
     request_body = ChangeUserRolePayload,
     params(("id" = Uuid, Path, description = "ID do usuário")),
     responses(
@@ -290,6 +297,7 @@ pub async fn change_user_role_handler(
 
 #[utoipa::path(
     patch, path = "/api/v1/identity/users/{id}/status",
+    tag = "Identity",
     request_body = UpdateUserStatusPayload,
     params(("id" = Uuid, Path, description = "ID do usuário")),
     responses(
@@ -324,6 +332,7 @@ pub async fn update_user_status_handler(
 
 #[utoipa::path(
     get, path = "/api/v1/identity/tenant",
+    tag = "Identity",
     responses(
         (status = 200, description = "Informações do tenant", body = TenantResponse),
         (status = 401, description = "Não autorizado"),
