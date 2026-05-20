@@ -244,7 +244,14 @@ pub async fn approve_ai_response_handler(
 
             let title = format!("Ticket resolvido #{}", ticket_id_copy);
             if let Err(e) = ai_engine
-                .index_document(&doc, &title, tenant_id, ticket_id_copy, "resolved_ticket", "system")
+                .index_document(
+                    &doc,
+                    &title,
+                    tenant_id,
+                    ticket_id_copy,
+                    "resolved_ticket",
+                    "system",
+                )
                 .await
             {
                 tracing::warn!(

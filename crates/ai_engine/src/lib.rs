@@ -54,7 +54,15 @@ impl AiEngine {
     ) -> Result<String, AiEngineError> {
         let vector = self.embedder.embed(content).await?;
         self.store
-            .upsert(vector, content, title, tenant_id, source_ticket_id, document_type, indexed_by)
+            .upsert(
+                vector,
+                content,
+                title,
+                tenant_id,
+                source_ticket_id,
+                document_type,
+                indexed_by,
+            )
             .await
     }
 

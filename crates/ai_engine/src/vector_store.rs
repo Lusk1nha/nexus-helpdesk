@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use qdrant_client::qdrant::point_id::PointIdOptions;
+use qdrant_client::qdrant::PointId;
 use qdrant_client::qdrant::{
     Condition, CreateCollectionBuilder, DeletePointsBuilder, Distance, Filter, PointStruct,
     PointsIdsList, QueryPointsBuilder, ScrollPointsBuilder, UpsertPointsBuilder, Value,
     VectorParamsBuilder,
 };
-use qdrant_client::qdrant::point_id::PointIdOptions;
-use qdrant_client::qdrant::PointId;
 use qdrant_client::Qdrant;
 use uuid::Uuid;
 

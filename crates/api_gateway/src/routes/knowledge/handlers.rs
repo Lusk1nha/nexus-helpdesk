@@ -12,9 +12,8 @@ use crate::{
 };
 
 use super::contracts::{
-    IngestKnowledgePayload, IngestKnowledgeResponse, KnowledgeDocumentResponse,
-    ListKnowledgeQuery, ListKnowledgeResponse, SearchKnowledgeQuery, SearchKnowledgeResponse,
-    SearchResultItem,
+    IngestKnowledgePayload, IngestKnowledgeResponse, KnowledgeDocumentResponse, ListKnowledgeQuery,
+    ListKnowledgeResponse, SearchKnowledgeQuery, SearchKnowledgeResponse, SearchResultItem,
 };
 
 #[utoipa::path(
