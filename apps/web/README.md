@@ -189,3 +189,27 @@ VITE_API_URL=http://localhost:8080
 | Unit | Vitest | Domain schemas, guards, utility functions, store actions |
 | Integration | RTL + MSW | Form flows, hook behavior with mocked API |
 | E2E | Playwright *(coming)* | Full auth/ticket flows in a real browser |
+
+---
+
+## Code Style
+
+Formatted with **Prettier** + `prettier-plugin-tailwindcss` (auto-sorts Tailwind classes).
+
+```bash
+# Format the whole web app
+pnpm --filter web format
+
+# Check formatting (CI-friendly)
+pnpm --filter web format:check
+```
+
+Config lives at the repo root in `.prettierrc.json` and applies to the whole monorepo.
+
+---
+
+## Author
+
+Built by **Lucas Pedro** — [github.com/Lusk1nha](https://github.com/Lusk1nha)
+
+If you find this project useful, feel free to star ⭐ the repo or open an issue with feedback.
