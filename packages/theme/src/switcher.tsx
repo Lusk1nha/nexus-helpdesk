@@ -1,5 +1,5 @@
-import { MonitorIcon } from "@phosphor-icons/react"
-import { useState } from "react"
+import { MonitorIcon, PlayIcon, StopIcon } from "@phosphor-icons/react"
+import { useState, useEffect, useRef } from "react"
 import { useTheme } from "./provider"
 import { themes, type ThemeId } from "./themes"
 import { cn } from "@nexus/utils"
@@ -7,11 +7,25 @@ import { cn } from "@nexus/utils"
 export function ThemeSwitcher({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme()
   const [open, setOpen] = useState(false)
+  
   const [activeTab, setActiveTab] = useState<"dark" | "light">("dark")
 
-  const filteredThemes = themes
-    .filter((t) => (activeTab === "dark" ? t.isDark : !t.isDark))
-    .sort((a, b) => a.name.localeCompare(b.name))
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
+
+  // Showcase Mode Logic
+  useEffect(() => {
+    if (isAutoPlaying) {
+      intervalRef.current = setInterval(() => {
+        const randomIndex = Math.floor(Math.random() * themes.length)
+        setTheme(themes[randomIndex]?.id as ThemeId)
+      }, 2000) // Troca a cada 2 segundos
+    } else {
+      clearInterval(intervalRef?.current)
+    }
+
+    return () => clearInterval(intervalRef.current)
+  }, [isAutoPlaying, setTheme])
 
   return (
     <div className={cn("relative", className)}>
@@ -35,8 +49,8 @@ export function ThemeSwitcher({ className }: { className?: string }) {
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
 
           <div className="absolute top-full right-0 z-50 mt-1 w-64 overflow-hidden rounded-sm border border-(--border) bg-(--surface) shadow-xl shadow-black/20">
-            {/* Tabs */}
-            <div className="flex border-b border-(--border)">
+            {/* Header com Tabs e botão de Showcase */}
+            <div className="flex items-center border-b border-(--border)">
               {(["dark", "light"] as const).map((tab) => (
                 <button
                   key={tab}
@@ -51,30 +65,50 @@ export function ThemeSwitcher({ className }: { className?: string }) {
                   {tab}
                 </button>
               ))}
+
+              {/* Botão Maluco (Showcase) */}
+              <button
+                onClick={() => setIsAutoPlaying(!isAutoPlaying)}
+                className={cn(
+                  "px-3 transition-colors hover:text-(--fg)",
+                  isAutoPlaying ? "text-(--accent)" : "text-(--muted)"
+                )}
+                title={isAutoPlaying ? "Stop showcase" : "Start showcase mode"}
+              >
+                {isAutoPlaying ? (
+                  <StopIcon className="h-3.5 w-3.5" />
+                ) : (
+                  <PlayIcon className="h-3.5 w-3.5" />
+                )}
+              </button>
             </div>
 
             {/* Grid de temas */}
             <div className="grid max-h-64 grid-cols-2 gap-1 overflow-y-auto p-2">
-              {filteredThemes.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => {
-                    setTheme(t.id as ThemeId)
-                    setOpen(false)
-                  }}
-                  className={cn(
-                    "flex items-center gap-2 rounded-sm px-2 py-1.5 text-left font-mono text-xs text-(--muted)",
-                    "hover:bg-(--surface-2) hover:text-(--fg)",
-                    theme === t.id && "bg-(--surface-2) font-medium text-(--fg)"
-                  )}
-                >
-                  <span
-                    className="h-2.5 w-2.5 shrink-0 rounded-full border border-black/10"
-                    style={{ backgroundColor: t.accentHex }}
-                  />
-                  <span className="truncate">{t.name}</span>
-                </button>
-              ))}
+              {themes
+                .filter((t) => (activeTab === "dark" ? t.isDark : !t.isDark))
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      setTheme(t.id as ThemeId)
+                      setIsAutoPlaying(false) // Para o showcase se o usuário clicar manualmente
+                    }}
+                    className={cn(
+                      "flex items-center gap-2 rounded-sm px-2 py-1.5 text-left font-mono text-xs text-(--muted)",
+                      "hover:bg-(--surface-2) hover:text-(--fg)",
+                      theme === t.id &&
+                        "bg-(--surface-2) font-medium text-(--fg)"
+                    )}
+                  >
+                    <span
+                      className="h-2.5 w-2.5 shrink-0 rounded-full border border-black/10"
+                      style={{ backgroundColor: t.accentHex }}
+                    />
+                    <span className="truncate">{t.name}</span>
+                  </button>
+                ))}
             </div>
           </div>
         </>
