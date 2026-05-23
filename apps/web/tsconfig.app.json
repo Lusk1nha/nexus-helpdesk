@@ -6,5 +6,5 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src", "../onboarding/src/application/register/use-register.ts"]
 }

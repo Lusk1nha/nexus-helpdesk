@@ -14,6 +14,7 @@ import { paths } from "@/presentation/router/paths"
 export function RegisterPage() {
   const navigate = useNavigate()
   const register_ = useRegister()
+  
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
 

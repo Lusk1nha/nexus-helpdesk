@@ -1,53 +1,72 @@
-import { AlertCircle, CheckCircle2, Info, TriangleAlert } from "lucide-react"
 import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@nexus/utils"
 
-type AlertVariant = "info" | "success" | "warning" | "error"
+const alertVariants = cva(
+  "relative grid w-full grid-cols-[0_1fr] items-start gap-y-0.5 rounded-sm border px-4 py-3 font-mono text-sm has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] has-[>svg]:gap-x-3 [&>svg]:size-4 [&>svg]:translate-y-0.5 [&>svg]:text-current",
+  {
+    variants: {
+      variant: {
+        default: "border-(--border) bg-(--surface) text-(--fg)",
+        destructive:
+          "border-(--destructive)/50 bg-(--destructive)/10 text-(--destructive) *:data-[slot=alert-description]:text-(--destructive)/90 [&>svg]:text-current",
+        error:
+          "border-(--destructive)/50 bg-(--destructive)/10 text-(--destructive) *:data-[slot=alert-description]:text-(--destructive)/90 [&>svg]:text-current",
+        success:
+          "border-(--success)/50 bg-(--success)/10 text-(--success) *:data-[slot=alert-description]:text-(--success)/90 [&>svg]:text-current",
+        warning:
+          "border-(--warning)/50 bg-(--warning)/10 text-(--warning) *:data-[slot=alert-description]:text-(--warning)/90 [&>svg]:text-current",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+)
 
-const icons: Record<AlertVariant, React.ElementType> = {
-  info: Info,
-  success: CheckCircle2,
-  warning: TriangleAlert,
-  error: AlertCircle,
-}
-
-const styles: Record<AlertVariant, string> = {
-  info: "border-(--accent) text-(--accent) bg-(--accent)/8",
-  success: "border-(--success) text-(--success) bg-(--success)/8",
-  warning: "border-(--warning) text-(--warning) bg-(--warning)/8",
-  error: "border-(--destructive) text-(--destructive) bg-(--destructive)/8",
-}
-
-interface AlertProps {
-  variant?: AlertVariant
-  title?: string
-  children: React.ReactNode
-  className?: string
-}
-
-export function Alert({
-  variant = "info",
-  title,
-  children,
+function Alert({
   className,
-}: AlertProps) {
-  const Icon = icons[variant]
-
+  variant,
+  ...props
+}: React.ComponentProps<"div"> & VariantProps<typeof alertVariants>) {
   return (
     <div
+      data-slot="alert"
       role="alert"
-      className={cn(
-        "flex gap-3 rounded-sm border px-3 py-2.5 font-mono text-sm",
-        styles[variant],
-        className
-      )}
-    >
-      <Icon className="mt-0.5 h-4 w-4 shrink-0" />
-      <div className="flex flex-col gap-0.5">
-        {title && <span className="font-semibold">{title}</span>}
-        <span className="opacity-90">{children}</span>
-      </div>
-    </div>
+      className={cn(alertVariants({ variant }), className)}
+      {...props}
+    />
   )
 }
+
+function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="alert-title"
+      className={cn(
+        "col-start-2 line-clamp-1 min-h-4 font-medium tracking-tight",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function AlertDescription({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="alert-description"
+      className={cn(
+        "col-start-2 grid justify-items-start gap-1 text-sm text-(--muted) [&_p]:leading-relaxed",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export { Alert, AlertTitle, AlertDescription }

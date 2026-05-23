@@ -77,6 +77,35 @@ export function createApiClient(opts: ApiClientOptions): KyInstance {
 
 /** Unwrap the `{ data, meta }` envelope used by every backend response. */
 export async function fetchApi<T>(fn: () => Promise<{ data: T }>): Promise<T> {
-  const envelope = await fn()
-  return envelope.data
+  try {
+    const envelope = await fn()
+    return envelope.data
+  } catch (error: any) {
+    if (error.name === "HTTPError" && error.response) {
+      let body
+
+      // 1. Apenas tentamos ler o JSON aqui com segurança
+      try {
+        body = error.data ?? (await error.response.clone().json())
+      } catch (parseError) {
+        // Se a resposta não for JSON (ex: erro 502 do Nginx), lança o original
+        throw error
+      }
+
+      // 2. FORA do try/catch, nós montamos e disparamos o nosso erro limpo!
+      const apiError = new Error(
+        body.error?.message || "Ocorreu um erro inesperado."
+      ) as Error & { code: string; status: number }
+
+      apiError.name = "NexusApiError"
+      apiError.code = body.error?.code || "UNKNOWN_ERROR"
+      apiError.status = error.response.status
+
+      // Agora sim, o React Query vai receber isso:
+      throw apiError
+    }
+
+    // Se for erro de rede (Offline, Timeout), repassa o original
+    throw error
+  }
 }

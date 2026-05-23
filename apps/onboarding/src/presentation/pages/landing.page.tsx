@@ -2,7 +2,7 @@ import { motion, type Variants } from "motion/react"
 import { Link } from "react-router"
 import { ArrowRight, Cpu, ShieldCheck, Zap } from "lucide-react"
 
-import { Button, buttonVariants } from "@nexus/ui"
+import { buttonVariants } from "@nexus/ui"
 
 export function LandingPage() {
   const container: Variants = {

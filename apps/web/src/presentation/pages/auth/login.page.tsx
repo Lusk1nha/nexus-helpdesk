@@ -1,11 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod"
-import { AnimatePresence, motion } from "motion/react"
+import { motion } from "motion/react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { Link, useNavigate } from "react-router"
 import { Eye, EyeOff } from "lucide-react"
 
-import { Alert, Button, FormField, Input } from "@nexus/ui"
+import { Button, FormError, FormField, Input } from "@nexus/ui"
 
 import { useLogin } from "@/application/auth/use-login"
 import { loginSchema, type LoginInput } from "@nexus/auth"
@@ -63,22 +63,10 @@ export function LoginPage() {
           noValidate
           className="space-y-4 px-6 py-5"
         >
-          <AnimatePresence mode="wait">
-            {login.isError && (
-              <motion.div
-                key="error"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.15 }}
-              >
-                <Alert variant="error">
-                  {(login.error as Error)?.message ??
-                    "Invalid credentials. Please try again."}
-                </Alert>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <FormError
+            error={login.error}
+            fallbackMessage="Invalid credentials. Please try again."
+          />
 
           <FormField
             label="Email"

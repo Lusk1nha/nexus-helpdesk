@@ -1,5 +1,6 @@
-export { Alert } from "./alert"
+export { Alert, AlertDescription, AlertTitle } from "./alert"
 export { Button, type ButtonProps, buttonVariants } from "./button"
 export { FormField } from "./form-field"
+export { FormError } from "./form-error"
 export { Input, type InputProps } from "./input"
 export { Label, type LabelProps } from "./label"

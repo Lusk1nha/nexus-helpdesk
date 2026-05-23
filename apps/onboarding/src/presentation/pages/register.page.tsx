@@ -1,45 +1,66 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { motion } from "motion/react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { Eye, EyeOff, Globe } from "lucide-react"
 
 import { registerSchema, type RegisterInput } from "@nexus/auth"
-import { Alert, Button, FormField, Input } from "@nexus/ui"
+import {
+  Button,
+  FormError,
+  FormField,
+  Input,
+} from "@nexus/ui"
 
-// import { useRegister } from "@/application/use-register"
+import { useRegister } from "@/application/auth/use-register"
+import { generateSlug } from "@nexus/utils"
+
 
 export function RegisterPage() {
-  // const registerTenant = useRegister()
+  const registerTenant = useRegister()
   const [showPassword, setShowPassword] = useState(false)
 
   const {
     register,
     handleSubmit,
     watch,
-    formState: { errors, isSubmitting },
+    setValue,
+    formState: { errors, isSubmitting, dirtyFields },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
+      tenantName: "",
       tenantSlug: "",
     },
   })
 
   const currentSlug = watch("tenantSlug")
+  const tenantName = watch("tenantName")
+
+  useEffect(() => {
+    if (!dirtyFields.tenantSlug) {
+      const suggestedSlug = generateSlug(tenantName || "")
+
+      setValue("tenantSlug", suggestedSlug, {
+        shouldValidate: false,
+        shouldDirty: false,
+      })
+    }
+  }, [tenantName, dirtyFields.tenantSlug, setValue])
 
   const onSubmit = async (data: RegisterInput) => {
     try {
-      // await registerTenant.mutateAsync(data)
+      // 1. Chama a API em Rust via TanStack Query
+      const { tenantSlug } = await registerTenant.mutateAsync(data)
 
-      // Simulando o delay da API
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      // Redirecionamento Mágico: Após criar, joga o admin para o subdomínio dele!
+      // 2. Redirecionamento Mágico para o Workspace criado
       const protocol = window.location.protocol
-      // Em dev: http://[slug].localhost:5173/login
-      window.location.href = `${protocol}//${data.tenantSlug}.localhost:5173/login?registered=true`
+
+      // Monta a URL: http://[slug].localhost:5173/login (ou .nexus.com em prod)
+      window.location.href = `${protocol}//${tenantSlug}.localhost:5173/login?registered=true`
     } catch (error) {
-      console.error(error)
+      // O React Query já vai setar registerTenant.isError como true
+      console.error("Falha ao provisionar o Tenant:", error)
     }
   }
 
@@ -70,6 +91,11 @@ export function RegisterPage() {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="p-6">
+          {/* Tratativa visual de erro da API */}
+          <FormError error={registerTenant.error}
+            fallbackMessage="It was not possible to proceed with this request!"
+          />
+
           <div className="space-y-8">
             {/* Secão 1: Organização */}
             <section className="space-y-4">
@@ -117,7 +143,7 @@ export function RegisterPage() {
                 <span className="text-(--accent)">
                   {currentSlug ? currentSlug.toLowerCase() : "<slug>"}
                 </span>
-                .nexus.com
+                .nexus.localhost
               </div>
             </section>
 
@@ -208,8 +234,12 @@ export function RegisterPage() {
           </div>
 
           <div className="mt-8 border-t border-(--border) pt-6">
-            <Button type="submit" className="w-full" loading={isSubmitting}>
-              {isSubmitting
+            <Button
+              type="submit"
+              className="w-full cursor-pointer"
+              loading={isSubmitting || registerTenant.isPending}
+            >
+              {isSubmitting || registerTenant.isPending
                 ? "Provisioning Workspace..."
                 : "Initialize Workspace →"}
             </Button>

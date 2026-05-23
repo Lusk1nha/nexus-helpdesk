@@ -14,5 +14,5 @@ import { RegisterPage } from "./register.page"
  */
 export const authRoutes: AppRoute[] = [
   { path: segments.login, element: <LoginPage /> },
-  { path: segments.register, element: <RegisterPage /> },
+  // { path: segments.register, element: <RegisterPage /> },
 ]
