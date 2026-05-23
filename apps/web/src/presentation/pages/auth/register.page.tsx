@@ -8,7 +8,7 @@ import { CheckCircle2, Eye, EyeOff } from "lucide-react"
 import { Alert, Button, FormField, Input } from "@nexus/ui"
 
 import { useRegister } from "@/application/auth/use-register"
-import { registerSchema, type RegisterInput } from "@/domain/auth/auth.schemas"
+import { registerSchema, type RegisterInput } from "@nexus/auth"
 import { paths } from "@/presentation/router/paths"
 
 export function RegisterPage() {
@@ -127,6 +127,26 @@ export function RegisterPage() {
                 error={!!errors.tenantName}
                 {...register("tenantName")}
               />
+            </FormField>
+            <FormField
+              label="Workspace slug"
+              htmlFor="tenantSlug"
+              error={errors.tenantSlug?.message}
+              required
+            >
+              <Input
+                id="tenantSlug"
+                placeholder="acme"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                error={!!errors.tenantSlug}
+                {...register("tenantSlug")}
+              />
+              <p className="mt-1 font-mono text-[10px] text-(--muted)">
+                your URL will be{" "}
+                <span className="text-(--accent)">[slug].nexus.com</span>
+              </p>
             </FormField>
           </div>
 

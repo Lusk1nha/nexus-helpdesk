@@ -1,5 +1,6 @@
 pub mod authenticate_api_key;
 pub mod change_user_role;
+pub mod check_slug_availability;
 pub mod create_api_key;
 pub mod get_tenant;
 pub mod invite_user;
@@ -16,6 +17,9 @@ pub mod update_user_status;
 
 pub use authenticate_api_key::{AuthenticateApiKeyCommand, AuthenticateApiKeyUseCase};
 pub use change_user_role::{ChangeUserRoleCommand, ChangeUserRoleUseCase};
+pub use check_slug_availability::{
+    CheckSlugAvailabilityCommand, CheckSlugAvailabilityUseCase, SlugAvailability,
+};
 pub use create_api_key::{CreateApiKeyCommand, CreateApiKeyUseCase};
 pub use get_tenant::{GetTenantCommand, GetTenantUseCase};
 pub use invite_user::{InviteUserCommand, InviteUserUseCase};

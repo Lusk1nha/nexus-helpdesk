@@ -1,7 +1,12 @@
+/**
+ * All backend API URLs in one place. Importing from `@nexus/api/routes`
+ * means a backend route rename is a single-file change.
+ */
 export const API = {
   identity: {
     login: "api/v1/identity/login",
     register: "api/v1/identity/register",
+    checkSlug: "api/v1/identity/check-slug",
     refresh: "api/v1/identity/refresh",
     logout: "api/v1/identity/logout",
     me: "api/v1/identity/me",

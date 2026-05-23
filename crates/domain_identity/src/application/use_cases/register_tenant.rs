@@ -1,11 +1,14 @@
 use std::sync::Arc;
 
+use crate::domain::entities::tenant::validate_slug;
 use crate::domain::entities::{Credential, Role, Tenant, TenantUser, User};
 use crate::domain::error::DomainError;
 use crate::domain::ports::{PasswordHasher, UnitOfWorkManager};
 
 pub struct RegisterTenantCommand {
     pub tenant_name: String,
+    /// User-chosen subdomain slug (e.g. "acme" → acme.nexus.com).
+    pub tenant_slug: String,
     pub admin_full_name: String,
     pub admin_email: String,
     pub admin_plain_password: String,
@@ -36,6 +39,10 @@ impl RegisterTenantUseCase {
         &self,
         command: RegisterTenantCommand,
     ) -> Result<(Tenant, User), DomainError> {
+        // Validate slug format BEFORE opening a transaction so bad input
+        // fails fast and doesn't waste a DB connection.
+        validate_slug(&command.tenant_slug)?;
+
         let mut uow = self.uow_manager.begin().await?;
 
         if uow
@@ -48,8 +55,17 @@ impl RegisterTenantUseCase {
             return Err(DomainError::UserAlreadyExists);
         }
 
-        let slug = slug::slugify(&command.tenant_name);
-        let tenant = Tenant::new(command.tenant_name, slug);
+        if uow
+            .tenants()
+            .find_by_slug(&command.tenant_slug)
+            .await?
+            .is_some()
+        {
+            tracing::warn!(slug = %command.tenant_slug, "registration rejected: slug already taken");
+            return Err(DomainError::SlugAlreadyTaken(command.tenant_slug));
+        }
+
+        let tenant = Tenant::new(command.tenant_name, command.tenant_slug);
         let user = User::new(command.admin_email, command.admin_full_name);
         let hashed_password = self.password_hasher.hash(&command.admin_plain_password)?;
         let credential = Credential::new(user.id, hashed_password);

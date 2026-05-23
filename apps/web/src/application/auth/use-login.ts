@@ -1,10 +1,8 @@
+import { API } from "@nexus/api"
+import { useAuthStore, type LoginInput, type LoginResult } from "@nexus/auth"
 import { useMutation } from "@tanstack/react-query"
 
-import type { LoginInput } from "@/domain/auth/auth.schemas"
-import type { LoginResult } from "@/domain/auth/auth.types"
 import { fetchApi, http } from "@/infrastructure/http/client"
-import { useAuthStore } from "@/infrastructure/store/auth.store"
-import { API } from "@/infrastructure/http/api.routes"
 
 export function useLogin() {
   const setSession = useAuthStore((s) => s.setSession)

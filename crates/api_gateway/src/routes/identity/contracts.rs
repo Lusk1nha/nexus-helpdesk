@@ -45,6 +45,12 @@ pub struct RegisterTenantPayload {
     #[schema(example = "Nexus Corp")]
     pub tenant_name: String,
 
+    /// Subdomain slug — drives the tenant's workspace URL ([slug].nexus.com).
+    /// Format and uniqueness are validated server-side.
+    #[validate(length(min = 3, max = 32, message = "O slug deve ter entre 3 e 32 caracteres."))]
+    #[schema(example = "nexus-corp")]
+    pub tenant_slug: String,
+
     #[validate(length(min = 3, message = "O nome do administrador é muito curto."))]
     #[schema(example = "Lucas P.")]
     pub admin_full_name: String,
@@ -62,6 +68,7 @@ pub struct RegisterTenantPayload {
 #[serde(rename_all = "camelCase")]
 pub struct RegisterTenantResponse {
     pub tenant_id: Uuid,
+    pub tenant_slug: String,
     pub user_id: Uuid,
     #[schema(example = "Empresa registrada com sucesso!")]
     pub message: String,
@@ -71,10 +78,30 @@ impl From<(Tenant, User)> for RegisterTenantResponse {
     fn from((tenant, user): (Tenant, User)) -> Self {
         Self {
             tenant_id: tenant.id,
+            tenant_slug: tenant.slug,
             user_id: user.id,
             message: "Empresa registrada com sucesso!".to_string(),
         }
     }
+}
+
+// ─── Check slug availability ─────────────────────────────────────────────────
+
+#[derive(serde::Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct CheckSlugQuery {
+    /// Candidate slug to check (e.g. "acme").
+    pub slug: String,
+}
+
+#[derive(Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct CheckSlugResponse {
+    pub slug: String,
+    pub available: bool,
+    /// When `available` is false, a human-readable reason (format issue or
+    /// already taken). `null` when the slug is available.
+    pub reason: Option<String>,
 }
 
 // ─── Login ────────────────────────────────────────────────────────────────────
@@ -94,17 +121,11 @@ pub struct LoginPayload {
 #[derive(Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct LoginResponse {
-    /// Short-lived access token (default 15 min). Renamed from `token` —
-    /// the legacy `token` alias is kept for clients still on the old payload.
-    #[serde(alias = "token")]
+    /// Short-lived access token (default 15 min). Kept in-memory by the frontend.
+    /// The refresh token travels in an httpOnly cookie and is NOT returned here.
     pub access_token: String,
-    /// Long-lived refresh token. Send back to POST /refresh to mint a new pair.
-    pub refresh_token: String,
     /// Seconds until `access_token` expires.
     pub access_token_expires_in: i64,
-    /// Convenience copy of the access token under its legacy name. Allows
-    /// existing tests/clients that read `body.token` to keep working.
-    pub token: String,
     pub user_id: Uuid,
     pub tenant_id: Uuid,
     #[schema(value_type = String, example = "admin")]
@@ -112,19 +133,14 @@ pub struct LoginResponse {
 }
 
 // ─── Refresh ──────────────────────────────────────────────────────────────────
-
-#[derive(Deserialize, Validate, ToSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct RefreshTokenPayload {
-    #[validate(length(min = 1, message = "O refresh token é obrigatório."))]
-    pub refresh_token: String,
-}
+//
+// The refresh endpoint reads the refresh token from the httpOnly cookie and
+// rotates it (issuing a fresh cookie). No request body is required.
 
 #[derive(Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct RefreshTokenResponse {
     pub access_token: String,
-    pub refresh_token: String,
     pub access_token_expires_in: i64,
 }
 
@@ -133,11 +149,9 @@ pub struct RefreshTokenResponse {
 #[derive(Deserialize, ToSchema, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct LogoutPayload {
-    /// Token a ser revogado. Se omitido com `everywhere=false`, apenas o
-    /// access token expira normalmente (logout local).
-    pub refresh_token: Option<String>,
     /// Quando true, revoga todas as sessões do usuário (logout em todos os
-    /// dispositivos).
+    /// dispositivos). Quando false (default), revoga apenas a sessão atual
+    /// (lida do cookie httpOnly).
     #[serde(default)]
     pub everywhere: bool,
 }

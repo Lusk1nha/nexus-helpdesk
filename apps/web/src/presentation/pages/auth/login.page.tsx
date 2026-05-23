@@ -8,7 +8,7 @@ import { Eye, EyeOff } from "lucide-react"
 import { Alert, Button, FormField, Input } from "@nexus/ui"
 
 import { useLogin } from "@/application/auth/use-login"
-import { loginSchema, type LoginInput } from "@/domain/auth/auth.schemas"
+import { loginSchema, type LoginInput } from "@nexus/auth"
 import { paths } from "@/presentation/router/paths"
 
 export function LoginPage() {

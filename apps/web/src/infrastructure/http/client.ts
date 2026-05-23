@@ -1,74 +1,22 @@
-import ky, {
-  type AfterResponseState,
-  type BeforeRequestState,
-  type KyInstance,
-} from "ky"
+import { createApiClient, fetchApi } from "@nexus/api"
+import { useAuthStore } from "@nexus/auth"
 
 import { env } from "@/env"
-import { useAuthStore } from "@/infrastructure/store/auth.store"
 import { paths } from "@/presentation/router/paths"
-import { API } from "./api.routes"
 
 /**
- * Shared ky instance with:
- * - Auth header injection (beforeRequest)
- * - Transparent access-token refresh on 401 (afterResponse)
+ * App-local ky instance wired to this app's Zustand auth store + redirect path.
+ * Each app (web, onboarding, admin) creates its own instance, but they all
+ * share the same factory + the same cookie-based refresh contract.
  */
-export const http: KyInstance = ky.create({
+export const http = createApiClient({
   baseUrl: env.apiUrl,
-  timeout: 30_000,
-  retry: 0,
-  hooks: {
-    beforeRequest: [
-      ({ request }: BeforeRequestState) => {
-        const token = useAuthStore.getState().accessToken
-        if (token) {
-          request.headers.set("Authorization", `Bearer ${token}`)
-        }
-      },
-    ],
-    afterResponse: [
-      async ({
-        request,
-        response,
-      }: AfterResponseState): Promise<Response | void> => {
-        if (response.status !== 401) return
-
-        const { refreshToken, setAccessToken, clear } = useAuthStore.getState()
-
-        if (!refreshToken) {
-          clear()
-          window.location.href = paths.login
-          return
-        }
-
-        try {
-          const refreshed = await ky
-            .post(`${env.apiUrl}/${API.identity.refresh}`, {
-              json: { refreshToken },
-            })
-            .json<{ data: { accessToken: string } }>()
-
-          setAccessToken(refreshed.data.accessToken)
-
-          return ky(request.url, {
-            method: request.method,
-            headers: {
-              ...Object.fromEntries(request.headers.entries()),
-              Authorization: `Bearer ${refreshed.data.accessToken}`,
-            },
-          })
-        } catch {
-          clear()
-          window.location.href = paths.login
-        }
-      },
-    ],
+  getAccessToken: () => useAuthStore.getState().accessToken,
+  setAccessToken: (token) => useAuthStore.getState().setAccessToken(token),
+  onAuthFailure: () => {
+    useAuthStore.getState().clear()
+    window.location.href = paths.login
   },
 })
 
-/** Unwrap the ApiResponse envelope and return `data`. */
-export async function fetchApi<T>(fn: () => Promise<{ data: T }>): Promise<T> {
-  const envelope = await fn()
-  return envelope.data
-}
+export { fetchApi }

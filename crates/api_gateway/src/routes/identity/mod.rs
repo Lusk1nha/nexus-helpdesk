@@ -17,6 +17,7 @@ pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/me", get(handlers::get_me_handler))
         .route("/register", post(handlers::register_tenant_handler))
+        .route("/check-slug", get(handlers::check_slug_handler))
         .route(
             "/login",
             post(handlers::login_handler).route_layer(auth_limit.clone()),

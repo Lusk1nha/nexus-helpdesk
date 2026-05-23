@@ -24,6 +24,7 @@ async fn test_login_success_with_correct_credentials() {
     register_uc
         .execute(RegisterTenantCommand {
             tenant_name: "Login Corporation".to_string(),
+            tenant_slug: "login-corp".to_string(),
             admin_full_name: "User Test".to_string(),
             admin_email: "login@test.com".to_string(),
             admin_plain_password: "Password123!".to_string(),
@@ -57,6 +58,7 @@ async fn test_login_fails_and_increments_attempts_until_lockout() {
     register_uc
         .execute(RegisterTenantCommand {
             tenant_name: "Security Labs".to_string(),
+            tenant_slug: "security-labs".to_string(),
             admin_full_name: "Target User".to_string(),
             admin_email: "hacker@target.com".to_string(),
             admin_plain_password: "CorrectPassword123!".to_string(),

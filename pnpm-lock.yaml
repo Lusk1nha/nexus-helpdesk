@@ -29,6 +29,12 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.4.0
         version: 5.4.0(react-hook-form@7.76.0(react@19.2.6))
+      '@nexus/api':
+        specifier: workspace:*
+        version: link:../../packages/api
+      '@nexus/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
       '@nexus/theme':
         specifier: workspace:*
         version: link:../../packages/theme
@@ -38,9 +44,6 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.100.13
         version: 5.100.13(react@19.2.6)
-      ky:
-        specifier: ^2.0.2
-        version: 2.0.2
       lucide-react:
         specifier: ^1.16.0
         version: 1.16.0(react@19.2.6)
@@ -62,9 +65,6 @@ importers:
       zod:
         specifier: ^4.4.3
         version: 4.4.3
-      zustand:
-        specifier: ^5.0.13
-        version: 5.0.13(@types/react@19.2.15)(react@19.2.6)
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
@@ -138,6 +138,35 @@ importers:
       vitest:
         specifier: ^4.1.7
         version: 4.1.7(@types/node@24.12.4)(@vitest/ui@4.1.7)(jsdom@29.1.1)(vite@8.0.14(@types/node@24.12.4)(jiti@2.7.0))
+
+  packages/api:
+    dependencies:
+      ky:
+        specifier: ^2.0.2
+        version: 2.0.2
+    devDependencies:
+      '@nexus/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      typescript:
+        specifier: ~6.0.2
+        version: 6.0.3
+
+  packages/auth:
+    dependencies:
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+      zustand:
+        specifier: ^5.0.13
+        version: 5.0.13(@types/react@19.2.15)(react@19.2.6)
+    devDependencies:
+      '@nexus/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      typescript:
+        specifier: ~6.0.2
+        version: 6.0.3
 
   packages/theme:
     dependencies:

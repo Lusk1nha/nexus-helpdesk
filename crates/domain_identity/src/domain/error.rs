@@ -18,6 +18,12 @@ pub enum DomainError {
     #[error("A função (Role) '{0}' é inválida. Use: admin, agent, customer.")]
     InvalidRole(String),
 
+    #[error("O slug '{0}' já está em uso por outra empresa.")]
+    SlugAlreadyTaken(String),
+
+    #[error("Slug inválido: {0}")]
+    InvalidSlug(String),
+
     // --- Erros de Infraestrutura (Encapsulados) ---
     // Note que usamos String para não acoplar o domínio aos erros do SQLx ou Argon2
     #[error("Erro interno no banco de dados: {0}")]

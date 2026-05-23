@@ -1,7 +1,7 @@
 import { Navigate } from "react-router"
 
 import { useSession } from "@/application/auth/use-session"
-import type { Role } from "@/domain/auth/auth.types"
+import type { Role } from "@nexus/auth"
 
 import { paths } from "./paths"
 

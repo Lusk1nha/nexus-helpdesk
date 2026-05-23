@@ -1,6 +1,6 @@
 import type { RouteObject } from "react-router"
 
-import type { Role } from "@/domain/auth/auth.types"
+import type { Role } from "@nexus/auth"
 
 /**
  * Extension of React Router's RouteObject with an optional `requiredRole`

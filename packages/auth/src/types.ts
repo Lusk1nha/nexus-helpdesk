@@ -6,13 +6,13 @@ export interface User {
   role: Role
 }
 
-export interface TokenPair {
+/**
+ * Login response — the refresh token is NOT here. It lives in an httpOnly
+ * cookie set by the backend and sent automatically by the browser.
+ */
+export interface LoginResult {
   accessToken: string
-  refreshToken: string
   accessTokenExpiresIn: number
-}
-
-export interface LoginResult extends TokenPair {
   userId: string
   tenantId: string
   role: Role
@@ -20,6 +20,13 @@ export interface LoginResult extends TokenPair {
 
 export interface RegisterResult {
   tenantId: string
+  tenantSlug: string
   userId: string
   message: string
+}
+
+export interface CheckSlugResult {
+  slug: string
+  available: boolean
+  reason: string | null
 }
