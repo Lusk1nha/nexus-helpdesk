@@ -94,11 +94,52 @@ pub struct LoginPayload {
 #[derive(Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct LoginResponse {
+    /// Short-lived access token (default 15 min). Renamed from `token` —
+    /// the legacy `token` alias is kept for clients still on the old payload.
+    #[serde(alias = "token")]
+    pub access_token: String,
+    /// Long-lived refresh token. Send back to POST /refresh to mint a new pair.
+    pub refresh_token: String,
+    /// Seconds until `access_token` expires.
+    pub access_token_expires_in: i64,
+    /// Convenience copy of the access token under its legacy name. Allows
+    /// existing tests/clients that read `body.token` to keep working.
     pub token: String,
     pub user_id: Uuid,
     pub tenant_id: Uuid,
     #[schema(value_type = String, example = "admin")]
     pub role: Role,
+}
+
+// ─── Refresh ──────────────────────────────────────────────────────────────────
+
+#[derive(Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct RefreshTokenPayload {
+    #[validate(length(min = 1, message = "O refresh token é obrigatório."))]
+    pub refresh_token: String,
+}
+
+#[derive(Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct RefreshTokenResponse {
+    pub access_token: String,
+    pub refresh_token: String,
+    pub access_token_expires_in: i64,
+}
+
+// ─── Logout ──────────────────────────────────────────────────────────────────
+
+#[derive(Deserialize, ToSchema, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct LogoutPayload {
+    /// Token a ser revogado. Se omitido com `everywhere=false`, apenas o
+    /// access token expira normalmente (logout local).
+    pub refresh_token: Option<String>,
+    /// Quando true, revoga todas as sessões do usuário (logout em todos os
+    /// dispositivos).
+    #[serde(default)]
+    pub everywhere: bool,
 }
 
 // ─── Admin reset password ─────────────────────────────────────────────────────
@@ -233,6 +274,88 @@ pub struct TenantResponse {
     pub is_active: bool,
     #[schema(value_type = String)]
     pub created_at: OffsetDateTime,
+}
+
+// ─── API keys ────────────────────────────────────────────────────────────────
+
+#[derive(Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateApiKeyPayload {
+    #[validate(length(
+        min = 3,
+        max = 120,
+        message = "O nome da chave deve ter entre 3 e 120 caracteres."
+    ))]
+    #[schema(example = "CI deploy bot")]
+    pub name: String,
+
+    /// Papel atribuído à chave. Restringe o que ela pode fazer.
+    #[validate(length(min = 1, message = "O papel (role) é obrigatório."))]
+    #[schema(example = "agent")]
+    pub role: String,
+
+    /// Dias até expirar. Se omitido, a chave não expira.
+    #[schema(example = 90, nullable = true)]
+    pub expires_in_days: Option<u32>,
+}
+
+#[derive(Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateApiKeyResponse {
+    pub id: Uuid,
+    pub name: String,
+    pub key_prefix: String,
+    #[schema(value_type = String, example = "agent")]
+    pub role: Role,
+    /// **Valor completo da chave.** Mostrado uma única vez no momento da
+    /// criação — não é possível recuperá-lo depois. Use no header
+    /// `X-API-Key: <plaintext>`.
+    pub plaintext: String,
+    #[schema(value_type = String, nullable = true)]
+    pub expires_at: Option<OffsetDateTime>,
+    #[schema(value_type = String)]
+    pub created_at: OffsetDateTime,
+}
+
+#[derive(Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ApiKeyResponse {
+    pub id: Uuid,
+    pub name: String,
+    pub key_prefix: String,
+
+    #[schema(value_type = String, example = "agent")]
+    pub role: Role,
+    pub is_active: bool,
+
+    #[schema(value_type = String, nullable = true)]
+    pub expires_at: Option<OffsetDateTime>,
+
+    #[schema(value_type = String, nullable = true)]
+    pub last_used_at: Option<OffsetDateTime>,
+
+    #[schema(value_type = String, nullable = true)]
+    pub revoked_at: Option<OffsetDateTime>,
+    
+    #[schema(value_type = String)]
+    pub created_at: OffsetDateTime,
+}
+
+impl From<domain_identity::domain::entities::ApiKey> for ApiKeyResponse {
+    fn from(k: domain_identity::domain::entities::ApiKey) -> Self {
+        let is_active = k.is_active();
+        Self {
+            id: k.id,
+            name: k.name,
+            key_prefix: k.key_prefix,
+            role: k.role,
+            is_active,
+            expires_at: k.expires_at,
+            last_used_at: k.last_used_at,
+            revoked_at: k.revoked_at,
+            created_at: k.created_at,
+        }
+    }
 }
 
 impl From<Tenant> for TenantResponse {

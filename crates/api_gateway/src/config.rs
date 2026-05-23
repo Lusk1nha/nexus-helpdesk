@@ -13,6 +13,15 @@ pub struct AppConfig {
     /// Use a long random string in production (32+ characters).
     pub jwt_secret: String,
 
+    /// Lifetime of access tokens, in minutes. Default: 15.
+    pub access_token_ttl_minutes: u32,
+
+    /// Lifetime of refresh tokens, in days. Default: 30.
+    pub refresh_token_ttl_days: u32,
+
+    /// Issuer claim (`iss`) put into every JWT. Default: "nexus-helpdesk".
+    pub jwt_issuer: String,
+
     // ── HTTP server ───────────────────────────────────────────────────────────
     /// IP address the server binds to. Default: 0.0.0.0
     pub host: String,
@@ -62,6 +71,9 @@ impl AppConfig {
             .set_default("frontend_url", "http://localhost:5173")?
             .set_default("ollama_url", "http://127.0.0.1:11434")?
             .set_default("qdrant_url", "http://127.0.0.1:6334")?
+            .set_default("access_token_ttl_minutes", 15_i64)?
+            .set_default("refresh_token_ttl_days", 30_i64)?
+            .set_default("jwt_issuer", "nexus-helpdesk")?
             // ── Optional config file ───────────────────────────────────────
             // Place a config.toml at the workspace root to override defaults
             // without touching environment variables.
@@ -70,6 +82,15 @@ impl AppConfig {
             // Env vars are read case-insensitively: DATABASE_URL → database_url
             .add_source(Environment::default())
             .build()?
-            .try_deserialize()
+            .try_deserialize::<AppConfig>()
+            .and_then(|cfg| {
+                if cfg.jwt_secret.len() < 32 {
+                    return Err(config::ConfigError::Message(
+                        "JWT_SECRET deve ter pelo menos 32 caracteres (gere com `openssl rand -base64 48`)."
+                            .to_string(),
+                    ));
+                }
+                Ok(cfg)
+            })
     }
 }

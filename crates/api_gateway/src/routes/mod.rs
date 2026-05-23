@@ -1,7 +1,7 @@
 use axum::Router;
 use utoipa::{
     Modify, OpenApi,
-    openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme},
+    openapi::security::{ApiKey, ApiKeyValue, HttpAuthScheme, HttpBuilder, SecurityScheme},
 };
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -51,6 +51,8 @@ pub mod ticketing;
         // Identity
         identity::handlers::register_tenant_handler,
         identity::handlers::login_handler,
+        identity::handlers::refresh_token_handler,
+        identity::handlers::logout_handler,
         identity::handlers::get_me_handler,
         identity::handlers::admin_reset_user_password_handler,
         identity::handlers::invite_user_handler,
@@ -58,6 +60,9 @@ pub mod ticketing;
         identity::handlers::change_user_role_handler,
         identity::handlers::update_user_status_handler,
         identity::handlers::get_tenant_handler,
+        identity::handlers::create_api_key_handler,
+        identity::handlers::list_api_keys_handler,
+        identity::handlers::revoke_api_key_handler,
     ),
     components(
         schemas(
@@ -89,6 +94,12 @@ pub mod ticketing;
             identity::contracts::ChangeUserRolePayload,
             identity::contracts::UpdateUserStatusPayload,
             identity::contracts::TenantResponse,
+            identity::contracts::RefreshTokenPayload,
+            identity::contracts::RefreshTokenResponse,
+            identity::contracts::LogoutPayload,
+            identity::contracts::CreateApiKeyPayload,
+            identity::contracts::CreateApiKeyResponse,
+            identity::contracts::ApiKeyResponse,
         )
     ),
     tags(
@@ -112,7 +123,11 @@ impl Modify for SecurityAddon {
                         .bearer_format("JWT")
                         .build(),
                 ),
-            )
+            );
+            components.add_security_scheme(
+                "api_key",
+                SecurityScheme::ApiKey(ApiKey::Header(ApiKeyValue::new("X-API-Key"))),
+            );
         }
     }
 }

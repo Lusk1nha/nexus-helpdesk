@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use uuid::Uuid;
 
-use crate::domain::entities::{Credential, Tenant, TenantUser, User};
+use crate::domain::entities::{ApiKey, Credential, RefreshToken, Tenant, TenantUser, User};
 use crate::domain::error::DomainError;
 
 #[async_trait]
@@ -63,4 +63,37 @@ pub trait TenantRepository: Send + Sync {
 
     /// Lista todos os membros ativos de um tenant com seus dados de usuário.
     async fn list_members(&self, tenant_id: Uuid) -> Result<Vec<(User, TenantUser)>, DomainError>;
+}
+
+#[async_trait]
+pub trait RefreshTokenRepository: Send + Sync {
+    /// Persiste um novo refresh token.
+    async fn create(&self, token: &RefreshToken) -> Result<(), DomainError>;
+
+    /// Busca um refresh token pelo seu jti (id pública).
+    async fn find_by_jti(&self, jti: Uuid) -> Result<Option<RefreshToken>, DomainError>;
+
+    /// Marca como revogado um refresh token específico.
+    async fn revoke(&self, jti: Uuid) -> Result<(), DomainError>;
+
+    /// Revoga todos os refresh tokens ativos de um usuário (logout global).
+    async fn revoke_all_for_user(&self, user_id: Uuid) -> Result<(), DomainError>;
+}
+
+#[async_trait]
+pub trait ApiKeyRepository: Send + Sync {
+    /// Cria uma nova API key.
+    async fn create(&self, api_key: &ApiKey) -> Result<(), DomainError>;
+
+    /// Busca uma API key pelo hash do segredo (usado na autenticação).
+    async fn find_by_hash(&self, key_hash: &str) -> Result<Option<ApiKey>, DomainError>;
+
+    /// Lista as API keys de um tenant.
+    async fn list_by_tenant(&self, tenant_id: Uuid) -> Result<Vec<ApiKey>, DomainError>;
+
+    /// Revoga uma API key.
+    async fn revoke(&self, id: Uuid, tenant_id: Uuid) -> Result<(), DomainError>;
+
+    /// Atualiza last_used_at — chamado a cada autenticação bem-sucedida.
+    async fn touch_last_used(&self, id: Uuid) -> Result<(), DomainError>;
 }

@@ -191,6 +191,9 @@ pub async fn spawn_test_app() -> TestApp {
     let config = AppConfig {
         database_url: connection_string,
         jwt_secret: "test_secret_key_for_testing_only_32chars!".to_string(),
+        access_token_ttl_minutes: 15,
+        refresh_token_ttl_days: 30,
+        jwt_issuer: "nexus-helpdesk-test".to_string(),
         port: 0,
         host: "127.0.0.1".to_string(),
         frontend_url: "http://localhost:5173".to_string(),

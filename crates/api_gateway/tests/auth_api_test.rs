@@ -2,6 +2,7 @@ mod common;
 
 use axum::http::StatusCode;
 use common::spawn_test_app;
+use tower::ServiceExt;
 
 // ─── Register ────────────────────────────────────────────────────────────────
 
@@ -184,4 +185,260 @@ async fn get_me_with_invalid_token_returns_401() {
         .get_json("/api/v1/identity/me", Some("this.is.not.valid"))
         .await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);
+}
+
+// ─── Refresh token ───────────────────────────────────────────────────────────
+
+#[tokio::test]
+async fn login_returns_access_and_refresh_tokens() {
+    let app = spawn_test_app().await;
+    app.register_tenant("pair@example.com", "StrongPass123!")
+        .await;
+
+    let (status, body) = app
+        .post_json(
+            "/api/v1/identity/login",
+            serde_json::json!({"email": "pair@example.com", "password": "StrongPass123!"}),
+        )
+        .await;
+
+    assert_eq!(status, StatusCode::OK);
+    let access = body["data"]["accessToken"].as_str().unwrap();
+    let refresh = body["data"]["refreshToken"].as_str().unwrap();
+    assert!(!access.is_empty());
+    assert!(!refresh.is_empty());
+    assert_ne!(access, refresh);
+    assert!(body["data"]["accessTokenExpiresIn"].as_i64().unwrap() > 0);
+}
+
+#[tokio::test]
+async fn refresh_with_valid_token_returns_new_pair() {
+    let app = spawn_test_app().await;
+    app.register_tenant("refresh@example.com", "StrongPass123!")
+        .await;
+    let (_, login_body) = app
+        .post_json(
+            "/api/v1/identity/login",
+            serde_json::json!({"email": "refresh@example.com", "password": "StrongPass123!"}),
+        )
+        .await;
+
+    let refresh = login_body["data"]["refreshToken"].as_str().unwrap();
+
+    let (status, body) = app
+        .post_json(
+            "/api/v1/identity/refresh",
+            serde_json::json!({"refreshToken": refresh}),
+        )
+        .await;
+
+    assert_eq!(status, StatusCode::OK, "refresh failed: {body}");
+    let new_access = body["data"]["accessToken"].as_str().unwrap();
+    let new_refresh = body["data"]["refreshToken"].as_str().unwrap();
+    assert!(!new_access.is_empty());
+    assert_ne!(new_refresh, refresh, "refresh token must rotate");
+}
+
+#[tokio::test]
+async fn refresh_with_reused_token_is_rejected_after_rotation() {
+    let app = spawn_test_app().await;
+    app.register_tenant("reuse@example.com", "StrongPass123!")
+        .await;
+    let (_, login_body) = app
+        .post_json(
+            "/api/v1/identity/login",
+            serde_json::json!({"email": "reuse@example.com", "password": "StrongPass123!"}),
+        )
+        .await;
+    let refresh = login_body["data"]["refreshToken"].as_str().unwrap();
+
+    // First refresh succeeds…
+    let (status, _) = app
+        .post_json(
+            "/api/v1/identity/refresh",
+            serde_json::json!({"refreshToken": refresh}),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK);
+
+    // …reusing the old token must be rejected.
+    let (status, _) = app
+        .post_json(
+            "/api/v1/identity/refresh",
+            serde_json::json!({"refreshToken": refresh}),
+        )
+        .await;
+    assert_eq!(status, StatusCode::UNAUTHORIZED);
+}
+
+#[tokio::test]
+async fn refresh_with_garbage_token_returns_401() {
+    let app = spawn_test_app().await;
+    let (status, _) = app
+        .post_json(
+            "/api/v1/identity/refresh",
+            serde_json::json!({"refreshToken": "not.a.jwt"}),
+        )
+        .await;
+    assert_eq!(status, StatusCode::UNAUTHORIZED);
+}
+
+// ─── Logout ──────────────────────────────────────────────────────────────────
+
+#[tokio::test]
+async fn logout_revokes_refresh_token() {
+    let app = spawn_test_app().await;
+    app.register_tenant("lo@example.com", "StrongPass123!")
+        .await;
+    let (_, login_body) = app
+        .post_json(
+            "/api/v1/identity/login",
+            serde_json::json!({"email": "lo@example.com", "password": "StrongPass123!"}),
+        )
+        .await;
+    let access = login_body["data"]["accessToken"].as_str().unwrap().to_string();
+    let refresh = login_body["data"]["refreshToken"].as_str().unwrap().to_string();
+
+    let (status, _) = app
+        .post_json_authed(
+            "/api/v1/identity/logout",
+            serde_json::json!({"refreshToken": refresh}),
+            &access,
+        )
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+
+    // After logout the refresh token must no longer work.
+    let (status, _) = app
+        .post_json(
+            "/api/v1/identity/refresh",
+            serde_json::json!({"refreshToken": refresh}),
+        )
+        .await;
+    assert_eq!(status, StatusCode::UNAUTHORIZED);
+}
+
+// ─── API keys ────────────────────────────────────────────────────────────────
+
+#[tokio::test]
+async fn admin_can_create_api_key_and_use_it_for_auth() {
+    let app = spawn_test_app().await;
+    app.register_tenant("apikey@example.com", "StrongPass123!")
+        .await;
+    let token = app.login("apikey@example.com", "StrongPass123!").await;
+
+    let (status, body) = app
+        .post_json_authed(
+            "/api/v1/identity/api-keys",
+            serde_json::json!({"name": "ci bot", "role": "agent"}),
+            &token,
+        )
+        .await;
+    assert_eq!(status, StatusCode::CREATED, "create failed: {body}");
+
+    let plaintext = body["data"]["plaintext"].as_str().unwrap().to_string();
+    assert!(plaintext.starts_with("nxk_"));
+    let prefix = body["data"]["keyPrefix"].as_str().unwrap();
+    assert!(plaintext.contains(prefix));
+
+    // Use the API key to call /me.
+    let response = app
+        .router
+        .clone()
+        .oneshot(
+            axum::http::Request::builder()
+                .method("GET")
+                .uri("/api/v1/identity/me")
+                .header("x-api-key", &plaintext)
+                .body(axum::body::Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+}
+
+#[tokio::test]
+async fn revoked_api_key_no_longer_authenticates() {
+    let app = spawn_test_app().await;
+    app.register_tenant("revoke@example.com", "StrongPass123!")
+        .await;
+    let token = app.login("revoke@example.com", "StrongPass123!").await;
+
+    let (status, body) = app
+        .post_json_authed(
+            "/api/v1/identity/api-keys",
+            serde_json::json!({"name": "temp bot", "role": "agent"}),
+            &token,
+        )
+        .await;
+    assert_eq!(status, StatusCode::CREATED);
+    let plaintext = body["data"]["plaintext"].as_str().unwrap().to_string();
+    let id = body["data"]["id"].as_str().unwrap().to_string();
+
+    // Revoke it.
+    let response = app
+        .router
+        .clone()
+        .oneshot(
+            axum::http::Request::builder()
+                .method("DELETE")
+                .uri(format!("/api/v1/identity/api-keys/{id}"))
+                .header("authorization", format!("Bearer {token}"))
+                .body(axum::body::Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::NO_CONTENT);
+
+    // Subsequent calls with that key must fail.
+    let response = app
+        .router
+        .clone()
+        .oneshot(
+            axum::http::Request::builder()
+                .method("GET")
+                .uri("/api/v1/identity/me")
+                .header("x-api-key", plaintext)
+                .body(axum::body::Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+}
+
+#[tokio::test]
+async fn non_admin_cannot_create_api_key() {
+    let app = spawn_test_app().await;
+    app.register_tenant("admin@example.com", "StrongPass123!")
+        .await;
+    let admin_token = app.login("admin@example.com", "StrongPass123!").await;
+
+    // Invite a non-admin user under the same tenant.
+    let (status, _) = app
+        .post_json_authed(
+            "/api/v1/identity/users",
+            serde_json::json!({
+                "email": "agent@example.com",
+                "fullName": "Agent Smith",
+                "role": "agent",
+                "temporaryPassword": "AgentPass123!"
+            }),
+            &admin_token,
+        )
+        .await;
+    assert_eq!(status, StatusCode::CREATED);
+
+    let agent_token = app.login("agent@example.com", "AgentPass123!").await;
+
+    let (status, _) = app
+        .post_json_authed(
+            "/api/v1/identity/api-keys",
+            serde_json::json!({"name": "should fail", "role": "agent"}),
+            &agent_token,
+        )
+        .await;
+    assert_eq!(status, StatusCode::FORBIDDEN);
 }

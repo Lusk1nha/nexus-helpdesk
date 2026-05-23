@@ -5,11 +5,15 @@ use tokio::sync::Mutex;
 
 use crate::domain::error::DomainError;
 use crate::domain::ports::{
-    CredentialRepository, TenantRepository, UnitOfWork, UnitOfWorkManager, UserRepository,
+    ApiKeyRepository, CredentialRepository, RefreshTokenRepository, TenantRepository, UnitOfWork,
+    UnitOfWorkManager, UserRepository,
 };
 
 // Importamos os repositórios reais da nossa infraestrutura
-use super::{PgCredentialRepository, PgTenantRepository, PgUserRepository};
+use super::{
+    PgApiKeyRepository, PgCredentialRepository, PgRefreshTokenRepository, PgTenantRepository,
+    PgUserRepository,
+};
 
 // ==========================================
 // 1. O Gerenciador (Cria as transações)
@@ -59,6 +63,14 @@ impl UnitOfWork for PgUnitOfWork {
 
     fn credentials(&mut self) -> Box<dyn CredentialRepository + '_> {
         Box::new(PgCredentialRepository::with_transaction(self.tx.clone()))
+    }
+
+    fn refresh_tokens(&mut self) -> Box<dyn RefreshTokenRepository + '_> {
+        Box::new(PgRefreshTokenRepository::with_transaction(self.tx.clone()))
+    }
+
+    fn api_keys(&mut self) -> Box<dyn ApiKeyRepository + '_> {
+        Box::new(PgApiKeyRepository::with_transaction(self.tx.clone()))
     }
 
     // Finaliza com sucesso

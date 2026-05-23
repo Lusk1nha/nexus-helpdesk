@@ -10,8 +10,10 @@ use domain_ticketing::application::{
 use domain_ticketing::infrastructure::database::postgres_uow::PgTicketingUoWManager;
 
 use domain_identity::application::use_cases::{
-    ChangeUserRoleUseCase, GetTenantUseCase, InviteUserUseCase, ListUsersUseCase, LoginUseCase,
-    RegisterTenantUseCase, ResetPasswordUseCase, UpdateUserStatusUseCase,
+    AuthenticateApiKeyUseCase, ChangeUserRoleUseCase, CreateApiKeyUseCase, GetTenantUseCase,
+    InviteUserUseCase, IssueRefreshTokenUseCase, ListApiKeysUseCase, ListUsersUseCase,
+    LoginUseCase, LogoutUseCase, RefreshSessionUseCase, RegisterTenantUseCase,
+    ResetPasswordUseCase, RevokeApiKeyUseCase, UpdateUserStatusUseCase,
 };
 use domain_identity::infrastructure::{
     database::postgres_uow::PgUnitOfWorkManager, security::argon2_hasher::Argon2Hasher,
@@ -28,6 +30,13 @@ pub struct IdentityUseCases {
     pub change_user_role: Arc<ChangeUserRoleUseCase>,
     pub update_user_status: Arc<UpdateUserStatusUseCase>,
     pub get_tenant: Arc<GetTenantUseCase>,
+    pub issue_refresh_token: Arc<IssueRefreshTokenUseCase>,
+    pub refresh_session: Arc<RefreshSessionUseCase>,
+    pub logout: Arc<LogoutUseCase>,
+    pub create_api_key: Arc<CreateApiKeyUseCase>,
+    pub revoke_api_key: Arc<RevokeApiKeyUseCase>,
+    pub list_api_keys: Arc<ListApiKeysUseCase>,
+    pub authenticate_api_key: Arc<AuthenticateApiKeyUseCase>,
 }
 
 pub struct TicketingUseCases {
@@ -79,7 +88,16 @@ impl AppState {
         let change_user_role = Arc::new(ChangeUserRoleUseCase::new(identity_uow_manager.clone()));
         let update_user_status =
             Arc::new(UpdateUserStatusUseCase::new(identity_uow_manager.clone()));
-        let get_tenant = Arc::new(GetTenantUseCase::new(identity_uow_manager));
+        let get_tenant = Arc::new(GetTenantUseCase::new(identity_uow_manager.clone()));
+        let issue_refresh_token =
+            Arc::new(IssueRefreshTokenUseCase::new(identity_uow_manager.clone()));
+        let refresh_session = Arc::new(RefreshSessionUseCase::new(identity_uow_manager.clone()));
+        let logout = Arc::new(LogoutUseCase::new(identity_uow_manager.clone()));
+        let create_api_key = Arc::new(CreateApiKeyUseCase::new(identity_uow_manager.clone()));
+        let revoke_api_key = Arc::new(RevokeApiKeyUseCase::new(identity_uow_manager.clone()));
+        let list_api_keys = Arc::new(ListApiKeysUseCase::new(identity_uow_manager.clone()));
+        let authenticate_api_key =
+            Arc::new(AuthenticateApiKeyUseCase::new(identity_uow_manager));
 
         let identity_cases = Arc::new(IdentityUseCases {
             register_tenant,
@@ -90,6 +108,13 @@ impl AppState {
             change_user_role,
             update_user_status,
             get_tenant,
+            issue_refresh_token,
+            refresh_session,
+            logout,
+            create_api_key,
+            revoke_api_key,
+            list_api_keys,
+            authenticate_api_key,
         });
 
         // Ticketing use cases

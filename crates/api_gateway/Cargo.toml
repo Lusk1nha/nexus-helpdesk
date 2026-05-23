@@ -26,6 +26,10 @@ jsonwebtoken = { version = "10.3.0", default-features = false, features = [
     "rust_crypto",
 ] }
 chrono = "0.4.44"
+sha2 = "0.10.8"
+base64 = "0.22.1"
+rand = "0.8.5"
+hex = "0.4.3"
 
 # 📚 Swagger / OpenAPI
 utoipa = { version = "5.5.0", features = ["axum_extras", "uuid"] }

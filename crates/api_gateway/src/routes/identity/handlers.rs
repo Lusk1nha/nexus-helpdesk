@@ -7,21 +7,28 @@ use uuid::Uuid;
 use validator::Validate;
 
 use super::contracts::{
-    AdminResetPasswordPayload, ChangeUserRolePayload, GetMeResponse, InviteUserPayload,
-    InviteUserResponse, LoginPayload, LoginResponse, RegisterTenantPayload, RegisterTenantResponse,
-    ResetPasswordResponse, TenantMemberResponse, TenantResponse, UpdateUserStatusPayload,
+    AdminResetPasswordPayload, ApiKeyResponse, ChangeUserRolePayload, CreateApiKeyPayload,
+    CreateApiKeyResponse, GetMeResponse, InviteUserPayload, InviteUserResponse, LoginPayload,
+    LoginResponse, LogoutPayload, RefreshTokenPayload, RefreshTokenResponse,
+    RegisterTenantPayload, RegisterTenantResponse, ResetPasswordResponse, TenantMemberResponse,
+    TenantResponse, UpdateUserStatusPayload,
 };
 use crate::{
     app_state::AppState,
     error::ApiError,
     middleware::auth::{AdminUser, AuthUser},
     response::ApiResponse,
-    utils::jwt::sign_jwt,
+    utils::{
+        jwt::{sign_access_token, sign_refresh_token, verify_jwt},
+        secret::{generate_api_key, sha256_hex},
+    },
 };
 
 use domain_identity::application::use_cases::{
-    LoginCommand, ResetPasswordCommand, change_user_role::ChangeUserRoleCommand,
-    get_tenant::GetTenantCommand, invite_user::InviteUserCommand, list_users::ListUsersCommand,
+    CreateApiKeyCommand, IssueRefreshTokenCommand, ListApiKeysCommand, LoginCommand, LogoutCommand,
+    RefreshSessionCommand, ResetPasswordCommand, RevokeApiKeyCommand,
+    change_user_role::ChangeUserRoleCommand, get_tenant::GetTenantCommand,
+    invite_user::InviteUserCommand, list_users::ListUsersCommand,
     register_tenant::RegisterTenantCommand, update_user_status::UpdateUserStatusCommand,
 };
 
@@ -104,24 +111,287 @@ pub async fn login_handler(
         })
         .await?;
 
-    let token = sign_jwt(
+    let access = sign_access_token(
         user.id,
         tenant_user.tenant_id,
         tenant_user.role.clone(),
         &state.config.jwt_secret,
+        &state.config.jwt_issuer,
+        state.config.access_token_ttl_minutes,
     )
-    .map_err(|e| ApiError::Internal(format!("Falha ao assinar JWT: {e}")))?;
+    .map_err(|e| ApiError::Internal(format!("Falha ao assinar access token: {e}")))?;
+
+    let refresh = sign_refresh_token(
+        user.id,
+        tenant_user.tenant_id,
+        tenant_user.role.clone(),
+        &state.config.jwt_secret,
+        &state.config.jwt_issuer,
+        state.config.refresh_token_ttl_days,
+    )
+    .map_err(|e| ApiError::Internal(format!("Falha ao assinar refresh token: {e}")))?;
+
+    state
+        .identity
+        .issue_refresh_token
+        .execute(IssueRefreshTokenCommand {
+            jti: refresh.jti,
+            user_id: user.id,
+            tenant_id: tenant_user.tenant_id,
+            token_hash: sha256_hex(&refresh.value),
+            expires_at: refresh.expires_at,
+        })
+        .await?;
+
+    let access_ttl_secs = (state.config.access_token_ttl_minutes as i64) * 60;
 
     tracing::info!(user_id = %user.id, tenant_id = %tenant_user.tenant_id, "login successful via API");
     Ok((
         StatusCode::OK,
         Json(ApiResponse::success(LoginResponse {
-            token,
+            access_token: access.value.clone(),
+            refresh_token: refresh.value,
+            access_token_expires_in: access_ttl_secs,
+            token: access.value,
             user_id: user.id,
             tenant_id: tenant_user.tenant_id,
             role: tenant_user.role,
         })),
     ))
+}
+
+// ─── Refresh ─────────────────────────────────────────────────────────────────
+
+#[utoipa::path(
+    post, path = "/api/v1/identity/refresh",
+    tag = "Identity",
+    request_body = RefreshTokenPayload,
+    responses(
+        (status = 200, description = "Tokens rotacionados", body = RefreshTokenResponse),
+        (status = 400, description = "Erro de validação"),
+        (status = 401, description = "Refresh token inválido, expirado ou revogado")
+    )
+)]
+pub async fn refresh_token_handler(
+    State(state): State<AppState>,
+    Json(payload): Json<RefreshTokenPayload>,
+) -> Result<(StatusCode, Json<ApiResponse<RefreshTokenResponse>>), ApiError> {
+    payload.validate()?;
+
+    let claims = verify_jwt(
+        &payload.refresh_token,
+        &state.config.jwt_secret,
+        &state.config.jwt_issuer,
+    )
+    .map_err(|_| {
+        ApiError::Identity(domain_identity::domain::error::DomainError::InvalidCredentials)
+    })?;
+
+    let new_refresh = sign_refresh_token(
+        claims.sub,
+        claims.tenant_id,
+        claims.role.clone(),
+        &state.config.jwt_secret,
+        &state.config.jwt_issuer,
+        state.config.refresh_token_ttl_days,
+    )
+    .map_err(|e| ApiError::Internal(format!("Falha ao assinar refresh token: {e}")))?;
+
+    let result = state
+        .identity
+        .refresh_session
+        .execute(RefreshSessionCommand {
+            presented_jti: claims.jti,
+            presented_token_hash: sha256_hex(&payload.refresh_token),
+            new_jti: new_refresh.jti,
+            new_token_hash: sha256_hex(&new_refresh.value),
+            new_expires_at: new_refresh.expires_at,
+        })
+        .await?;
+
+    let access = sign_access_token(
+        result.user.id,
+        result.tenant_user.tenant_id,
+        result.tenant_user.role,
+        &state.config.jwt_secret,
+        &state.config.jwt_issuer,
+        state.config.access_token_ttl_minutes,
+    )
+    .map_err(|e| ApiError::Internal(format!("Falha ao assinar access token: {e}")))?;
+
+    Ok((
+        StatusCode::OK,
+        Json(ApiResponse::success(RefreshTokenResponse {
+            access_token: access.value,
+            refresh_token: new_refresh.value,
+            access_token_expires_in: (state.config.access_token_ttl_minutes as i64) * 60,
+        })),
+    ))
+}
+
+// ─── Logout ──────────────────────────────────────────────────────────────────
+
+#[utoipa::path(
+    post, path = "/api/v1/identity/logout",
+    tag = "Identity",
+    request_body = LogoutPayload,
+    responses(
+        (status = 204, description = "Sessão revogada"),
+        (status = 401, description = "Não autenticado")
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn logout_handler(
+    State(state): State<AppState>,
+    AuthUser(claims): AuthUser,
+    Json(payload): Json<LogoutPayload>,
+) -> Result<StatusCode, ApiError> {
+    let refresh_jti = payload.refresh_token.as_deref().and_then(|t| {
+        verify_jwt(t, &state.config.jwt_secret, &state.config.jwt_issuer)
+            .ok()
+            .filter(|c| c.sub == claims.sub)
+            .map(|c| c.jti)
+    });
+
+    state
+        .identity
+        .logout
+        .execute(LogoutCommand {
+            refresh_jti,
+            user_id: claims.sub,
+            revoke_all: payload.everywhere,
+        })
+        .await?;
+
+    tracing::info!(user_id = %claims.sub, everywhere = payload.everywhere, "logout via API");
+    Ok(StatusCode::NO_CONTENT)
+}
+
+// ─── API keys ────────────────────────────────────────────────────────────────
+
+#[utoipa::path(
+    post, path = "/api/v1/identity/api-keys",
+    tag = "Identity",
+    request_body = CreateApiKeyPayload,
+    responses(
+        (status = 201, description = "Chave criada — copie `plaintext`, ele não será exibido novamente", body = CreateApiKeyResponse),
+        (status = 400, description = "Erro de validação"),
+        (status = 401, description = "Não autenticado"),
+        (status = 403, description = "Somente admin")
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn create_api_key_handler(
+    State(state): State<AppState>,
+    AdminUser(claims): AdminUser,
+    Json(payload): Json<CreateApiKeyPayload>,
+) -> Result<(StatusCode, Json<ApiResponse<CreateApiKeyResponse>>), ApiError> {
+    payload.validate()?;
+
+    let role = payload
+        .role
+        .parse::<domain_identity::domain::entities::Role>()
+        .map_err(|_| {
+            ApiError::Identity(domain_identity::domain::error::DomainError::InvalidRole(
+                payload.role.clone(),
+            ))
+        })?;
+
+    let expires_at = payload.expires_in_days.map(|days| {
+        time::OffsetDateTime::now_utc() + time::Duration::days(days as i64)
+    });
+
+    let (plaintext, prefix, hash) = generate_api_key();
+
+    let api_key = state
+        .identity
+        .create_api_key
+        .execute(CreateApiKeyCommand {
+            tenant_id: claims.tenant_id,
+            created_by: claims.sub,
+            name: payload.name,
+            role,
+            key_prefix: prefix.clone(),
+            key_hash: hash,
+            expires_at,
+        })
+        .await?;
+
+    tracing::info!(
+        api_key_id = %api_key.id,
+        tenant_id = %api_key.tenant_id,
+        created_by = %claims.sub,
+        "api key created"
+    );
+
+    Ok((
+        StatusCode::CREATED,
+        Json(ApiResponse::success(CreateApiKeyResponse {
+            id: api_key.id,
+            name: api_key.name,
+            key_prefix: prefix,
+            role: api_key.role,
+            plaintext,
+            expires_at: api_key.expires_at,
+            created_at: api_key.created_at,
+        })),
+    ))
+}
+
+#[utoipa::path(
+    get, path = "/api/v1/identity/api-keys",
+    tag = "Identity",
+    responses(
+        (status = 200, description = "Chaves do tenant (sem o segredo)", body = Vec<ApiKeyResponse>),
+        (status = 401, description = "Não autenticado"),
+        (status = 403, description = "Somente admin")
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn list_api_keys_handler(
+    State(state): State<AppState>,
+    AdminUser(claims): AdminUser,
+) -> Result<(StatusCode, Json<ApiResponse<Vec<ApiKeyResponse>>>), ApiError> {
+    let keys = state
+        .identity
+        .list_api_keys
+        .execute(ListApiKeysCommand {
+            tenant_id: claims.tenant_id,
+        })
+        .await?;
+
+    let body: Vec<ApiKeyResponse> = keys.into_iter().map(Into::into).collect();
+    Ok((StatusCode::OK, Json(ApiResponse::success(body))))
+}
+
+#[utoipa::path(
+    delete, path = "/api/v1/identity/api-keys/{id}",
+    tag = "Identity",
+    params(("id" = Uuid, Path, description = "ID da API key")),
+    responses(
+        (status = 204, description = "Chave revogada"),
+        (status = 401, description = "Não autenticado"),
+        (status = 403, description = "Somente admin"),
+        (status = 404, description = "Chave não encontrada")
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn revoke_api_key_handler(
+    State(state): State<AppState>,
+    AdminUser(claims): AdminUser,
+    Path(api_key_id): Path<Uuid>,
+) -> Result<StatusCode, ApiError> {
+    state
+        .identity
+        .revoke_api_key
+        .execute(RevokeApiKeyCommand {
+            api_key_id,
+            tenant_id: claims.tenant_id,
+        })
+        .await?;
+
+    tracing::info!(api_key_id = %api_key_id, admin = %claims.sub, "api key revoked");
+    Ok(StatusCode::NO_CONTENT)
 }
 
 // ─── Admin reset password ─────────────────────────────────────────────────────
