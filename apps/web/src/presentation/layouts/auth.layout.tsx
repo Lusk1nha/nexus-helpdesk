@@ -16,7 +16,7 @@ export function AuthLayout() {
   }
 
   return (
-    <div className="relative flex min-h-dvh flex-col bg-[var(--bg)]">
+    <div className="relative flex min-h-dvh flex-col bg-(--bg)">
       {/* Dot grid background */}
       <div
         className="pointer-events-none absolute inset-0"
@@ -29,12 +29,12 @@ export function AuthLayout() {
       />
 
       {/* Top bar */}
-      <header className="relative z-20 flex items-center justify-between border-b border-[var(--border)]/50 px-6 py-4">
+      <header className="relative z-20 flex items-center justify-between border-b border-(--border)/50 px-6 py-4">
         <div className="flex items-center gap-2 font-mono text-sm">
-          <span className="font-semibold text-[var(--accent)]">◈</span>
-          <span className="text-[var(--muted)]">nexus</span>
-          <span className="text-[var(--border)]">/</span>
-          <span className="text-[var(--fg)]">helpdesk</span>
+          <span className="font-semibold text-(--accent)">◈</span>
+          <span className="text-(--muted)">nexus</span>
+          <span className="text-(--border)">/</span>
+          <span className="text-(--fg)">helpdesk</span>
         </div>
         <ThemeSwitcher />
       </header>
@@ -45,10 +45,10 @@ export function AuthLayout() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-[var(--border)]/50 px-6 py-4">
-        <p className="text-center font-mono text-xs text-[var(--muted)]">
+      <footer className="relative z-10 border-t border-(--border)/50 px-6 py-4">
+        <p className="text-center font-mono text-xs text-(--muted)">
           nexus_helpdesk v1.0 —{" "}
-          <span className="text-[var(--accent)]">multi-tenant</span> ·
+          <span className="text-(--accent)">multi-tenant</span> ·
           ai-powered · realtime
         </p>
       </footer>

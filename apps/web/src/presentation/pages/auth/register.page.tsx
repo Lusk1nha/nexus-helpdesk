@@ -36,13 +36,13 @@ export function RegisterPage() {
         transition={{ duration: 0.25 }}
         className="w-full max-w-sm"
       >
-        <div className="space-y-4 rounded-sm border border-[var(--success)] bg-[var(--surface)] px-6 py-8 text-center">
-          <CheckCircle2 className="mx-auto h-10 w-10 text-[var(--success)]" />
+        <div className="space-y-4 rounded-sm border border-(--success) bg-(--surface) px-6 py-8 text-center">
+          <CheckCircle2 className="mx-auto h-10 w-10 text-(--success)" />
           <div>
-            <h2 className="font-mono text-base font-semibold text-[var(--fg)]">
+            <h2 className="font-mono text-base font-semibold text-(--fg)">
               Company registered!
             </h2>
-            <p className="mt-1 text-xs text-[var(--muted)]">
+            <p className="mt-1 text-xs text-(--muted)">
               Your workspace is ready. Sign in to get started.
             </p>
           </div>
@@ -65,22 +65,22 @@ export function RegisterPage() {
       transition={{ duration: 0.3, ease: "easeOut" }}
       className="w-full max-w-sm"
     >
-      <div className="overflow-hidden rounded-sm border border-[var(--border)] bg-[var(--surface)]">
+      <div className="overflow-hidden rounded-sm border border-(--border) bg-(--surface)">
         {/* Card header */}
-        <div className="border-b border-[var(--border)] px-6 pt-6 pb-4">
+        <div className="border-b border-(--border) px-6 pt-6 pb-4">
           <div className="mb-4 flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-[var(--destructive)] opacity-70" />
-            <span className="h-2.5 w-2.5 rounded-full bg-[var(--warning)] opacity-70" />
-            <span className="h-2.5 w-2.5 rounded-full bg-[var(--success)] opacity-70" />
+            <span className="h-2.5 w-2.5 rounded-full bg-(--destructive) opacity-70" />
+            <span className="h-2.5 w-2.5 rounded-full bg-(--warning) opacity-70" />
+            <span className="h-2.5 w-2.5 rounded-full bg-(--success) opacity-70" />
           </div>
-          <p className="mb-1 font-mono text-xs text-[var(--muted)]">
-            <span className="text-[var(--success)]">$</span> nexus register
+          <p className="mb-1 font-mono text-xs text-(--muted)">
+            <span className="text-(--success)">$</span> nexus register
             --new-tenant
           </p>
-          <h1 className="font-mono text-lg font-semibold text-[var(--fg)]">
+          <h1 className="font-mono text-lg font-semibold text-(--fg)">
             Create workspace
           </h1>
-          <p className="mt-0.5 text-xs text-[var(--muted)]">
+          <p className="mt-0.5 text-xs text-(--muted)">
             Set up your company's helpdesk in seconds
           </p>
         </div>
@@ -110,7 +110,7 @@ export function RegisterPage() {
 
           {/* Section: Company */}
           <div className="space-y-3">
-            <p className="font-mono text-[10px] tracking-widest text-[var(--accent)] uppercase">
+            <p className="font-mono text-[10px] tracking-widest text-(--accent) uppercase">
               Company
             </p>
             <FormField
@@ -131,7 +131,7 @@ export function RegisterPage() {
 
           {/* Section: Admin account */}
           <div className="space-y-3">
-            <p className="font-mono text-[10px] tracking-widest text-[var(--accent)] uppercase">
+            <p className="font-mono text-[10px] tracking-widest text-(--accent) uppercase">
               Admin account
             </p>
             <FormField
@@ -182,7 +182,7 @@ export function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute top-1/2 right-2.5 -translate-y-1/2 text-[var(--muted)] transition-colors hover:text-[var(--fg)]"
+                  className="absolute top-1/2 right-2.5 -translate-y-1/2 text-(--muted) transition-colors hover:text-(--fg)"
                   tabIndex={-1}
                 >
                   {showPassword ? (
@@ -212,7 +212,7 @@ export function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => setShowConfirm((v) => !v)}
-                  className="absolute top-1/2 right-2.5 -translate-y-1/2 text-[var(--muted)] transition-colors hover:text-[var(--fg)]"
+                  className="absolute top-1/2 right-2.5 -translate-y-1/2 text-(--muted) transition-colors hover:text-(--fg)"
                   tabIndex={-1}
                 >
                   {showConfirm ? (
@@ -238,11 +238,11 @@ export function RegisterPage() {
 
         {/* Footer */}
         <div className="px-6 pb-5">
-          <p className="text-center font-mono text-xs text-[var(--muted)]">
+          <p className="text-center font-mono text-xs text-(--muted)">
             Already have an account?{" "}
             <Link
               to="/login"
-              className="text-[var(--accent)] underline-offset-2 hover:underline"
+              className="text-(--accent) underline-offset-2 hover:underline"
             >
               Sign in
             </Link>

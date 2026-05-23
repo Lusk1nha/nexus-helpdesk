@@ -19,9 +19,9 @@ export function ThemeSwitcher({ className }: { className?: string }) {
         onClick={() => setOpen((o) => !o)}
         className={cn(
           "flex h-7 items-center gap-1.5 px-2",
-          "font-mono text-xs text-[var(--muted)]",
-          "rounded-sm border border-[var(--border)] bg-[var(--surface)]",
-          "transition-colors hover:border-[var(--muted)] hover:text-[var(--fg)]"
+          "font-mono text-xs text-(--muted)",
+          "rounded-sm border border-(--border) bg-(--surface)",
+          "transition-colors hover:border-(--muted) hover:text-(--fg)"
         )}
         aria-label="Switch theme"
         title="Switch theme"
@@ -41,7 +41,7 @@ export function ThemeSwitcher({ className }: { className?: string }) {
           <div
             className={cn(
               "absolute top-full right-0 z-50 mt-1 min-w-[180px]",
-              "rounded-sm border border-[var(--border)] bg-[var(--surface)]",
+              "rounded-sm border border-(--border) bg-(--surface)",
               "overflow-hidden shadow-lg shadow-black/20"
             )}
           >
@@ -54,9 +54,9 @@ export function ThemeSwitcher({ className }: { className?: string }) {
                 }}
                 className={cn(
                   "flex w-full items-center gap-2.5 px-3 py-2 text-left",
-                  "font-mono text-xs text-[var(--muted)]",
-                  "transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--fg)]",
-                  theme === t.id && "bg-[var(--surface-2)] text-[var(--fg)]"
+                  "font-mono text-xs text-(--muted)",
+                  "transition-colors hover:bg-(--surface-2) hover:text-(--fg)",
+                  theme === t.id && "bg-(--surface-2) text-(--fg)"
                 )}
               >
                 {/* Color swatch */}
@@ -66,7 +66,7 @@ export function ThemeSwitcher({ className }: { className?: string }) {
                 />
                 <span>{t.name}</span>
                 {theme === t.id && (
-                  <span className="ml-auto text-[var(--accent)]">✓</span>
+                  <span className="ml-auto text-(--accent)">✓</span>
                 )}
               </button>
             ))}

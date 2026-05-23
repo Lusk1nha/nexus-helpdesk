@@ -27,7 +27,7 @@ export function FormField({
       </Label>
       {children}
       {error && (
-        <p className="mt-0.5 font-mono text-xs text-[var(--destructive)]">
+        <p className="mt-0.5 font-mono text-xs text-(--destructive)">
           {error}
         </p>
       )}

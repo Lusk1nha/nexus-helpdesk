@@ -11,15 +11,15 @@ export const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
     <label
       ref={ref}
       className={cn(
-        "font-mono text-xs font-medium tracking-widest text-[var(--muted)] uppercase",
+        "font-mono text-xs font-medium tracking-widest text-(--muted) uppercase",
         "flex items-center gap-1",
         className
       )}
       {...props}
     >
-      <span className="text-[var(--accent)] select-none">{">"}</span>
+      <span className="text-(--accent) select-none">{">"}</span>
       {children}
-      {required && <span className="text-[var(--destructive)]">*</span>}
+      {required && <span className="text-(--destructive)">*</span>}
     </label>
   )
 )

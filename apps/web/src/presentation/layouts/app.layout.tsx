@@ -49,13 +49,13 @@ export function AppLayout() {
   ]
 
   return (
-    <div className="flex min-h-dvh bg-[var(--bg)]">
+    <div className="flex min-h-dvh bg-(--bg)">
       {/* Sidebar */}
-      <aside className="flex w-56 shrink-0 flex-col border-r border-[var(--border)] bg-[var(--surface)]">
+      <aside className="flex w-56 shrink-0 flex-col border-r border-(--border) bg-(--surface)">
         {/* Brand */}
-        <div className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-4">
-          <span className="text-sm font-semibold text-[var(--accent)]">◈</span>
-          <span className="font-mono text-sm font-medium text-[var(--fg)]">
+        <div className="flex items-center gap-2 border-b border-(--border) px-4 py-4">
+          <span className="text-sm font-semibold text-(--accent)">◈</span>
+          <span className="font-mono text-sm font-medium text-(--fg)">
             nexus
           </span>
         </div>
@@ -71,8 +71,8 @@ export function AppLayout() {
                   "flex items-center gap-2.5 rounded-sm px-3 py-2",
                   "font-mono text-xs transition-colors",
                   isActive
-                    ? "bg-[var(--accent)]/10 text-[var(--accent)]"
-                    : "text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--fg)]"
+                    ? "bg-(--accent)/10 text-(--accent)"
+                    : "text-(--muted) hover:bg-(--surface-2) hover:text-(--fg)"
                 )
               }
             >
@@ -83,9 +83,9 @@ export function AppLayout() {
         </nav>
 
         {/* User + logout */}
-        <div className="space-y-2 border-t border-[var(--border)] p-3">
+        <div className="space-y-2 border-t border-(--border) p-3">
           <div className="px-2 py-1">
-            <p className="truncate font-mono text-xs text-[var(--muted)]">
+            <p className="truncate font-mono text-xs text-(--muted)">
               {user?.role}
             </p>
           </div>
@@ -93,8 +93,8 @@ export function AppLayout() {
             onClick={handleLogout}
             className={cn(
               "flex w-full items-center gap-2.5 rounded-sm px-3 py-2",
-              "font-mono text-xs text-[var(--muted)]",
-              "transition-colors hover:bg-[var(--destructive)]/10 hover:text-[var(--destructive)]"
+              "font-mono text-xs text-(--muted)",
+              "transition-colors hover:bg-(--destructive)/10 hover:text-(--destructive)"
             )}
           >
             <LogOut className="h-3.5 w-3.5 shrink-0" />
@@ -106,14 +106,14 @@ export function AppLayout() {
       {/* Main area */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--surface)] px-6 py-3">
-          <div className="flex items-center gap-1 font-mono text-xs text-[var(--muted)]">
+        <header className="flex items-center justify-between border-b border-(--border) bg-(--surface) px-6 py-3">
+          <div className="flex items-center gap-1 font-mono text-xs text-(--muted)">
             <LayoutDashboard className="h-3.5 w-3.5" />
             <span className="ml-1">dashboard</span>
           </div>
           <div className="flex items-center gap-3">
             <ThemeSwitcher />
-            <button className="text-[var(--muted)] transition-colors hover:text-[var(--fg)]">
+            <button className="text-(--muted) transition-colors hover:text-(--fg)">
               <Settings className="h-4 w-4" />
             </button>
           </div>

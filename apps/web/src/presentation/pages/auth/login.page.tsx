@@ -36,22 +36,22 @@ export function LoginPage() {
       className="w-full max-w-sm"
     >
       {/* Card */}
-      <div className="overflow-hidden rounded-sm border border-[var(--border)] bg-[var(--surface)]">
+      <div className="overflow-hidden rounded-sm border border-(--border) bg-(--surface)">
         {/* Card header */}
-        <div className="border-b border-[var(--border)] px-6 pt-6 pb-4">
+        <div className="border-b border-(--border) px-6 pt-6 pb-4">
           <div className="mb-4 flex items-center gap-2">
             {/* Terminal dots */}
-            <span className="h-2.5 w-2.5 rounded-full bg-[var(--destructive)] opacity-70" />
-            <span className="h-2.5 w-2.5 rounded-full bg-[var(--warning)] opacity-70" />
-            <span className="h-2.5 w-2.5 rounded-full bg-[var(--success)] opacity-70" />
+            <span className="h-2.5 w-2.5 rounded-full bg-(--destructive) opacity-70" />
+            <span className="h-2.5 w-2.5 rounded-full bg-(--warning) opacity-70" />
+            <span className="h-2.5 w-2.5 rounded-full bg-(--success) opacity-70" />
           </div>
-          <p className="mb-1 font-mono text-xs text-[var(--muted)]">
-            <span className="text-[var(--success)]">$</span> nexus authenticate
+          <p className="mb-1 font-mono text-xs text-(--muted)">
+            <span className="text-(--success)">$</span> nexus authenticate
           </p>
-          <h1 className="font-mono text-lg font-semibold text-[var(--fg)]">
+          <h1 className="font-mono text-lg font-semibold text-(--fg)">
             Sign in
           </h1>
-          <p className="mt-0.5 text-xs text-[var(--muted)]">
+          <p className="mt-0.5 text-xs text-(--muted)">
             Access your helpdesk workspace
           </p>
         </div>
@@ -114,7 +114,7 @@ export function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute top-1/2 right-2.5 -translate-y-1/2 text-[var(--muted)] transition-colors hover:text-[var(--fg)]"
+                className="absolute top-1/2 right-2.5 -translate-y-1/2 text-(--muted) transition-colors hover:text-(--fg)"
                 tabIndex={-1}
               >
                 {showPassword ? (
@@ -133,11 +133,11 @@ export function LoginPage() {
 
         {/* Footer */}
         <div className="px-6 pb-5">
-          <p className="text-center font-mono text-xs text-[var(--muted)]">
+          <p className="text-center font-mono text-xs text-(--muted)">
             No account?{" "}
             <Link
               to="/register"
-              className="text-[var(--accent)] underline-offset-2 hover:underline"
+              className="text-(--accent) underline-offset-2 hover:underline"
             >
               Register your company
             </Link>
@@ -146,8 +146,8 @@ export function LoginPage() {
       </div>
 
       {/* Hint below card */}
-      <p className="mt-4 text-center font-mono text-xs text-[var(--border)]">
-        <span className="text-[var(--muted)]">tip:</span> use your company
+      <p className="mt-4 text-center font-mono text-xs text-(--border)">
+        <span className="text-(--muted)">tip:</span> use your company
         credentials
       </p>
     </motion.div>

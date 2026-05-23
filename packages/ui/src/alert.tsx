@@ -13,13 +13,13 @@ const icons: Record<AlertVariant, React.ElementType> = {
 }
 
 const styles: Record<AlertVariant, string> = {
-  info: "border-[var(--accent)] text-[var(--accent)] bg-[var(--accent)]/8",
+  info: "border-(--accent) text-(--accent) bg-(--accent)/8",
   success:
-    "border-[var(--success)] text-[var(--success)] bg-[var(--success)]/8",
+    "border-(--success) text-(--success) bg-(--success)/8",
   warning:
-    "border-[var(--warning)] text-[var(--warning)] bg-[var(--warning)]/8",
+    "border-(--warning) text-(--warning) bg-(--warning)/8",
   error:
-    "border-[var(--destructive)] text-[var(--destructive)] bg-[var(--destructive)]/8",
+    "border-(--destructive) text-(--destructive) bg-(--destructive)/8",
 }
 
 interface AlertProps {

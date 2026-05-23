@@ -11,30 +11,30 @@ const buttonVariants = cva(
     "border transition-all duration-100",
     "cursor-pointer select-none",
     "disabled:pointer-events-none disabled:opacity-40",
-    "focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg)] focus-visible:outline-none",
+    "focus-visible:ring-2 focus-visible:ring-(--accent) focus-visible:ring-offset-1 focus-visible:ring-offset-(--bg) focus-visible:outline-none",
   ],
   {
     variants: {
       variant: {
         primary: [
-          "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]",
+          "border-(--accent) bg-(--accent) text-(--accent-fg)",
           "hover:opacity-85 active:scale-[0.98]",
         ],
         secondary: [
-          "border-[var(--border)] bg-[var(--surface)] text-[var(--fg)]",
-          "hover:bg-[var(--surface-2)] active:scale-[0.98]",
+          "border-(--border) bg-(--surface) text-(--fg)",
+          "hover:bg-(--surface-2) active:scale-[0.98]",
         ],
         ghost: [
-          "border-transparent bg-transparent text-[var(--fg)]",
-          "hover:border-[var(--border)] hover:bg-[var(--surface)]",
+          "border-transparent bg-transparent text-(--fg)",
+          "hover:border-(--border) hover:bg-(--surface)",
         ],
         destructive: [
-          "border-[var(--destructive)] bg-[var(--destructive)] text-[var(--destructive-fg)]",
+          "border-(--destructive) bg-(--destructive) text-(--destructive-fg)",
           "hover:opacity-85 active:scale-[0.98]",
         ],
         outline: [
-          "border-[var(--accent)] bg-transparent text-[var(--accent)]",
-          "hover:bg-[var(--accent)] hover:text-[var(--accent-fg)] active:scale-[0.98]",
+          "border-(--accent) bg-transparent text-(--accent)",
+          "hover:bg-(--accent) hover:text-(--accent-fg) active:scale-[0.98]",
         ],
       },
       size: {
