@@ -46,6 +46,13 @@ impl IntoResponse for ApiError {
                 StatusCode::BAD_REQUEST,
                 format!("Role inválido: '{role}'. Use: admin, agent ou customer."),
             ),
+            ApiError::Identity(IdentityError::SlugAlreadyTaken(slug)) => (
+                StatusCode::CONFLICT,
+                format!("O slug '{slug}' já está em uso por outra empresa."),
+            ),
+            ApiError::Identity(err @ IdentityError::InvalidSlug(_)) => {
+                (StatusCode::BAD_REQUEST, err.to_string())
+            }
             ApiError::Identity(IdentityError::DatabaseError(msg)) => {
                 tracing::error!(domain = "identity", error = %msg, "database error");
                 (

@@ -10,10 +10,10 @@ use domain_ticketing::application::{
 use domain_ticketing::infrastructure::database::postgres_uow::PgTicketingUoWManager;
 
 use domain_identity::application::use_cases::{
-    AuthenticateApiKeyUseCase, ChangeUserRoleUseCase, CreateApiKeyUseCase, GetTenantUseCase,
-    InviteUserUseCase, IssueRefreshTokenUseCase, ListApiKeysUseCase, ListUsersUseCase,
-    LoginUseCase, LogoutUseCase, RefreshSessionUseCase, RegisterTenantUseCase,
-    ResetPasswordUseCase, RevokeApiKeyUseCase, UpdateUserStatusUseCase,
+    AuthenticateApiKeyUseCase, ChangeUserRoleUseCase, CheckSlugAvailabilityUseCase,
+    CreateApiKeyUseCase, GetTenantUseCase, InviteUserUseCase, IssueRefreshTokenUseCase,
+    ListApiKeysUseCase, ListUsersUseCase, LoginUseCase, LogoutUseCase, RefreshSessionUseCase,
+    RegisterTenantUseCase, ResetPasswordUseCase, RevokeApiKeyUseCase, UpdateUserStatusUseCase,
 };
 use domain_identity::infrastructure::{
     database::postgres_uow::PgUnitOfWorkManager, security::argon2_hasher::Argon2Hasher,
@@ -24,6 +24,7 @@ use crate::realtime::RealtimeHub;
 
 pub struct IdentityUseCases {
     pub register_tenant: Arc<RegisterTenantUseCase>,
+    pub check_slug: Arc<CheckSlugAvailabilityUseCase>,
     pub login: Arc<LoginUseCase>,
     pub reset_password: Arc<ResetPasswordUseCase>,
     pub invite_user: Arc<InviteUserUseCase>,
@@ -75,6 +76,9 @@ impl AppState {
             identity_uow_manager.clone(),
             password_hasher.clone(),
         ));
+        let check_slug = Arc::new(CheckSlugAvailabilityUseCase::new(
+            identity_uow_manager.clone(),
+        ));
         let login = Arc::new(LoginUseCase::new(
             identity_uow_manager.clone(),
             password_hasher.clone(),
@@ -103,6 +107,7 @@ impl AppState {
 
         let identity_cases = Arc::new(IdentityUseCases {
             register_tenant,
+            check_slug,
             login,
             reset_password,
             invite_user,

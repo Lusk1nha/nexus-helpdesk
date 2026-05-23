@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_nexus_helpdesk:/var/lib/postgresql/data
       - ./docker/create-test-database.sql:/docker-entrypoint-initdb.d/init.sql
 
   qdrant:
@@ -19,8 +19,8 @@ services:
       - "6333:6333"
       - "6334:6334"
     volumes:
-      - qdrant_data:/qdrant/storage
+      - qdrant_data_nexus_helpdesk:/qdrant/storage
 
 volumes:
-  postgres_data:
-  qdrant_data:
+  postgres_data_nexus_helpdesk:
+  qdrant_data_nexus_helpdesk:

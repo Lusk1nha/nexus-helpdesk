@@ -1,6 +1,61 @@
 use super::role::Role;
+use crate::domain::error::DomainError;
 use time::OffsetDateTime;
 use uuid::Uuid;
+
+/// Subdomain names that must not be allowed as tenant slugs because they
+/// collide with platform-level routes (onboarding, admin panel, API host, etc.).
+const RESERVED_SLUGS: &[&str] = &[
+    "www", "api", "admin", "app", "onboarding", "auth", "mail", "smtp", "ftp", "docs", "help",
+    "support", "status", "blog", "billing", "stripe", "internal", "staff", "root", "system",
+];
+
+/// Validates a user-provided tenant slug. Returns `Ok(())` if the slug is
+/// well-formed and not reserved. The actual uniqueness check (already taken by
+/// another tenant) is done separately against the repository.
+///
+/// Rules:
+/// - 3..=32 characters
+/// - lowercase letters, digits, and hyphens only
+/// - must start and end with a letter or digit
+/// - no consecutive hyphens
+/// - not in the reserved list
+pub fn validate_slug(slug: &str) -> Result<(), DomainError> {
+    let len = slug.len();
+    if !(3..=32).contains(&len) {
+        return Err(DomainError::InvalidSlug(
+            "deve ter entre 3 e 32 caracteres.".into(),
+        ));
+    }
+
+    let bytes = slug.as_bytes();
+    let valid_char = |b: u8| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-';
+    if !bytes.iter().all(|&b| valid_char(b)) {
+        return Err(DomainError::InvalidSlug(
+            "use apenas letras minúsculas, dígitos e hífens.".into(),
+        ));
+    }
+
+    if bytes[0] == b'-' || bytes[len - 1] == b'-' {
+        return Err(DomainError::InvalidSlug(
+            "não pode começar ou terminar com hífen.".into(),
+        ));
+    }
+
+    if slug.contains("--") {
+        return Err(DomainError::InvalidSlug(
+            "hífens consecutivos não são permitidos.".into(),
+        ));
+    }
+
+    if RESERVED_SLUGS.contains(&slug) {
+        return Err(DomainError::InvalidSlug(format!(
+            "'{slug}' é um nome reservado da plataforma."
+        )));
+    }
+
+    Ok(())
+}
 
 #[derive(Debug, Clone)]
 pub struct Tenant {

@@ -115,11 +115,34 @@ impl TenantRepository for PgTenantRepository {
         let query = sqlx::query_as!(
             Tenant,
             r#"
-            SELECT id, name, slug, plan, is_active, created_at, updated_at 
-            FROM tenants 
+            SELECT id, name, slug, plan, is_active, created_at, updated_at
+            FROM tenants
             WHERE id = $1
             "#,
             id
+        );
+
+        let result = match &self.conn {
+            DatabaseConnection::Pool(pool) => query.fetch_optional(pool).await,
+            DatabaseConnection::Transaction(tx_mutex) => {
+                let mut guard = tx_mutex.lock().await;
+                query.fetch_optional(&mut **guard.as_mut().unwrap()).await
+            }
+        }
+        .map_err(|e| DomainError::DatabaseError(e.to_string()))?;
+
+        Ok(result)
+    }
+
+    async fn find_by_slug(&self, slug: &str) -> Result<Option<Tenant>, DomainError> {
+        let query = sqlx::query_as!(
+            Tenant,
+            r#"
+            SELECT id, name, slug, plan, is_active, created_at, updated_at
+            FROM tenants
+            WHERE slug = $1
+            "#,
+            slug
         );
 
         let result = match &self.conn {

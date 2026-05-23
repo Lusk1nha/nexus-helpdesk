@@ -31,6 +31,7 @@ async fn test_register_tenant_success_saves_all_data() {
 
     let command = RegisterTenantCommand {
         tenant_name: "Nexus Corp LTDA".to_string(),
+        tenant_slug: "nexus-corp-ltda".to_string(),
         admin_full_name: "Jane Doe".to_string(),
         admin_email: "admin@empresa.com".to_string(),
         admin_plain_password: "SenhaSuperForte123!".to_string(),
@@ -70,6 +71,7 @@ async fn test_register_tenant_fails_if_email_already_exists() {
 
     let command_1 = RegisterTenantCommand {
         tenant_name: "Empresa Um".to_string(),
+        tenant_slug: "empresa-um".to_string(),
         admin_full_name: "Bob".to_string(),
         admin_email: "shared@empresa.com".to_string(),
         admin_plain_password: "123".to_string(),
@@ -77,6 +79,7 @@ async fn test_register_tenant_fails_if_email_already_exists() {
 
     let command_2 = RegisterTenantCommand {
         tenant_name: "Empresa Dois".to_string(),
+        tenant_slug: "empresa-dois".to_string(),
         admin_full_name: "Alice".to_string(),
         admin_email: "shared@empresa.com".to_string(), // Mesmo e-mail
         admin_plain_password: "456".to_string(),

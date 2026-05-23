@@ -1,9 +1,11 @@
 use ai_engine::AiEngine;
-use api_gateway::{app_state::AppState, config::AppConfig, routes::create_router};
+use api_gateway::{
+    app_state::AppState, config::AppConfig, realtime::RealtimeHub, routes::create_router,
+};
 use axum::{
     Router,
     body::Body,
-    http::{Request, StatusCode},
+    http::{HeaderMap, Request, StatusCode, header::SET_COOKIE},
 };
 use domain_ticketing::application::workers::ai_worker::AiTask;
 use http_body_util::BodyExt;
@@ -120,13 +122,27 @@ impl TestApp {
         (status, json)
     }
 
-    /// Registers a tenant and returns (tenant_id, user_id).
+    /// Registers a tenant and returns (tenant_id, user_id). Generates a unique
+    /// slug per call so tests can register multiple tenants without collision.
     pub async fn register_tenant(&self, email: &str, password: &str) -> (String, String) {
+        // Derive a per-call slug from the local-part of the email (which the
+        // existing tests already use as a unique identifier).
+        let local = email.split('@').next().unwrap_or("tenant");
+        let slug = format!(
+            "t-{}",
+            local
+                .chars()
+                .map(|c| if c.is_ascii_alphanumeric() { c } else { '-' })
+                .collect::<String>()
+                .to_lowercase()
+        );
+
         let (status, body) = self
             .post_json(
                 "/api/v1/identity/register",
                 serde_json::json!({
                     "tenantName": "Test Corp",
+                    "tenantSlug": slug,
                     "adminFullName": "Admin User",
                     "adminEmail": email,
                     "adminPassword": password
@@ -141,18 +157,101 @@ impl TestApp {
         )
     }
 
-    /// Logs in and returns the JWT token.
+    /// Logs in and returns the access token (refresh token lives in the cookie,
+    /// which most tests don't need — see `login_full()` for cookie-aware flows).
     pub async fn login(&self, email: &str, password: &str) -> String {
-        let (status, body) = self
-            .post_json(
+        let (_status, body, _cookie) = self.login_full(email, password).await;
+        body["data"]["accessToken"].as_str().unwrap().to_string()
+    }
+
+    /// Logs in and returns the full response: status, body, and the refresh
+    /// cookie (`name=value` form) extracted from the `Set-Cookie` header so
+    /// refresh-flow tests can replay it.
+    pub async fn login_full(
+        &self,
+        email: &str,
+        password: &str,
+    ) -> (StatusCode, Value, Option<String>) {
+        let (status, body, headers) = self
+            .post_json_full(
                 "/api/v1/identity/login",
                 serde_json::json!({ "email": email, "password": password }),
             )
             .await;
 
-        assert_eq!(status, StatusCode::OK, "login failed: {body}");
-        body["data"]["token"].as_str().unwrap().to_string()
+        let cookie = extract_refresh_cookie(&headers);
+        (status, body, cookie)
     }
+
+    /// Same as `post_json` but also returns the response headers — needed when
+    /// the caller has to inspect `Set-Cookie`.
+    #[allow(dead_code)]
+    pub async fn post_json_full(
+        &self,
+        uri: &str,
+        body: Value,
+    ) -> (StatusCode, Value, HeaderMap) {
+        let response = self
+            .router
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri(uri)
+                    .header("content-type", "application/json")
+                    .body(Body::from(body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        let status = response.status();
+        let headers = response.headers().clone();
+        let bytes = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&bytes).unwrap_or(Value::Null);
+        (status, json, headers)
+    }
+
+    /// POST that sends a `Cookie` header (for refresh-flow tests).
+    #[allow(dead_code)]
+    pub async fn post_with_cookie(
+        &self,
+        uri: &str,
+        cookie: &str,
+    ) -> (StatusCode, Value, HeaderMap) {
+        let response = self
+            .router
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri(uri)
+                    .header("content-type", "application/json")
+                    .header("cookie", cookie)
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        let status = response.status();
+        let headers = response.headers().clone();
+        let bytes = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&bytes).unwrap_or(Value::Null);
+        (status, json, headers)
+    }
+}
+
+/// Extracts the `nexus_refresh=<value>` segment from a Set-Cookie header so
+/// tests can replay it as a `Cookie` header on subsequent requests.
+#[allow(dead_code)]
+pub fn extract_refresh_cookie(headers: &HeaderMap) -> Option<String> {
+    headers
+        .get_all(SET_COOKIE)
+        .iter()
+        .filter_map(|v| v.to_str().ok())
+        .find(|v| v.starts_with("nexus_refresh="))
+        .map(|v| v.split(';').next().unwrap_or("").to_string())
 }
 
 pub async fn spawn_test_app() -> TestApp {
@@ -197,6 +296,8 @@ pub async fn spawn_test_app() -> TestApp {
         port: 0,
         host: "127.0.0.1".to_string(),
         frontend_url: "http://localhost:5173".to_string(),
+        cookie_domain: None,
+        cookie_secure: false,
         // Point to an unreachable address — tests use a dummy AI channel drain,
         // so the worker is never invoked during API tests.
         ollama_url: "http://127.0.0.1:1".to_string(),
@@ -217,7 +318,8 @@ pub async fn spawn_test_app() -> TestApp {
         .expect("Failed to build test AiEngine"),
     );
 
-    let state = AppState::new(pool.clone(), config, ai_sender, ai_engine);
+    let realtime = Arc::new(RealtimeHub::new());
+    let state = AppState::new(pool.clone(), config, ai_sender, ai_engine, realtime);
     let router = create_router(state);
 
     TestApp {

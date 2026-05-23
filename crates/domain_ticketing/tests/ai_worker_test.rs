@@ -9,8 +9,9 @@ use domain_ticketing::application::use_cases::create_ticket::{
     CreateTicketCommand, CreateTicketUseCase,
 };
 use domain_ticketing::application::workers::ai_worker::AiWorker;
-use domain_ticketing::domain::entities::ticket::TicketStatus;
-use domain_ticketing::domain::ports::TicketingUnitOfWorkManager as _;
+use domain_ticketing::domain::entities::message::TicketMessage;
+use domain_ticketing::domain::entities::ticket::{Ticket, TicketStatus};
+use domain_ticketing::domain::ports::{TicketEventPublisher, TicketingUnitOfWorkManager as _};
 use domain_ticketing::infrastructure::database::postgres_uow::PgTicketingUoWManager;
 
 fn dummy_ai_engine(ollama_url: &str) -> Arc<AiEngine> {
@@ -22,6 +23,19 @@ fn dummy_ai_engine(ollama_url: &str) -> Arc<AiEngine> {
         )
         .expect("Failed to build test AiEngine"),
     )
+}
+
+/// No-op event publisher for tests — the AiWorker's events are not asserted on.
+struct NoopEventPublisher;
+
+impl TicketEventPublisher for NoopEventPublisher {
+    fn publish_message_added(&self, _ticket_id: Uuid, _message: &TicketMessage) {}
+    fn publish_status_changed(&self, _ticket_id: Uuid, _status: &TicketStatus) {}
+    fn publish_ticket_created(&self, _ticket: &Ticket) {}
+}
+
+fn dummy_event_publisher() -> Arc<dyn TicketEventPublisher> {
+    Arc::new(NoopEventPublisher)
 }
 
 #[tokio::test]
@@ -60,6 +74,7 @@ async fn test_worker_reverts_ticket_to_open_when_ollama_is_unavailable() {
         uow_manager.clone(),
         bad_ollama_url.clone(),
         dummy_ai_engine(&bad_ollama_url),
+        dummy_event_publisher(),
     );
     let handle = tokio::spawn(async move { worker.start().await });
 
@@ -126,6 +141,7 @@ async fn test_worker_saves_ai_response_and_transitions_to_awaiting_approval() {
         uow_manager.clone(),
         ollama_url.clone(),
         dummy_ai_engine(&ollama_url),
+        dummy_event_publisher(),
     );
     tokio::spawn(async move { worker.start().await })
         .await

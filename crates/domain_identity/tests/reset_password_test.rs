@@ -23,6 +23,7 @@ async fn test_admin_can_reset_password_and_unlock_user_from_same_tenant() {
     let (tenant, admin_user) = register_uc
         .execute(RegisterTenantCommand {
             tenant_name: "Alpha Company".to_string(),
+            tenant_slug: "alpha-co".to_string(),
             admin_full_name: "Admin Alpha".to_string(),
             admin_email: "admin@alpha.com".to_string(),
             admin_plain_password: "OldPassword123!".to_string(),
@@ -81,6 +82,7 @@ async fn test_reset_password_fails_if_operator_belongs_to_different_tenant_cross
     let (tenant_a, _admin_a) = register_uc
         .execute(RegisterTenantCommand {
             tenant_name: "Tenant A".to_string(),
+            tenant_slug: "tenant-a".to_string(),
             admin_full_name: "Owner A".to_string(),
             admin_email: "owner@a.com".to_string(),
             admin_plain_password: "PasswordA123!".to_string(),
@@ -92,6 +94,7 @@ async fn test_reset_password_fails_if_operator_belongs_to_different_tenant_cross
     let (_tenant_b, admin_b) = register_uc
         .execute(RegisterTenantCommand {
             tenant_name: "Tenant B".to_string(),
+            tenant_slug: "tenant-b".to_string(),
             admin_full_name: "Owner B".to_string(),
             admin_email: "victim@b.com".to_string(),
             admin_plain_password: "PasswordB123!".to_string(),

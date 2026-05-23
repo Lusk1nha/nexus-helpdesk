@@ -51,6 +51,7 @@ pub mod ticketing;
         ticketing::handlers::reject_ai_response_handler,
         // Identity
         identity::handlers::register_tenant_handler,
+        identity::handlers::check_slug_handler,
         identity::handlers::login_handler,
         identity::handlers::refresh_token_handler,
         identity::handlers::logout_handler,
@@ -84,6 +85,7 @@ pub mod ticketing;
             // Identity
             identity::contracts::RegisterTenantPayload,
             identity::contracts::RegisterTenantResponse,
+            identity::contracts::CheckSlugResponse,
             identity::contracts::LoginPayload,
             identity::contracts::LoginResponse,
             identity::contracts::GetMeResponse,
@@ -95,7 +97,6 @@ pub mod ticketing;
             identity::contracts::ChangeUserRolePayload,
             identity::contracts::UpdateUserStatusPayload,
             identity::contracts::TenantResponse,
-            identity::contracts::RefreshTokenPayload,
             identity::contracts::RefreshTokenResponse,
             identity::contracts::LogoutPayload,
             identity::contracts::CreateApiKeyPayload,

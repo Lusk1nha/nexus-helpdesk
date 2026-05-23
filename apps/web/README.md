@@ -1,73 +1,92 @@
-# React + TypeScript + Vite
+# @nexus/web (Tenant Workspace)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React frontend for the Nexus Helpdesk platform — multi-tenant, AI-powered, realtime.
 
-Currently, two official plugins are available:
+> **Author:** Lucas Pedro · [github.com/Lusk1nha](https://github.com/Lusk1nha)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## 🎯 App Scope & Subdomains
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+This application serves as the **Tenant Workspace**. It is strictly designed to run under a tenant-specific subdomain (e.g., `apple.nexus.com` in production, or `apple.localhost` in development). 
 
-## Expanding the ESLint configuration
+**What this app DOES NOT do:**
+It does not handle the registration of new companies (Tenants). That responsibility belongs to `apps/onboarding`. This app assumes the Tenant already exists and operates securely within that bounded context.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Stack
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+| Layer        | Technology                          |
+| ------------ | ----------------------------------- |
+| Framework    | React 19 + Vite 8                   |
+| Language     | TypeScript 6                        |
+| Styling      | Tailwind CSS v4                     |
+| Font         | JetBrains Mono Variable             |
+| Routing      | React Router v7                     |
+| Server state | TanStack Query v5                   |
+| Client state | Zustand v5                          |
+| Validation   | Zod                                 |
+| Forms        | React Hook Form + Zod resolver      |
+| HTTP         | ky (fetch wrapper)                  |
+| Animations   | Motion (Framer Motion for React 19) |
+| Icons        | Lucide React                        |
+| Unit tests   | Vitest + React Testing Library      |
+| E2E tests    | Playwright _(coming)_               |
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Monorepo Structure
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+This is one app inside the larger Nexus monorepo (Turbo + pnpm workspaces). It depends on shared packages:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+| Package           | Purpose                                                                               |
+| ----------------- | ------------------------------------------------------------------------------------- |
+| `@nexus/ui`       | Design system primitives — `Button`, `Input`, `Label`, `FormField`, `Alert`, `cn()`   |
+| `@nexus/theme`    | Multi-theme system — `ThemeProvider`, `ThemeSwitcher`, theme registry, theme CSS vars |
+| `@nexus/auth`     | Shared auth session logic and SSO token management                                    |
+| `@nexus/tsconfig` | Shared TypeScript bases (`base`, `react`, `react-library`)                            |
+
+---
+
+## Architecture — Domain-Driven Design
+
+```text
+src/
+├── domain/                 # Pure business logic — no framework deps
+│   ├── auth/
+│   │   ├── auth.types.ts   # User, Role interfaces
+│   │   └── auth.schemas.ts # Zod validation schemas (Login only)
+│   └── ticketing/          # Ticket, Message types + schemas
+│
+├── application/            # Use cases as React hooks
+│   └── auth/
+│       ├── use-login.ts
+│       └── use-session.ts
+│
+├── infrastructure/         # External adapters
+│   ├── http/
+│   │   ├── client.ts       # ky instance — auth injection + token refresh
+│   │   └── api.routes.ts   # All API URL constants
+│   └── store/
+│       └── auth.store.ts   # Zustand store — session persistence
+│
+└── presentation/           # UI layer
+    ├── layouts/
+    │   ├── auth.layout.tsx # Public pages (redirects if authenticated)
+    │   └── app.layout.tsx  # Protected pages (redirects if not authenticated)
+    ├── pages/
+    │   ├── auth/
+    │   │   ├── login.page.tsx  # ← Tenant-local login
+    │   │   └── routes.tsx      
+    │   └── app/
+    │       ├── dashboard.page.tsx
+    │       └── routes.tsx      
+    ├── providers/
+    │   └── query.provider.tsx
+    └── router/
+        ├── types.ts        # AppRoute type (extends RouteObject + requiredRole)
+        ├── guards.tsx      # <RequireRole> component
+        ├── compose.tsx     # config → RouteObject[] transform
+        ├── routes.tsx      # top-level layout composition
+        └── index.ts

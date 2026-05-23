@@ -1,5 +1,5 @@
 use ai_engine::AiEngine;
-use axum::http::{HeaderValue, Method};
+use axum::http::{HeaderName, HeaderValue, Method, header};
 use sqlx::{PgPool, postgres::PgPoolOptions};
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -103,12 +103,23 @@ async fn setup_database(database_url: &str) -> Result<PgPool, sqlx::Error> {
 }
 
 fn setup_cors(frontend_url: &str) -> CorsLayer {
-    let origin = frontend_url
-        .parse::<HeaderValue>()
-        .expect("FRONTEND_URL inválida");
+    // Accept a comma-separated list so multiple subdomains (web, onboarding,
+    // admin) can share the same backend with credentials.
+    let origins: Vec<HeaderValue> = frontend_url
+        .split(',')
+        .map(|s| s.trim())
+        .filter(|s| !s.is_empty())
+        .map(|o| {
+            o.parse::<HeaderValue>()
+                .unwrap_or_else(|_| panic!("FRONTEND_URL inválida: {o}"))
+        })
+        .collect();
 
+    // When allow_credentials is true, allow_headers/allow_origin cannot be Any —
+    // they must be explicit. The browser refuses the response otherwise.
     CorsLayer::new()
-        .allow_origin(origin)
+        .allow_origin(origins)
+        .allow_credentials(true)
         .allow_methods([
             Method::GET,
             Method::POST,
@@ -116,7 +127,12 @@ fn setup_cors(frontend_url: &str) -> CorsLayer {
             Method::DELETE,
             Method::PATCH,
         ])
-        .allow_headers(tower_http::cors::Any)
+        .allow_headers([
+            header::AUTHORIZATION,
+            header::CONTENT_TYPE,
+            header::ACCEPT,
+            HeaderName::from_static("x-api-key"),
+        ])
 }
 
 fn spawn_background_workers(

@@ -29,8 +29,20 @@ pub struct AppConfig {
     /// Port the server listens on. Default: 8080
     pub port: u16,
 
-    /// Allowed CORS origin for the frontend. Default: http://localhost:5173
+    /// Comma-separated list of allowed CORS origins for the frontends.
+    /// Example: "http://acme.nexus.test:5173,http://onboarding.nexus.test:5174"
+    /// Default: http://localhost:5173
     pub frontend_url: String,
+
+    /// Domain attribute set on the refresh token cookie. When set, the cookie
+    /// is shared across all subdomains (e.g. ".nexus.test" lets acme.nexus.test
+    /// and onboarding.nexus.test share the session). When None, the cookie is
+    /// host-scoped to the API origin. Default: None.
+    pub cookie_domain: Option<String>,
+
+    /// Whether to set the `Secure` attribute on cookies. Must be true in
+    /// production (HTTPS). Default: false (dev over plain HTTP).
+    pub cookie_secure: bool,
 
     // ── AI integrations ───────────────────────────────────────────────────────
     /// Base URL for the local Ollama LLM server. Default: http://127.0.0.1:11434
@@ -74,6 +86,8 @@ impl AppConfig {
             .set_default("access_token_ttl_minutes", 15_i64)?
             .set_default("refresh_token_ttl_days", 30_i64)?
             .set_default("jwt_issuer", "nexus-helpdesk")?
+            .set_default("cookie_domain", None::<String>)?
+            .set_default("cookie_secure", false)?
             // ── Optional config file ───────────────────────────────────────
             // Place a config.toml at the workspace root to override defaults
             // without touching environment variables.

@@ -1,6 +1,25 @@
+# Build artifacts
 dist/
+build/
+target/
 node_modules/
 .turbo/
 coverage/
+
+# Rust
+**/Cargo.lock
+
+# Lock files
 pnpm-lock.yaml
 .pnpm-store/
+package-lock.json
+yarn.lock
+
+# Generated
+*.min.js
+*.min.css
+
+# Env files (except example)
+.env
+.env.local
+.env.*.local

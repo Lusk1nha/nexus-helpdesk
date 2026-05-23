@@ -113,8 +113,8 @@ async fn login_with_valid_credentials_returns_200_with_token() {
         .await;
 
     assert_eq!(status, StatusCode::OK);
-    assert!(body["data"]["token"].is_string());
-    assert!(!body["data"]["token"].as_str().unwrap().is_empty());
+    assert!(body["data"]["accessToken"].is_string());
+    assert!(!body["data"]["accessToken"].as_str().unwrap().is_empty());
     assert!(body["data"]["userId"].is_string());
     assert!(body["data"]["tenantId"].is_string());
     assert_eq!(body["data"]["role"].as_str().unwrap(), "admin");
@@ -190,95 +190,79 @@ async fn get_me_with_invalid_token_returns_401() {
 // ─── Refresh token ───────────────────────────────────────────────────────────
 
 #[tokio::test]
-async fn login_returns_access_and_refresh_tokens() {
+async fn login_returns_access_token_and_refresh_cookie() {
     let app = spawn_test_app().await;
     app.register_tenant("pair@example.com", "StrongPass123!")
         .await;
 
-    let (status, body) = app
-        .post_json(
-            "/api/v1/identity/login",
-            serde_json::json!({"email": "pair@example.com", "password": "StrongPass123!"}),
-        )
-        .await;
+    let (status, body, cookie) = app.login_full("pair@example.com", "StrongPass123!").await;
 
     assert_eq!(status, StatusCode::OK);
     let access = body["data"]["accessToken"].as_str().unwrap();
-    let refresh = body["data"]["refreshToken"].as_str().unwrap();
     assert!(!access.is_empty());
-    assert!(!refresh.is_empty());
-    assert_ne!(access, refresh);
     assert!(body["data"]["accessTokenExpiresIn"].as_i64().unwrap() > 0);
+
+    // Refresh token must NOT be in the body — it travels in the httpOnly cookie.
+    assert!(
+        body["data"].get("refreshToken").is_none(),
+        "refresh token must not leak into the response body"
+    );
+
+    let cookie = cookie.expect("Set-Cookie nexus_refresh must be present on login");
+    assert!(cookie.starts_with("nexus_refresh="));
 }
 
 #[tokio::test]
-async fn refresh_with_valid_token_returns_new_pair() {
+async fn refresh_with_valid_cookie_returns_new_access_token_and_rotates_cookie() {
     let app = spawn_test_app().await;
     app.register_tenant("refresh@example.com", "StrongPass123!")
         .await;
-    let (_, login_body) = app
-        .post_json(
-            "/api/v1/identity/login",
-            serde_json::json!({"email": "refresh@example.com", "password": "StrongPass123!"}),
-        )
+
+    let (_, _, cookie) = app
+        .login_full("refresh@example.com", "StrongPass123!")
         .await;
+    let cookie = cookie.unwrap();
 
-    let refresh = login_body["data"]["refreshToken"].as_str().unwrap();
-
-    let (status, body) = app
-        .post_json(
-            "/api/v1/identity/refresh",
-            serde_json::json!({"refreshToken": refresh}),
-        )
+    let (status, body, headers) = app
+        .post_with_cookie("/api/v1/identity/refresh", &cookie)
         .await;
 
     assert_eq!(status, StatusCode::OK, "refresh failed: {body}");
     let new_access = body["data"]["accessToken"].as_str().unwrap();
-    let new_refresh = body["data"]["refreshToken"].as_str().unwrap();
     assert!(!new_access.is_empty());
-    assert_ne!(new_refresh, refresh, "refresh token must rotate");
+
+    let new_cookie = common::extract_refresh_cookie(&headers)
+        .expect("refresh endpoint must rotate the cookie");
+    assert_ne!(new_cookie, cookie, "refresh cookie must rotate");
 }
 
 #[tokio::test]
-async fn refresh_with_reused_token_is_rejected_after_rotation() {
+async fn refresh_with_reused_cookie_is_rejected_after_rotation() {
     let app = spawn_test_app().await;
     app.register_tenant("reuse@example.com", "StrongPass123!")
         .await;
-    let (_, login_body) = app
-        .post_json(
-            "/api/v1/identity/login",
-            serde_json::json!({"email": "reuse@example.com", "password": "StrongPass123!"}),
-        )
-        .await;
-    let refresh = login_body["data"]["refreshToken"].as_str().unwrap();
+
+    let (_, _, cookie) = app.login_full("reuse@example.com", "StrongPass123!").await;
+    let cookie = cookie.unwrap();
 
     // First refresh succeeds…
-    let (status, _) = app
-        .post_json(
-            "/api/v1/identity/refresh",
-            serde_json::json!({"refreshToken": refresh}),
-        )
+    let (status, _, _) = app
+        .post_with_cookie("/api/v1/identity/refresh", &cookie)
         .await;
     assert_eq!(status, StatusCode::OK);
 
-    // …reusing the old token must be rejected.
-    let (status, _) = app
-        .post_json(
-            "/api/v1/identity/refresh",
-            serde_json::json!({"refreshToken": refresh}),
-        )
+    // …reusing the old cookie must be rejected.
+    let (status, _, _) = app
+        .post_with_cookie("/api/v1/identity/refresh", &cookie)
         .await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 }
 
 #[tokio::test]
-async fn refresh_with_garbage_token_returns_401() {
+async fn refresh_without_cookie_returns_401() {
     let app = spawn_test_app().await;
-    let (status, _) = app
-        .post_json(
-            "/api/v1/identity/refresh",
-            serde_json::json!({"refreshToken": "not.a.jwt"}),
-        )
+    let (status, _, _) = app
+        .post_with_cookie("/api/v1/identity/refresh", "nexus_refresh=not.a.jwt")
         .await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 }
@@ -286,40 +270,46 @@ async fn refresh_with_garbage_token_returns_401() {
 // ─── Logout ──────────────────────────────────────────────────────────────────
 
 #[tokio::test]
-async fn logout_revokes_refresh_token() {
+async fn logout_revokes_refresh_cookie() {
     let app = spawn_test_app().await;
     app.register_tenant("lo@example.com", "StrongPass123!")
         .await;
-    let (_, login_body) = app
-        .post_json(
-            "/api/v1/identity/login",
-            serde_json::json!({"email": "lo@example.com", "password": "StrongPass123!"}),
-        )
-        .await;
+
+    let (_, login_body, cookie) = app.login_full("lo@example.com", "StrongPass123!").await;
     let access = login_body["data"]["accessToken"]
         .as_str()
         .unwrap()
         .to_string();
-    let refresh = login_body["data"]["refreshToken"]
-        .as_str()
-        .unwrap()
-        .to_string();
+    let cookie = cookie.unwrap();
 
-    let (status, _) = app
-        .post_json_authed(
-            "/api/v1/identity/logout",
-            serde_json::json!({"refreshToken": refresh}),
-            &access,
+    // Build a single request that carries BOTH the access token (header) and
+    // the refresh cookie (cookie header), since logout reads from both.
+    use axum::body::Body;
+    use axum::http::Request;
+    use http_body_util::BodyExt;
+    use tower::ServiceExt;
+    let response = app
+        .router
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/api/v1/identity/logout")
+                .header("content-type", "application/json")
+                .header("authorization", format!("Bearer {}", access))
+                .header("cookie", &cookie)
+                .body(Body::from("{}"))
+                .unwrap(),
         )
-        .await;
+        .await
+        .unwrap();
+    let status = response.status();
+    let _ = response.into_body().collect().await.unwrap();
     assert_eq!(status, StatusCode::NO_CONTENT);
 
-    // After logout the refresh token must no longer work.
-    let (status, _) = app
-        .post_json(
-            "/api/v1/identity/refresh",
-            serde_json::json!({"refreshToken": refresh}),
-        )
+    // After logout the refresh cookie must no longer work.
+    let (status, _, _) = app
+        .post_with_cookie("/api/v1/identity/refresh", &cookie)
         .await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 }

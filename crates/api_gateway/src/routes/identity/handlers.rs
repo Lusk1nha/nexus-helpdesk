@@ -3,15 +3,16 @@ use axum::{
     extract::{Path, State},
     http::StatusCode,
 };
+use axum_extra::extract::cookie::CookieJar;
 use uuid::Uuid;
 use validator::Validate;
 
 use super::contracts::{
-    AdminResetPasswordPayload, ApiKeyResponse, ChangeUserRolePayload, CreateApiKeyPayload,
-    CreateApiKeyResponse, GetMeResponse, InviteUserPayload, InviteUserResponse, LoginPayload,
-    LoginResponse, LogoutPayload, RefreshTokenPayload, RefreshTokenResponse, RegisterTenantPayload,
-    RegisterTenantResponse, ResetPasswordResponse, TenantMemberResponse, TenantResponse,
-    UpdateUserStatusPayload,
+    AdminResetPasswordPayload, ApiKeyResponse, ChangeUserRolePayload, CheckSlugQuery,
+    CheckSlugResponse, CreateApiKeyPayload, CreateApiKeyResponse, GetMeResponse,
+    InviteUserPayload, InviteUserResponse, LoginPayload, LoginResponse, LogoutPayload,
+    RefreshTokenResponse, RegisterTenantPayload, RegisterTenantResponse, ResetPasswordResponse,
+    TenantMemberResponse, TenantResponse, UpdateUserStatusPayload,
 };
 use crate::{
     app_state::AppState,
@@ -19,15 +20,16 @@ use crate::{
     middleware::auth::{AdminUser, AuthUser},
     response::ApiResponse,
     utils::{
+        cookies::{REFRESH_COOKIE_NAME, build_refresh_cookie, clear_refresh_cookie},
         jwt::{sign_access_token, sign_refresh_token, verify_jwt},
         secret::{generate_api_key, sha256_hex},
     },
 };
 
 use domain_identity::application::use_cases::{
-    CreateApiKeyCommand, IssueRefreshTokenCommand, ListApiKeysCommand, LoginCommand, LogoutCommand,
-    RefreshSessionCommand, ResetPasswordCommand, RevokeApiKeyCommand,
-    change_user_role::ChangeUserRoleCommand, get_tenant::GetTenantCommand,
+    CheckSlugAvailabilityCommand, CreateApiKeyCommand, IssueRefreshTokenCommand,
+    ListApiKeysCommand, LoginCommand, LogoutCommand, RefreshSessionCommand, ResetPasswordCommand,
+    RevokeApiKeyCommand, change_user_role::ChangeUserRoleCommand, get_tenant::GetTenantCommand,
     invite_user::InviteUserCommand, list_users::ListUsersCommand,
     register_tenant::RegisterTenantCommand, update_user_status::UpdateUserStatusCommand,
 };
@@ -73,6 +75,7 @@ pub async fn register_tenant_handler(
         .register_tenant
         .execute(RegisterTenantCommand {
             tenant_name: payload.tenant_name,
+            tenant_slug: payload.tenant_slug,
             admin_full_name: payload.admin_full_name,
             admin_email: payload.admin_email,
             admin_plain_password: payload.admin_password,
@@ -80,8 +83,38 @@ pub async fn register_tenant_handler(
         .await?;
 
     let resp: RegisterTenantResponse = result.into();
-    tracing::info!(tenant_id = %resp.tenant_id, "tenant registered via API");
+    tracing::info!(tenant_id = %resp.tenant_id, slug = %resp.tenant_slug, "tenant registered via API");
     Ok((StatusCode::CREATED, Json(ApiResponse::success(resp))))
+}
+
+// ─── Check slug availability ─────────────────────────────────────────────────
+
+#[utoipa::path(
+    get, path = "/api/v1/identity/check-slug",
+    tag = "Identity",
+    params(("slug" = String, Query, description = "Candidate slug to check")),
+    responses(
+        (status = 200, description = "Disponibilidade do slug", body = CheckSlugResponse),
+    )
+)]
+pub async fn check_slug_handler(
+    State(state): State<AppState>,
+    axum::extract::Query(query): axum::extract::Query<CheckSlugQuery>,
+) -> Result<(StatusCode, Json<ApiResponse<CheckSlugResponse>>), ApiError> {
+    let availability = state
+        .identity
+        .check_slug
+        .execute(CheckSlugAvailabilityCommand { slug: query.slug })
+        .await?;
+
+    Ok((
+        StatusCode::OK,
+        Json(ApiResponse::success(CheckSlugResponse {
+            slug: availability.slug,
+            available: availability.available,
+            reason: availability.reason,
+        })),
+    ))
 }
 
 // ─── Login ────────────────────────────────────────────────────────────────────
@@ -98,8 +131,9 @@ pub async fn register_tenant_handler(
 )]
 pub async fn login_handler(
     State(state): State<AppState>,
+    jar: CookieJar,
     Json(payload): Json<LoginPayload>,
-) -> Result<(StatusCode, Json<ApiResponse<LoginResponse>>), ApiError> {
+) -> Result<(CookieJar, Json<ApiResponse<LoginResponse>>), ApiError> {
     payload.validate()?;
 
     let (user, tenant_user) = state
@@ -146,13 +180,14 @@ pub async fn login_handler(
     let access_ttl_secs = (state.config.access_token_ttl_minutes as i64) * 60;
 
     tracing::info!(user_id = %user.id, tenant_id = %tenant_user.tenant_id, "login successful via API");
+
+    let updated_jar = jar.add(build_refresh_cookie(refresh.value, &state.config));
+
     Ok((
-        StatusCode::OK,
+        updated_jar,
         Json(ApiResponse::success(LoginResponse {
-            access_token: access.value.clone(),
-            refresh_token: refresh.value,
+            access_token: access.value,
             access_token_expires_in: access_ttl_secs,
-            token: access.value,
             user_id: user.id,
             tenant_id: tenant_user.tenant_id,
             role: tenant_user.role,
@@ -165,27 +200,26 @@ pub async fn login_handler(
 #[utoipa::path(
     post, path = "/api/v1/identity/refresh",
     tag = "Identity",
-    request_body = RefreshTokenPayload,
     responses(
-        (status = 200, description = "Tokens rotacionados", body = RefreshTokenResponse),
-        (status = 400, description = "Erro de validação"),
-        (status = 401, description = "Refresh token inválido, expirado ou revogado")
+        (status = 200, description = "Access token rotacionado (refresh token continua no cookie httpOnly)", body = RefreshTokenResponse),
+        (status = 401, description = "Cookie ausente, refresh token inválido, expirado ou revogado")
     )
 )]
 pub async fn refresh_token_handler(
     State(state): State<AppState>,
-    Json(payload): Json<RefreshTokenPayload>,
-) -> Result<(StatusCode, Json<ApiResponse<RefreshTokenResponse>>), ApiError> {
-    payload.validate()?;
+    jar: CookieJar,
+) -> Result<(CookieJar, Json<ApiResponse<RefreshTokenResponse>>), ApiError> {
+    let presented = jar
+        .get(REFRESH_COOKIE_NAME)
+        .map(|c| c.value().to_string())
+        .ok_or_else(|| {
+            ApiError::Identity(domain_identity::domain::error::DomainError::InvalidCredentials)
+        })?;
 
-    let claims = verify_jwt(
-        &payload.refresh_token,
-        &state.config.jwt_secret,
-        &state.config.jwt_issuer,
-    )
-    .map_err(|_| {
-        ApiError::Identity(domain_identity::domain::error::DomainError::InvalidCredentials)
-    })?;
+    let claims = verify_jwt(&presented, &state.config.jwt_secret, &state.config.jwt_issuer)
+        .map_err(|_| {
+            ApiError::Identity(domain_identity::domain::error::DomainError::InvalidCredentials)
+        })?;
 
     let new_refresh = sign_refresh_token(
         claims.sub,
@@ -202,7 +236,7 @@ pub async fn refresh_token_handler(
         .refresh_session
         .execute(RefreshSessionCommand {
             presented_jti: claims.jti,
-            presented_token_hash: sha256_hex(&payload.refresh_token),
+            presented_token_hash: sha256_hex(&presented),
             new_jti: new_refresh.jti,
             new_token_hash: sha256_hex(&new_refresh.value),
             new_expires_at: new_refresh.expires_at,
@@ -219,11 +253,12 @@ pub async fn refresh_token_handler(
     )
     .map_err(|e| ApiError::Internal(format!("Falha ao assinar access token: {e}")))?;
 
+    let updated_jar = jar.add(build_refresh_cookie(new_refresh.value, &state.config));
+
     Ok((
-        StatusCode::OK,
+        updated_jar,
         Json(ApiResponse::success(RefreshTokenResponse {
             access_token: access.value,
-            refresh_token: new_refresh.value,
             access_token_expires_in: (state.config.access_token_ttl_minutes as i64) * 60,
         })),
     ))
@@ -244,13 +279,18 @@ pub async fn refresh_token_handler(
 pub async fn logout_handler(
     State(state): State<AppState>,
     AuthUser(claims): AuthUser,
-    Json(payload): Json<LogoutPayload>,
-) -> Result<StatusCode, ApiError> {
-    let refresh_jti = payload.refresh_token.as_deref().and_then(|t| {
-        verify_jwt(t, &state.config.jwt_secret, &state.config.jwt_issuer)
+    jar: CookieJar,
+    payload: Option<Json<LogoutPayload>>,
+) -> Result<(CookieJar, StatusCode), ApiError> {
+    let everywhere = payload.map(|p| p.0.everywhere).unwrap_or(false);
+
+    // Resolve which session to revoke: the JTI from the current cookie (single-device logout)
+    // OR all sessions when `everywhere=true`.
+    let refresh_jti = jar.get(REFRESH_COOKIE_NAME).and_then(|c| {
+        verify_jwt(c.value(), &state.config.jwt_secret, &state.config.jwt_issuer)
             .ok()
-            .filter(|c| c.sub == claims.sub)
-            .map(|c| c.jti)
+            .filter(|claims_| claims_.sub == claims.sub)
+            .map(|claims_| claims_.jti)
     });
 
     state
@@ -259,12 +299,14 @@ pub async fn logout_handler(
         .execute(LogoutCommand {
             refresh_jti,
             user_id: claims.sub,
-            revoke_all: payload.everywhere,
+            revoke_all: everywhere,
         })
         .await?;
 
-    tracing::info!(user_id = %claims.sub, everywhere = payload.everywhere, "logout via API");
-    Ok(StatusCode::NO_CONTENT)
+    tracing::info!(user_id = %claims.sub, everywhere, "logout via API");
+
+    let updated_jar = jar.add(clear_refresh_cookie(&state.config));
+    Ok((updated_jar, StatusCode::NO_CONTENT))
 }
 
 // ─── API keys ────────────────────────────────────────────────────────────────

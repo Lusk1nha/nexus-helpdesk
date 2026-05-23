@@ -1,0 +1,26 @@
+{
+  "name": "@nexus/utils",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.6.0"
+  },
+  "devDependencies": {
+    "@nexus/tsconfig": "workspace:*",
+    "@types/react": "^19.2.14",
+    "react": "^19.2.5",
+    "tailwindcss": "^4.3.0",
+    "typescript": "~6.0.2"
+  }
+}
