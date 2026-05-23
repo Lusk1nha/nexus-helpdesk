@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,json,md}\" \"./*.{json,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json,md}\" \"./*.{json,md}\""
   },
   "dependencies": {
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
@@ -42,6 +46,8 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.5.0",
     "jsdom": "^29.1.1",
+    "prettier": "^3.0.0",
+    "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4.3.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.58.2",

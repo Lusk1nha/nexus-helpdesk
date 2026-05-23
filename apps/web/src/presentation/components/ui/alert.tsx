@@ -33,12 +33,12 @@ export function Alert({ variant = 'info', title, children, className }: AlertPro
     <div
       role="alert"
       className={cn(
-        'flex gap-3 rounded-sm border px-3 py-2.5 text-sm font-mono',
+        'flex gap-3 rounded-sm border px-3 py-2.5 font-mono text-sm',
         styles[variant],
         className,
       )}
     >
-      <Icon className="h-4 w-4 mt-0.5 shrink-0" />
+      <Icon className="mt-0.5 h-4 w-4 shrink-0" />
       <div className="flex flex-col gap-0.5">
         {title && <span className="font-semibold">{title}</span>}
         <span className="opacity-90">{children}</span>

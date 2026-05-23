@@ -1,8 +1,4 @@
-import ky, {
-  type AfterResponseState,
-  type BeforeRequestState,
-  type KyInstance,
-} from 'ky'
+import ky, { type AfterResponseState, type BeforeRequestState, type KyInstance } from 'ky'
 
 import { env } from '@/env'
 import { useAuthStore } from '@/infrastructure/store/auth.store'
@@ -27,14 +23,10 @@ export const http: KyInstance = ky.create({
       },
     ],
     afterResponse: [
-      async ({
-        request,
-        response,
-      }: AfterResponseState): Promise<Response | void> => {
+      async ({ request, response }: AfterResponseState): Promise<Response | void> => {
         if (response.status !== 401) return
 
-        const { refreshToken, setAccessToken, clear } =
-          useAuthStore.getState()
+        const { refreshToken, setAccessToken, clear } = useAuthStore.getState()
 
         if (!refreshToken) {
           clear()

@@ -38,28 +38,24 @@ export function LoginPage() {
       className="w-full max-w-sm"
     >
       {/* Card */}
-      <div className="border border-[var(--border)] rounded-sm bg-[var(--surface)] overflow-hidden">
+      <div className="overflow-hidden rounded-sm border border-[var(--border)] bg-[var(--surface)]">
         {/* Card header */}
-        <div className="px-6 pt-6 pb-4 border-b border-[var(--border)]">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="border-b border-[var(--border)] px-6 pt-6 pb-4">
+          <div className="mb-4 flex items-center gap-2">
             {/* Terminal dots */}
             <span className="h-2.5 w-2.5 rounded-full bg-[var(--destructive)] opacity-70" />
             <span className="h-2.5 w-2.5 rounded-full bg-[var(--warning)] opacity-70" />
             <span className="h-2.5 w-2.5 rounded-full bg-[var(--success)] opacity-70" />
           </div>
-          <p className="text-xs font-mono text-[var(--muted)] mb-1">
+          <p className="mb-1 font-mono text-xs text-[var(--muted)]">
             <span className="text-[var(--success)]">$</span> nexus authenticate
           </p>
-          <h1 className="text-lg font-mono font-semibold text-[var(--fg)]">
-            Sign in
-          </h1>
-          <p className="text-xs text-[var(--muted)] mt-0.5">
-            Access your helpdesk workspace
-          </p>
+          <h1 className="font-mono text-lg font-semibold text-[var(--fg)]">Sign in</h1>
+          <p className="mt-0.5 text-xs text-[var(--muted)]">Access your helpdesk workspace</p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} noValidate className="px-6 py-5 space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4 px-6 py-5">
           <AnimatePresence mode="wait">
             {login.isError && (
               <motion.div
@@ -101,30 +97,30 @@ export function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--fg)] transition-colors"
+                className="absolute top-1/2 right-2.5 -translate-y-1/2 text-[var(--muted)] transition-colors hover:text-[var(--fg)]"
                 tabIndex={-1}
               >
-                {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                {showPassword ? (
+                  <EyeOff className="h-3.5 w-3.5" />
+                ) : (
+                  <Eye className="h-3.5 w-3.5" />
+                )}
               </button>
             </div>
           </FormField>
 
-          <Button
-            type="submit"
-            className="w-full"
-            loading={login.isPending}
-          >
+          <Button type="submit" className="w-full" loading={login.isPending}>
             {login.isPending ? 'Authenticating...' : 'Authenticate →'}
           </Button>
         </form>
 
         {/* Footer */}
         <div className="px-6 pb-5">
-          <p className="text-center text-xs font-mono text-[var(--muted)]">
+          <p className="text-center font-mono text-xs text-[var(--muted)]">
             No account?{' '}
             <Link
               to="/register"
-              className="text-[var(--accent)] hover:underline underline-offset-2"
+              className="text-[var(--accent)] underline-offset-2 hover:underline"
             >
               Register your company
             </Link>
@@ -133,7 +129,7 @@ export function LoginPage() {
       </div>
 
       {/* Hint below card */}
-      <p className="mt-4 text-center text-xs font-mono text-[var(--border)]">
+      <p className="mt-4 text-center font-mono text-xs text-[var(--border)]">
         <span className="text-[var(--muted)]">tip:</span> use your company credentials
       </p>
     </motion.div>

@@ -7,14 +7,10 @@ export const loginSchema = z.object({
 
 export const registerSchema = z
   .object({
-    tenantName: z
-      .string()
-      .min(3, 'Company name must be at least 3 characters'),
+    tenantName: z.string().min(3, 'Company name must be at least 3 characters'),
     adminFullName: z.string().min(3, 'Full name must be at least 3 characters'),
     adminEmail: z.email('Enter a valid email address'),
-    adminPassword: z
-      .string()
-      .min(8, 'Password must be at least 8 characters'),
+    adminPassword: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string(),
   })
   .refine((data) => data.adminPassword === data.confirmPassword, {

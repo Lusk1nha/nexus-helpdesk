@@ -1,11 +1,11 @@
-@import "@fontsource-variable/jetbrains-mono";
-@import "tailwindcss";
+@import '@fontsource-variable/jetbrains-mono';
+@import 'tailwindcss';
 
 /* ─── Design tokens (resolved via CSS custom properties per theme) ─────────── */
 
 @theme {
-  --font-sans: "JetBrains Mono Variable", "JetBrains Mono", monospace;
-  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", monospace;
+  --font-sans: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
 
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -24,7 +24,7 @@
 /* ─── Theme: Midnight (default — GitHub dark inspired) ─────────────────────── */
 
 :root,
-[data-theme="midnight"] {
+[data-theme='midnight'] {
   color-scheme: dark;
   --bg: #0d1117;
   --surface: #161b22;
@@ -42,7 +42,7 @@
 
 /* ─── Theme: Dawn (clean light) ────────────────────────────────────────────── */
 
-[data-theme="dawn"] {
+[data-theme='dawn'] {
   color-scheme: light;
   --bg: #ffffff;
   --surface: #f6f8fa;
@@ -60,7 +60,7 @@
 
 /* ─── Theme: Dracula ────────────────────────────────────────────────────────── */
 
-[data-theme="dracula"] {
+[data-theme='dracula'] {
   color-scheme: dark;
   --bg: #282a36;
   --surface: #343746;
@@ -78,7 +78,7 @@
 
 /* ─── Theme: Nord ───────────────────────────────────────────────────────────── */
 
-[data-theme="nord"] {
+[data-theme='nord'] {
   color-scheme: dark;
   --bg: #2e3440;
   --surface: #3b4252;
@@ -96,7 +96,7 @@
 
 /* ─── Theme: Catppuccin Mocha ───────────────────────────────────────────────── */
 
-[data-theme="catppuccin"] {
+[data-theme='catppuccin'] {
   color-scheme: dark;
   --bg: #1e1e2e;
   --surface: #313244;
@@ -121,7 +121,7 @@
 }
 
 html {
-  font-family: "JetBrains Mono Variable", "JetBrains Mono", monospace;
+  font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

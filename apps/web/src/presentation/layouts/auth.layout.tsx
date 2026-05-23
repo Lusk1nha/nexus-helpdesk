@@ -15,22 +15,21 @@ export function AuthLayout() {
   }
 
   return (
-    <div className="relative min-h-dvh flex flex-col bg-[var(--bg)]">
+    <div className="relative flex min-h-dvh flex-col bg-[var(--bg)]">
       {/* Dot grid background */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="pointer-events-none absolute inset-0"
         style={{
-          backgroundImage:
-            'radial-gradient(circle, var(--border) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, var(--border) 1px, transparent 1px)',
           backgroundSize: '28px 28px',
           opacity: 0.5,
         }}
       />
 
       {/* Top bar */}
-      <header className="relative z-20 flex items-center justify-between px-6 py-4 border-b border-[var(--border)]/50">
+      <header className="relative z-20 flex items-center justify-between border-b border-[var(--border)]/50 px-6 py-4">
         <div className="flex items-center gap-2 font-mono text-sm">
-          <span className="text-[var(--accent)] font-semibold">◈</span>
+          <span className="font-semibold text-[var(--accent)]">◈</span>
           <span className="text-[var(--muted)]">nexus</span>
           <span className="text-[var(--border)]">/</span>
           <span className="text-[var(--fg)]">helpdesk</span>
@@ -44,10 +43,10 @@ export function AuthLayout() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 py-4 px-6 border-t border-[var(--border)]/50">
-        <p className="text-center text-xs text-[var(--muted)] font-mono">
-          nexus_helpdesk v1.0 —{' '}
-          <span className="text-[var(--accent)]">multi-tenant</span> · ai-powered · realtime
+      <footer className="relative z-10 border-t border-[var(--border)]/50 px-6 py-4">
+        <p className="text-center font-mono text-xs text-[var(--muted)]">
+          nexus_helpdesk v1.0 — <span className="text-[var(--accent)]">multi-tenant</span> ·
+          ai-powered · realtime
         </p>
       </footer>
     </div>

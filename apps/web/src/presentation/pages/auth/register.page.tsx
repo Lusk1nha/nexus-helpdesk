@@ -38,13 +38,13 @@ export function RegisterPage() {
         transition={{ duration: 0.25 }}
         className="w-full max-w-sm"
       >
-        <div className="border border-[var(--success)] rounded-sm bg-[var(--surface)] px-6 py-8 text-center space-y-4">
-          <CheckCircle2 className="h-10 w-10 text-[var(--success)] mx-auto" />
+        <div className="space-y-4 rounded-sm border border-[var(--success)] bg-[var(--surface)] px-6 py-8 text-center">
+          <CheckCircle2 className="mx-auto h-10 w-10 text-[var(--success)]" />
           <div>
-            <h2 className="font-mono font-semibold text-[var(--fg)] text-base">
+            <h2 className="font-mono text-base font-semibold text-[var(--fg)]">
               Company registered!
             </h2>
-            <p className="text-xs text-[var(--muted)] mt-1">
+            <p className="mt-1 text-xs text-[var(--muted)]">
               Your workspace is ready. Sign in to get started.
             </p>
           </div>
@@ -67,27 +67,25 @@ export function RegisterPage() {
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className="w-full max-w-sm"
     >
-      <div className="border border-[var(--border)] rounded-sm bg-[var(--surface)] overflow-hidden">
+      <div className="overflow-hidden rounded-sm border border-[var(--border)] bg-[var(--surface)]">
         {/* Card header */}
-        <div className="px-6 pt-6 pb-4 border-b border-[var(--border)]">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="border-b border-[var(--border)] px-6 pt-6 pb-4">
+          <div className="mb-4 flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-[var(--destructive)] opacity-70" />
             <span className="h-2.5 w-2.5 rounded-full bg-[var(--warning)] opacity-70" />
             <span className="h-2.5 w-2.5 rounded-full bg-[var(--success)] opacity-70" />
           </div>
-          <p className="text-xs font-mono text-[var(--muted)] mb-1">
+          <p className="mb-1 font-mono text-xs text-[var(--muted)]">
             <span className="text-[var(--success)]">$</span> nexus register --new-tenant
           </p>
-          <h1 className="text-lg font-mono font-semibold text-[var(--fg)]">
-            Create workspace
-          </h1>
-          <p className="text-xs text-[var(--muted)] mt-0.5">
+          <h1 className="font-mono text-lg font-semibold text-[var(--fg)]">Create workspace</h1>
+          <p className="mt-0.5 text-xs text-[var(--muted)]">
             Set up your company's helpdesk in seconds
           </p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} noValidate className="px-6 py-5 space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4 px-6 py-5">
           <AnimatePresence mode="wait">
             {register_.isError && (
               <motion.div
@@ -106,10 +104,15 @@ export function RegisterPage() {
 
           {/* Section: Company */}
           <div className="space-y-3">
-            <p className="text-[10px] font-mono text-[var(--accent)] uppercase tracking-widest">
+            <p className="font-mono text-[10px] tracking-widest text-[var(--accent)] uppercase">
               Company
             </p>
-            <FormField label="Company name" htmlFor="tenantName" error={errors.tenantName?.message} required>
+            <FormField
+              label="Company name"
+              htmlFor="tenantName"
+              error={errors.tenantName?.message}
+              required
+            >
               <Input
                 id="tenantName"
                 placeholder="Acme Corp"
@@ -122,10 +125,15 @@ export function RegisterPage() {
 
           {/* Section: Admin account */}
           <div className="space-y-3">
-            <p className="text-[10px] font-mono text-[var(--accent)] uppercase tracking-widest">
+            <p className="font-mono text-[10px] tracking-widest text-[var(--accent)] uppercase">
               Admin account
             </p>
-            <FormField label="Full name" htmlFor="adminFullName" error={errors.adminFullName?.message} required>
+            <FormField
+              label="Full name"
+              htmlFor="adminFullName"
+              error={errors.adminFullName?.message}
+              required
+            >
               <Input
                 id="adminFullName"
                 placeholder="Jane Doe"
@@ -134,7 +142,12 @@ export function RegisterPage() {
                 {...register('adminFullName')}
               />
             </FormField>
-            <FormField label="Email" htmlFor="adminEmail" error={errors.adminEmail?.message} required>
+            <FormField
+              label="Email"
+              htmlFor="adminEmail"
+              error={errors.adminEmail?.message}
+              required
+            >
               <Input
                 id="adminEmail"
                 type="email"
@@ -144,7 +157,12 @@ export function RegisterPage() {
                 {...register('adminEmail')}
               />
             </FormField>
-            <FormField label="Password" htmlFor="adminPassword" error={errors.adminPassword?.message} required>
+            <FormField
+              label="Password"
+              htmlFor="adminPassword"
+              error={errors.adminPassword?.message}
+              required
+            >
               <div className="relative">
                 <Input
                   id="adminPassword"
@@ -158,14 +176,23 @@ export function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--fg)] transition-colors"
+                  className="absolute top-1/2 right-2.5 -translate-y-1/2 text-[var(--muted)] transition-colors hover:text-[var(--fg)]"
                   tabIndex={-1}
                 >
-                  {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  {showPassword ? (
+                    <EyeOff className="h-3.5 w-3.5" />
+                  ) : (
+                    <Eye className="h-3.5 w-3.5" />
+                  )}
                 </button>
               </div>
             </FormField>
-            <FormField label="Confirm password" htmlFor="confirmPassword" error={errors.confirmPassword?.message} required>
+            <FormField
+              label="Confirm password"
+              htmlFor="confirmPassword"
+              error={errors.confirmPassword?.message}
+              required
+            >
               <div className="relative">
                 <Input
                   id="confirmPassword"
@@ -179,32 +206,29 @@ export function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => setShowConfirm((v) => !v)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--fg)] transition-colors"
+                  className="absolute top-1/2 right-2.5 -translate-y-1/2 text-[var(--muted)] transition-colors hover:text-[var(--fg)]"
                   tabIndex={-1}
                 >
-                  {showConfirm ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  {showConfirm ? (
+                    <EyeOff className="h-3.5 w-3.5" />
+                  ) : (
+                    <Eye className="h-3.5 w-3.5" />
+                  )}
                 </button>
               </div>
             </FormField>
           </div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            loading={register_.isPending}
-          >
+          <Button type="submit" className="w-full" loading={register_.isPending}>
             {register_.isPending ? 'Creating workspace...' : 'Create workspace →'}
           </Button>
         </form>
 
         {/* Footer */}
         <div className="px-6 pb-5">
-          <p className="text-center text-xs font-mono text-[var(--muted)]">
+          <p className="text-center font-mono text-xs text-[var(--muted)]">
             Already have an account?{' '}
-            <Link
-              to="/login"
-              className="text-[var(--accent)] hover:underline underline-offset-2"
-            >
+            <Link to="/login" className="text-[var(--accent)] underline-offset-2 hover:underline">
               Sign in
             </Link>
           </p>

@@ -14,11 +14,11 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       className={cn(
         'flex h-9 w-full',
         'bg-[var(--surface)] text-[var(--fg)] placeholder:text-[var(--muted)]',
-        'border border-[var(--border)] rounded-sm',
-        'px-3 py-1 text-sm font-mono',
+        'rounded-sm border border-[var(--border)]',
+        'px-3 py-1 font-mono text-sm',
         'transition-colors duration-100',
-        'focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]',
-        'disabled:opacity-40 disabled:cursor-not-allowed',
+        'focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] focus:outline-none',
+        'disabled:cursor-not-allowed disabled:opacity-40',
         error && 'border-[var(--destructive)] focus:ring-[var(--destructive)]',
         className,
       )}

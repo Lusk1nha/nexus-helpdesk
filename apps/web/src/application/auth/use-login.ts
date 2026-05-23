@@ -11,9 +11,7 @@ export function useLogin() {
 
   return useMutation({
     mutationFn: (input: LoginInput) =>
-      fetchApi<LoginResult>(() =>
-        http.post(API.identity.login, { json: input }).json(),
-      ),
+      fetchApi<LoginResult>(() => http.post(API.identity.login, { json: input }).json()),
     onSuccess: (result) => {
       setSession(result)
     },

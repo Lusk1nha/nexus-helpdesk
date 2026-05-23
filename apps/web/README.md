@@ -8,22 +8,22 @@ React frontend for the Nexus Helpdesk platform — multi-tenant, AI-powered, rea
 
 ## Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | React 19 + Vite 8 |
-| Language | TypeScript 6 |
-| Styling | Tailwind CSS v4 |
-| Font | JetBrains Mono Variable |
-| Routing | React Router v7 |
-| Server state | TanStack Query v5 |
-| Client state | Zustand v5 |
-| Validation | Zod |
-| Forms | React Hook Form + Zod resolver |
-| HTTP | ky (fetch wrapper) |
-| Animations | Motion (Framer Motion for React 19) |
-| Icons | Lucide React |
-| Unit tests | Vitest + React Testing Library |
-| E2E tests | Playwright *(coming)* |
+| Layer        | Technology                          |
+| ------------ | ----------------------------------- |
+| Framework    | React 19 + Vite 8                   |
+| Language     | TypeScript 6                        |
+| Styling      | Tailwind CSS v4                     |
+| Font         | JetBrains Mono Variable             |
+| Routing      | React Router v7                     |
+| Server state | TanStack Query v5                   |
+| Client state | Zustand v5                          |
+| Validation   | Zod                                 |
+| Forms        | React Hook Form + Zod resolver      |
+| HTTP         | ky (fetch wrapper)                  |
+| Animations   | Motion (Framer Motion for React 19) |
+| Icons        | Lucide React                        |
+| Unit tests   | Vitest + React Testing Library      |
+| E2E tests    | Playwright _(coming)_               |
 
 ---
 
@@ -75,20 +75,20 @@ src/
 
 Five built-in themes, infinitely extensible:
 
-| ID | Name | Style |
-|---|---|---|
-| `midnight` | Midnight | GitHub dark (default) |
-| `dawn` | Dawn | Clean light |
-| `dracula` | Dracula | Classic vampire |
-| `nord` | Nord | Arctic blue |
-| `catppuccin` | Catppuccin | Soothing mocha |
+| ID           | Name       | Style                 |
+| ------------ | ---------- | --------------------- |
+| `midnight`   | Midnight   | GitHub dark (default) |
+| `dawn`       | Dawn       | Clean light           |
+| `dracula`    | Dracula    | Classic vampire       |
+| `nord`       | Nord       | Arctic blue           |
+| `catppuccin` | Catppuccin | Soothing mocha        |
 
 **Adding a new theme — two steps:**
 
 1. Add a CSS block in `src/index.css`:
 
 ```css
-[data-theme="my-theme"] {
+[data-theme='my-theme'] {
   --bg: #...;
   --surface: #...;
   --surface-2: #...;
@@ -184,11 +184,11 @@ VITE_API_URL=http://localhost:8080
 
 ## Testing Strategy
 
-| Layer | Tool | What |
-|---|---|---|
-| Unit | Vitest | Domain schemas, guards, utility functions, store actions |
-| Integration | RTL + MSW | Form flows, hook behavior with mocked API |
-| E2E | Playwright *(coming)* | Full auth/ticket flows in a real browser |
+| Layer       | Tool                  | What                                                     |
+| ----------- | --------------------- | -------------------------------------------------------- |
+| Unit        | Vitest                | Domain schemas, guards, utility functions, store actions |
+| Integration | RTL + MSW             | Form flows, hook behavior with mocked API                |
+| E2E         | Playwright _(coming)_ | Full auth/ticket flows in a real browser                 |
 
 ---
 

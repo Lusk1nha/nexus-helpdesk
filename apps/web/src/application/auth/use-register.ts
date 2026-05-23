@@ -8,8 +8,6 @@ import { API } from '@/infrastructure/http/api.routes'
 export function useRegister() {
   return useMutation({
     mutationFn: ({ confirmPassword: _, ...input }: RegisterInput) =>
-      fetchApi<RegisterResult>(() =>
-        http.post(API.identity.register, { json: input }).json(),
-      ),
+      fetchApi<RegisterResult>(() => http.post(API.identity.register, { json: input }).json()),
   })
 }
