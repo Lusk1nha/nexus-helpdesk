@@ -1,6 +1,6 @@
 
 import { AnimatePresence, motion } from "motion/react"
-import { AlertCircle } from "lucide-react"
+import { WarningIcon } from "@phosphor-icons/react"
 import { Alert, AlertDescription } from "./alert"
 
 export interface FormErrorProps {
@@ -31,7 +31,7 @@ export function FormError({
           className={className}
         >
           <Alert variant="error">
-            <AlertCircle />
+            <WarningIcon />
             <AlertDescription>
               {error.message || fallbackMessage}
             </AlertDescription>

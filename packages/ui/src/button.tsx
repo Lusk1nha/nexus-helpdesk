@@ -1,6 +1,6 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
-import { Loader2 } from "lucide-react"
+import { SpinnerGapIcon } from "@phosphor-icons/react"
 import * as React from "react"
 
 import { cn } from "@nexus/utils"
@@ -36,7 +36,8 @@ const buttonVariants = cva(
 )
 
 export interface ButtonProps
-  extends React.ComponentPropsWithoutRef<typeof ButtonPrimitive>,
+  extends
+    React.ComponentPropsWithoutRef<typeof ButtonPrimitive>,
     VariantProps<typeof buttonVariants> {
   loading?: boolean
 }
@@ -57,7 +58,7 @@ function Button({
       disabled={disabled || loading}
       {...props}
     >
-      {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+      {loading && <SpinnerGapIcon className="h-3.5 w-3.5 animate-spin" />}
       {children}
     </ButtonPrimitive>
   )

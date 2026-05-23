@@ -1,11 +1,11 @@
 import {
-  LayoutDashboard,
-  LogOut,
-  MessageSquare,
-  Settings,
-  Shield,
-  BookOpen,
-} from "lucide-react"
+  LayoutIcon,
+  SignOutIcon,
+  ChatTextIcon,
+  GearIcon,
+  ShieldIcon,
+  BookOpenIcon,
+} from "@phosphor-icons/react"
 import { NavLink, Navigate, Outlet, useNavigate } from "react-router"
 
 import { ThemeSwitcher } from "@nexus/theme"
@@ -38,14 +38,14 @@ export function AppLayout() {
   }
 
   const navItems = [
-    { to: paths.app.tickets, icon: MessageSquare, label: "tickets" },
+    { to: paths.app.tickets, icon: ChatTextIcon, label: "tickets" },
 
     ...(user?.role !== "customer"
-      ? [{ to: paths.app.knowledge, icon: BookOpen, label: "knowledge" }]
+      ? [{ to: paths.app.knowledge, icon: BookOpenIcon, label: "knowledge" }]
       : []),
 
     ...(user?.role === "admin"
-      ? [{ to: paths.app.admin, icon: Shield, label: "admin" }]
+      ? [{ to: paths.app.admin, icon: ShieldIcon, label: "admin" }]
       : []),
   ]
 
@@ -98,7 +98,7 @@ export function AppLayout() {
               "transition-colors hover:bg-(--destructive)/10 hover:text-(--destructive)"
             )}
           >
-            <LogOut className="h-3.5 w-3.5 shrink-0" />
+            <SignOutIcon className="h-3.5 w-3.5 shrink-0" />
             logout
           </button>
         </div>
@@ -109,13 +109,13 @@ export function AppLayout() {
         {/* Top bar */}
         <header className="flex items-center justify-between border-b border-(--border) bg-(--surface) px-6 py-3">
           <div className="flex items-center gap-1 font-mono text-xs text-(--muted)">
-            <LayoutDashboard className="h-3.5 w-3.5" />
+            <LayoutIcon className="h-3.5 w-3.5" />
             <span className="ml-1">dashboard</span>
           </div>
           <div className="flex items-center gap-3">
             <ThemeSwitcher />
             <button className="text-(--muted) transition-colors hover:text-(--fg)">
-              <Settings className="h-4 w-4" />
+              <GearIcon className="h-4 w-4" />
             </button>
           </div>
         </header>

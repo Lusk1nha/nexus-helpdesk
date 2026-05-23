@@ -3,7 +3,7 @@ import { motion } from "motion/react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router"
-import { Eye, EyeOff } from "lucide-react"
+import { EyeIcon, EyeClosedIcon } from "@phosphor-icons/react"
 
 import { Button, FormError, FormField, Input } from "@nexus/ui"
 
@@ -107,9 +107,9 @@ export function LoginPage() {
                 tabIndex={-1}
               >
                 {showPassword ? (
-                  <EyeOff className="h-3.5 w-3.5" />
+                  <EyeClosedIcon className="h-3.5 w-3.5" />
                 ) : (
-                  <Eye className="h-3.5 w-3.5" />
+                  <EyeIcon className="h-3.5 w-3.5" />
                 )}
               </button>
             </div>

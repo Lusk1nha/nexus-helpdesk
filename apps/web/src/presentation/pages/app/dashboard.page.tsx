@@ -1,4 +1,4 @@
-import { MessageSquare } from "lucide-react"
+import { ChatTextIcon } from "@phosphor-icons/react"
 
 import { useSession } from "@/application/auth/use-session"
 
@@ -7,7 +7,7 @@ export function DashboardPage() {
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4 text-center">
-      <MessageSquare className="h-10 w-10 text-(--border)" />
+      <ChatTextIcon className="h-10 w-10 text-(--border)" />
       <div>
         <h1 className="font-mono text-base font-semibold text-(--fg)">
           Welcome back, <span className="text-(--accent)">{user?.role}</span>

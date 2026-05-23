@@ -2,19 +2,13 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { motion } from "motion/react"
 import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
-import { Eye, EyeOff, Globe } from "lucide-react"
+import { EyeIcon, EyeClosedIcon, GlobeIcon } from "@phosphor-icons/react"
 
 import { registerSchema, type RegisterInput } from "@nexus/auth"
-import {
-  Button,
-  FormError,
-  FormField,
-  Input,
-} from "@nexus/ui"
+import { Button, FormError, FormField, Input } from "@nexus/ui"
 
 import { useRegister } from "@/application/auth/use-register"
 import { generateSlug } from "@nexus/utils"
-
 
 export function RegisterPage() {
   const registerTenant = useRegister()
@@ -92,7 +86,8 @@ export function RegisterPage() {
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="p-6">
           {/* Tratativa visual de erro da API */}
-          <FormError error={registerTenant.error}
+          <FormError
+            error={registerTenant.error}
             fallbackMessage="It was not possible to proceed with this request!"
           />
 
@@ -125,7 +120,7 @@ export function RegisterPage() {
                   required
                 >
                   <div className="relative">
-                    <Globe className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-(--muted)" />
+                    <GlobeIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-(--muted)" />
                     <Input
                       id="tenantSlug"
                       placeholder="acme"
@@ -208,9 +203,9 @@ export function RegisterPage() {
                       tabIndex={-1}
                     >
                       {showPassword ? (
-                        <EyeOff className="h-3.5 w-3.5" />
+                        <EyeClosedIcon className="h-3.5 w-3.5" />
                       ) : (
-                        <Eye className="h-3.5 w-3.5" />
+                        <EyeIcon className="h-3.5 w-3.5" />
                       )}
                     </button>
                   </div>

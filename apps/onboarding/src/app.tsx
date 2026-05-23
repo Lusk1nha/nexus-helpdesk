@@ -3,16 +3,16 @@ import { Route, Routes } from "react-router"
 import { OnboardingLayout } from "@/presentation/layouts/onboarding.layout"
 import { LandingPage } from "@/presentation/pages/landing.page"
 import { RegisterPage } from "@/presentation/pages/register.page"
+import { AboutPage } from "@/presentation/pages/about.page" // <--- Adicione a importação
 
 export function App() {
   return (
     <Routes>
       <Route element={<OnboardingLayout />}>
-        {/* A Landing page é a home do Onboarding */}
         <Route path="/" element={<LandingPage />} />
-        
-        {/* O formulário de criação de conta fica em /register */}
         <Route path="/register" element={<RegisterPage />} />
+        {/* Nova Rota adicionada */}
+        <Route path="/about" element={<AboutPage />} /> 
       </Route>
     </Routes>
   )

@@ -11,6 +11,13 @@ export type ThemeId =
   | "tokyo-night"
   | "oled-black"
   | "synthwave"
+  | "night-runner"
+  | "terminal"
+  | "outrun"
+  | "paper"
+  | "slate-light"
+  | "monokai-pro"
+  
 export interface Theme {
   id: ThemeId
   name: string
@@ -104,6 +111,48 @@ export const themes: Theme[] = [
     description: "Neon 80s retro-futurism",
     isDark: true,
     accentHex: "#ff7edb",
+  },
+  {
+    id: "night-runner",
+    name: "Night Runner",
+    description: "Luzes de neon e asfalto molhado",
+    isDark: true,
+    accentHex: "#00f0ff", // Ciano vibrante
+  },
+  {
+    id: "terminal",
+    name: "Terminal",
+    description: "Nostalgia hacker em fósforo verde",
+    isDark: true,
+    accentHex: "#00ff41", // Verde Matrix
+  },
+  {
+    id: "outrun",
+    name: "Outrun",
+    description: "Pôr do sol digital em alta velocidade",
+    isDark: true,
+    accentHex: "#ff9e00", // Laranja neon
+  },
+  {
+    id: "paper",
+    name: "Paper",
+    description: "Papel envelhecido relaxante",
+    isDark: false,
+    accentHex: "#8b7355",
+  },
+  {
+    id: "slate-light",
+    name: "Slate Light",
+    description: "Cinza azulado suave",
+    isDark: false,
+    accentHex: "#475569",
+  },
+  {
+    id: "monokai-pro",
+    name: "Monokai Pro",
+    description: "Foco total e contraste equilibrado",
+    isDark: true,
+    accentHex: "#ffd866",
   },
 ]
 

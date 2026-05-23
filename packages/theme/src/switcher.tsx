@@ -1,4 +1,4 @@
-import { Monitor } from "lucide-react"
+import { MonitorIcon } from "@phosphor-icons/react"
 import { useState } from "react"
 
 import { useTheme } from "./provider"
@@ -23,7 +23,7 @@ export function ThemeSwitcher({ className }: { className?: string }) {
         aria-label="Switch theme"
         title="Switch theme"
       >
-        <Monitor className="h-3 w-3" />
+        <MonitorIcon className="h-3 w-3" />
         <span className="hidden sm:inline">
           {themes.find((t) => t.id === theme)?.name ?? "Theme"}
         </span>
@@ -37,7 +37,7 @@ export function ThemeSwitcher({ className }: { className?: string }) {
           {/* Dropdown */}
           <div
             className={cn(
-              "absolute top-full right-0 z-50 mt-1 w-72", // Aumentamos a largura para acomodar o grid
+              "absolute top-full right-0 z-50 mt-1 w-72 lg:w-96", // Aumentamos a largura para acomodar o grid
               "rounded-sm border border-(--border) bg-(--surface)",
               "overflow-hidden shadow-lg shadow-black/20"
             )}
@@ -50,35 +50,45 @@ export function ThemeSwitcher({ className }: { className?: string }) {
             </div>
 
             {/* Container rolável com Grid de 2 colunas */}
-            <div className="grid max-h-64 grid-cols-2 gap-1 overflow-y-auto p-1">
-              {themes
-                ?.sort((a, b) => a.name.localeCompare(b.name))
-                .map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => {
-                      setTheme(t.id as ThemeId)
-                      setOpen(false)
-                    }}
-                    className={cn(
-                      "flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left",
-                      "font-mono text-xs text-(--muted)",
-                      "transition-colors hover:bg-(--surface-2) hover:text-(--fg)",
-                      theme === t.id &&
-                        "bg-(--surface-2) font-medium text-(--fg)"
-                    )}
-                    title={t.description} // Tooltip nativo útil caso o nome seja cortado
-                  >
-                    {/* Color swatch */}
-                    <span
-                      className="h-3 w-3 shrink-0 rounded-full border border-black/20 dark:border-white/10"
-                      style={{ backgroundColor: t.accentHex }}
-                    />
+            <div className="flex max-h-80 flex-col gap-2 overflow-y-auto p-1">
+              {["dark", "light"].map((mode) => {
+                const filtered = themes.filter((t) =>
+                  mode === "dark" ? t.isDark : !t.isDark
+                )
+                if (filtered.length === 0) return null
 
-                    {/* Truncate para garantir que nomes longos não quebrem o layout */}
-                    <span className="truncate">{t.name}</span>
-                  </button>
-                ))}
+                return (
+                  <div key={mode}>
+                    <div className="px-2 py-1 text-[10px] font-bold tracking-wider text-(--muted) uppercase">
+                      {mode} themes
+                    </div>
+                    <div className="grid grid-cols-2 gap-1">
+                      {filtered
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .map((t) => (
+                          <button
+                            key={t.id}
+                            onClick={() => {
+                              setTheme(t.id as ThemeId)
+                              setOpen(false)
+                            }}
+                            className={cn(
+                              "flex items-center gap-2 rounded-sm px-2 py-2 text-left font-mono text-xs text-(--muted)",
+                              "transition-colors hover:bg-(--surface-2) hover:text-(--fg)",
+                              theme === t.id && "bg-(--surface-2) text-(--fg)"
+                            )}
+                          >
+                            <span
+                              className="h-3 w-3 shrink-0 rounded-full border border-black/10"
+                              style={{ backgroundColor: t.accentHex }}
+                            />
+                            <span className="truncate">{t.name}</span>
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </>

@@ -225,3 +225,108 @@
   --destructive: #fe4450;
   --destructive-fg: #ffffff;
 }
+
+/* ─── Night Runner (Alta energia, cores frias com neon ciano/magenta) ──────── */
+
+[data-theme="night-runner"] {
+  color-scheme: dark;
+  --bg: #090a0f;
+  --surface: #12141f;
+  --surface-2: #1c1e2e;
+  --border: #2a2d45;
+  --fg: #e2e8f0;
+  --muted: #64748b;
+  --accent: #00f0ff;
+  --accent-fg: #000000;
+  --success: #39ff14;
+  --warning: #ffea00;
+  --destructive: #ff0055;
+  --destructive-fg: #ffffff;
+}
+
+/* ─── Terminal (Minimalista, inspirado em monitores CRT antigos) ────────────── */
+
+[data-theme="terminal"] {
+  color-scheme: dark;
+  --bg: #050505;
+  --surface: #0a0f0a;
+  --surface-2: #111a11;
+  --border: #1a331a;
+  --fg: #ccffcc;
+  --muted: #4d994d;
+  --accent: #00ff41;
+  --accent-fg: #050505;
+  --success: #00ff41;
+  --warning: #d4ff00;
+  --destructive: #ff3333;
+  --destructive-fg: #050505;
+}
+
+/* ─── Outrun (Retrowave, noites roxas e laranjas) ───────────────────────────── */
+
+[data-theme="outrun"] {
+  color-scheme: dark;
+  --bg: #14081c;
+  --surface: #220e33;
+  --surface-2: #30144a;
+  --border: #4a2175;
+  --fg: #fde6ff;
+  --muted: #9c7bb5;
+  --accent: #ff9e00;
+  --accent-fg: #14081c;
+  --success: #00ffcc;
+  --warning: #ffd700;
+  --destructive: #ff2a6d;
+  --destructive-fg: #ffffff;
+}
+
+/* ─── Paper (Light, muito confortável) ────────────────────────────────────── */
+[data-theme="paper"] {
+  color-scheme: light;
+  --bg: #f4ece0;
+  --surface: #eaddcf;
+  --surface-2: #dcd0c4;
+  --border: #c8b9ab;
+  --fg: #5a524a;
+  --muted: #8c8278;
+  --accent: #8b7355;
+  --accent-fg: #ffffff;
+  --success: #5c7e5a;
+  --warning: #a67c00;
+  --destructive: #b33939;
+  --destructive-fg: #ffffff;
+}
+
+/* ─── Slate Light (Moderno, profissional) ─────────────────────────────────── */
+[data-theme="slate-light"] {
+  color-scheme: light;
+  --bg: #f8fafc;
+  --surface: #f1f5f9;
+  --surface-2: #e2e8f0;
+  --border: #cbd5e1;
+  --fg: #334155;
+  --muted: #64748b;
+  --accent: #475569;
+  --accent-fg: #ffffff;
+  --success: #16a34a;
+  --warning: #d97706;
+  --destructive: #dc2626;
+  --destructive-fg: #ffffff;
+}
+
+/* ─── Monokai Pro (Dark, otimizado para longas sessões) ────────────────────── */
+[data-theme="monokai-pro"] {
+  color-scheme: dark;
+  --bg: #2d2a2e;
+  --surface: #363337;
+  --surface-2: #403e41;
+  --border: #5b595c;
+  --fg: #fcfcfa;
+  --muted: #939293;
+  --accent: #ffd866;
+  --accent-fg: #2d2a2e;
+  --success: #a9dc76;
+  --warning: #ffd866;
+  --destructive: #ff6188;
+  --destructive-fg: #fcfcfa;
+}
