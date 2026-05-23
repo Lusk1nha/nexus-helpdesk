@@ -410,6 +410,45 @@ async fn revoked_api_key_no_longer_authenticates() {
 }
 
 #[tokio::test]
+async fn login_endpoint_is_rate_limited() {
+    let app = spawn_test_app().await;
+    app.register_tenant("rate@example.com", "StrongPass123!")
+        .await;
+
+    // The rate limiter is configured at 6s/req with burst 10. Fire 25 wrong-
+    // password requests back-to-back from the same fake peer IP and assert
+    // we observe at least one 429 — meaning the limiter actually engaged.
+    let mut saw_429 = false;
+    for _ in 0..25 {
+        let response = app
+            .router
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/identity/login")
+                    .header("content-type", "application/json")
+                    .header("x-forwarded-for", "203.0.113.42")
+                    .body(axum::body::Body::from(
+                        serde_json::json!({
+                            "email": "rate@example.com",
+                            "password": "WrongPassword!"
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        if response.status() == StatusCode::TOO_MANY_REQUESTS {
+            saw_429 = true;
+            break;
+        }
+    }
+    assert!(saw_429, "rate limiter never returned 429");
+}
+
+#[tokio::test]
 async fn non_admin_cannot_create_api_key() {
     let app = spawn_test_app().await;
     app.register_tenant("admin@example.com", "StrongPass123!")
