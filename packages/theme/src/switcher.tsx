@@ -7,11 +7,13 @@ import { cn } from "@nexus/utils"
 export function ThemeSwitcher({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme()
   const [open, setOpen] = useState(false)
-  
+
   const [activeTab, setActiveTab] = useState<"dark" | "light">("dark")
 
   const [isAutoPlaying, setIsAutoPlaying] = useState(false)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(
+    undefined
+  )
 
   // Showcase Mode Logic
   useEffect(() => {
@@ -66,7 +68,6 @@ export function ThemeSwitcher({ className }: { className?: string }) {
                 </button>
               ))}
 
-              {/* Botão Maluco (Showcase) */}
               <button
                 onClick={() => setIsAutoPlaying(!isAutoPlaying)}
                 className={cn(
@@ -93,7 +94,7 @@ export function ThemeSwitcher({ className }: { className?: string }) {
                     key={t.id}
                     onClick={() => {
                       setTheme(t.id as ThemeId)
-                      setIsAutoPlaying(false) // Para o showcase se o usuário clicar manualmente
+                      setIsAutoPlaying(false)
                     }}
                     className={cn(
                       "flex items-center gap-2 rounded-sm px-2 py-1.5 text-left font-mono text-xs text-(--muted)",
