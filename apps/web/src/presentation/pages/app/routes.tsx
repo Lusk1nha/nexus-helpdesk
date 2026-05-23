@@ -1,5 +1,6 @@
 import { Navigate } from "react-router"
 
+import { paths, segments } from "@/presentation/router/paths"
 import type { AppRoute } from "@/presentation/router/types"
 
 import { DashboardPage } from "./dashboard.page"
@@ -9,14 +10,15 @@ import { DashboardPage } from "./dashboard.page"
  *
  * To add a new app page:
  *   1. Create `<name>.page.tsx` in this folder (or a subfolder)
- *   2. Add an entry below — path is relative to "/app"
- *   3. Optional: set `requiredRole` to restrict to "admin" or "agent"
+ *   2. Register the segment + absolute path in `router/paths.ts`
+ *   3. Add an entry below using `segments.<name>`
+ *   4. Optional: set `requiredRole` to restrict to "admin" or "agent"
  *
  * Example:
- *   { path: "admin", element: <AdminPage />, requiredRole: "admin" }
- *   { path: "knowledge", element: <KnowledgePage />, requiredRole: ["admin", "agent"] }
+ *   { path: segments.admin, element: <AdminPage />, requiredRole: "admin" }
+ *   { path: segments.knowledge, element: <KnowledgePage />, requiredRole: ["admin", "agent"] }
  */
 export const appRoutes: AppRoute[] = [
-  { index: true, element: <Navigate to="/app/tickets" replace /> },
-  { path: "tickets", element: <DashboardPage /> },
+  { index: true, element: <Navigate to={paths.app.tickets} replace /> },
+  { path: segments.tickets, element: <DashboardPage /> },
 ]

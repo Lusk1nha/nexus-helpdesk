@@ -3,6 +3,8 @@ import { Navigate } from "react-router"
 import { useSession } from "@/application/auth/use-session"
 import type { Role } from "@/domain/auth/auth.types"
 
+import { paths } from "./paths"
+
 interface RequireRoleProps {
   role: Role | Role[]
   children: React.ReactNode
@@ -20,7 +22,7 @@ export function RequireRole({ role, children }: RequireRoleProps) {
   const allowed = Array.isArray(role) ? role : [role]
 
   if (!user || !allowed.includes(user.role)) {
-    return <Navigate to="/app/tickets" replace />
+    return <Navigate to={paths.app.tickets} replace />
   }
   return <>{children}</>
 }

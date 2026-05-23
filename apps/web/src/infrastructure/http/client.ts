@@ -6,6 +6,7 @@ import ky, {
 
 import { env } from "@/env"
 import { useAuthStore } from "@/infrastructure/store/auth.store"
+import { paths } from "@/presentation/router/paths"
 import { API } from "./api.routes"
 
 /**
@@ -37,7 +38,7 @@ export const http: KyInstance = ky.create({
 
         if (!refreshToken) {
           clear()
-          window.location.href = "/login"
+          window.location.href = paths.login
           return
         }
 
@@ -59,7 +60,7 @@ export const http: KyInstance = ky.create({
           })
         } catch {
           clear()
-          window.location.href = "/login"
+          window.location.href = paths.login
         }
       },
     ],

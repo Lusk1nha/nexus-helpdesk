@@ -5,6 +5,7 @@ import { AuthLayout } from "@/presentation/layouts/auth.layout"
 import { appRoutes } from "@/presentation/pages/app/routes"
 import { authRoutes } from "@/presentation/pages/auth/routes"
 
+import { paths, segments } from "./paths"
 import type { AppRoute } from "./types"
 
 /**
@@ -16,17 +17,18 @@ import type { AppRoute } from "./types"
  *   1. Create the layout in `presentation/layouts/`
  *   2. Create routes in `presentation/pages/<section>/routes.tsx`
  *   3. Add an entry below mounting the layout + children
+ *   4. Add the section's segment + paths to `router/paths.ts`
  */
 export const routes: AppRoute[] = [
   // Root → login
-  { path: "/", element: <Navigate to="/login" replace /> },
+  { path: paths.home, element: <Navigate to={paths.login} replace /> },
 
   // Public area (login, register, password recovery, etc.)
   { element: <AuthLayout />, children: authRoutes },
 
   // Authenticated app (tickets, knowledge, admin, settings, etc.)
-  { path: "app", element: <AppLayout />, children: appRoutes },
+  { path: segments.app, element: <AppLayout />, children: appRoutes },
 
   // Catch-all → login
-  { path: "*", element: <Navigate to="/login" replace /> },
+  { path: "*", element: <Navigate to={paths.login} replace /> },
 ]

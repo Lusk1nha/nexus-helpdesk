@@ -9,6 +9,7 @@ import { Alert, Button, FormField, Input } from "@nexus/ui"
 
 import { useLogin } from "@/application/auth/use-login"
 import { loginSchema, type LoginInput } from "@/domain/auth/auth.schemas"
+import { paths } from "@/presentation/router/paths"
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -25,7 +26,7 @@ export function LoginPage() {
 
   const onSubmit = async (data: LoginInput) => {
     await login.mutateAsync(data)
-    navigate("/app/tickets", { replace: true })
+    navigate(paths.app.tickets, { replace: true })
   }
 
   return (
@@ -136,7 +137,7 @@ export function LoginPage() {
           <p className="text-center font-mono text-xs text-(--muted)">
             No account?{" "}
             <Link
-              to="/register"
+              to={paths.register}
               className="text-(--accent) underline-offset-2 hover:underline"
             >
               Register your company

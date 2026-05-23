@@ -9,6 +9,7 @@ import { Alert, Button, FormField, Input } from "@nexus/ui"
 
 import { useRegister } from "@/application/auth/use-register"
 import { registerSchema, type RegisterInput } from "@/domain/auth/auth.schemas"
+import { paths } from "@/presentation/router/paths"
 
 export function RegisterPage() {
   const navigate = useNavigate()
@@ -49,7 +50,7 @@ export function RegisterPage() {
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => navigate("/login", { replace: true })}
+            onClick={() => navigate(paths.login, { replace: true })}
           >
             Go to login →
           </Button>
@@ -241,7 +242,7 @@ export function RegisterPage() {
           <p className="text-center font-mono text-xs text-(--muted)">
             Already have an account?{" "}
             <Link
-              to="/login"
+              to={paths.login}
               className="text-(--accent) underline-offset-2 hover:underline"
             >
               Sign in

@@ -16,6 +16,7 @@ import {
   useLogout,
   useSession,
 } from "@/application/auth/use-session"
+import { paths } from "@/presentation/router/paths"
 
 /**
  * Authenticated application shell with sidebar navigation.
@@ -28,23 +29,23 @@ export function AppLayout() {
   const navigate = useNavigate()
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
+    return <Navigate to={paths.login} replace />
   }
 
   const handleLogout = () => {
     logout()
-    navigate("/login", { replace: true })
+    navigate(paths.login, { replace: true })
   }
 
   const navItems = [
-    { to: "/app/tickets", icon: MessageSquare, label: "tickets" },
+    { to: paths.app.tickets, icon: MessageSquare, label: "tickets" },
 
     ...(user?.role !== "customer"
-      ? [{ to: "/app/knowledge", icon: BookOpen, label: "knowledge" }]
+      ? [{ to: paths.app.knowledge, icon: BookOpen, label: "knowledge" }]
       : []),
 
     ...(user?.role === "admin"
-      ? [{ to: "/app/admin", icon: Shield, label: "admin" }]
+      ? [{ to: paths.app.admin, icon: Shield, label: "admin" }]
       : []),
   ]
 

@@ -3,6 +3,7 @@ import { Navigate, Outlet } from "react-router"
 import { ThemeSwitcher } from "@nexus/theme"
 
 import { useIsAuthenticated } from "@/application/auth/use-session"
+import { paths } from "@/presentation/router/paths"
 
 /**
  * Wraps public auth pages (login, register).
@@ -12,7 +13,7 @@ export function AuthLayout() {
   const isAuthenticated = useIsAuthenticated()
 
   if (isAuthenticated) {
-    return <Navigate to="/app/tickets" replace />
+    return <Navigate to={paths.app.tickets} replace />
   }
 
   return (
