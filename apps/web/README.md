@@ -1,73 +1,191 @@
-# React + TypeScript + Vite
+# nexus-helpdesk / web
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React frontend for the Nexus Helpdesk platform — multi-tenant, AI-powered, realtime.
 
-Currently, two official plugins are available:
+> **Author:** Lucas Pedro · [github.com/Lusk1nha](https://github.com/Lusk1nha)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Layer | Technology |
+|---|---|
+| Framework | React 19 + Vite 8 |
+| Language | TypeScript 6 |
+| Styling | Tailwind CSS v4 |
+| Font | JetBrains Mono Variable |
+| Routing | React Router v7 |
+| Server state | TanStack Query v5 |
+| Client state | Zustand v5 |
+| Validation | Zod |
+| Forms | React Hook Form + Zod resolver |
+| HTTP | ky (fetch wrapper) |
+| Animations | Motion (Framer Motion for React 19) |
+| Icons | Lucide React |
+| Unit tests | Vitest + React Testing Library |
+| E2E tests | Playwright *(coming)* |
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Architecture — Domain-Driven Design
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+src/
+├── domain/                 # Pure business logic — no framework deps
+│   ├── auth/
+│   │   ├── auth.types.ts   # User, Role, TokenPair interfaces
+│   │   └── auth.schemas.ts # Zod validation schemas
+│   └── ticketing/          # Ticket, Message types + schemas (coming)
+│
+├── application/            # Use cases as React hooks
+│   └── auth/
+│       ├── use-login.ts
+│       ├── use-register.ts
+│       └── use-session.ts
+│
+├── infrastructure/         # External adapters
+│   ├── http/
+│   │   ├── client.ts       # ky instance — auth injection + token refresh
+│   │   └── api.routes.ts   # All API URL constants
+│   └── store/
+│       └── auth.store.ts   # Zustand store — session persistence
+│
+└── presentation/           # UI layer
+    ├── components/
+    │   ├── ui/             # Design system primitives (Button, Input, Label…)
+    │   └── theme/          # ThemeSwitcher
+    ├── layouts/
+    │   ├── auth.layout.tsx # Public pages (redirects if authenticated)
+    │   └── app.layout.tsx  # Protected pages (redirects if not authenticated)
+    ├── pages/
+    │   ├── auth/           # login.page.tsx, register.page.tsx
+    │   └── app/            # dashboard, tickets, knowledge, admin (coming)
+    ├── providers/
+    │   ├── query.provider.tsx
+    │   └── theme.provider.tsx
+    └── theme/
+        └── themes.ts       # Theme registry
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+**Adding a feature:** domain types → Zod schema → application hook → page component. No layer skips.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Theme System
+
+Five built-in themes, infinitely extensible:
+
+| ID | Name | Style |
+|---|---|---|
+| `midnight` | Midnight | GitHub dark (default) |
+| `dawn` | Dawn | Clean light |
+| `dracula` | Dracula | Classic vampire |
+| `nord` | Nord | Arctic blue |
+| `catppuccin` | Catppuccin | Soothing mocha |
+
+**Adding a new theme — two steps:**
+
+1. Add a CSS block in `src/index.css`:
+
+```css
+[data-theme="my-theme"] {
+  --bg: #...;
+  --surface: #...;
+  --surface-2: #...;
+  --border: #...;
+  --fg: #...;
+  --muted: #...;
+  --accent: #...;
+  --accent-fg: #...;
+  --success: #...;
+  --warning: #...;
+  --destructive: #...;
+  --destructive-fg: #...;
+}
 ```
+
+2. Add an entry to `src/presentation/theme/themes.ts`:
+
+```ts
+{ id: 'my-theme', name: 'My Theme', description: '...', isDark: true, accentHex: '#...' }
+```
+
+The `ThemeSwitcher` picks it up automatically. Theme preference is persisted in `localStorage`.
+
+---
+
+## Routes
+
+```
+/                → redirect to /login
+/login           → LoginPage       (public, redirects if authenticated)
+/register        → RegisterPage    (public, redirects if authenticated)
+/app             → AppLayout       (auth required)
+  /app/tickets   → TicketListPage  (all roles)
+  /app/knowledge → KnowledgePage   (agent, admin)
+  /app/admin     → AdminLayout     (admin only)
+```
+
+---
+
+## HTTP Client
+
+`src/infrastructure/http/client.ts` wraps `ky` with:
+
+- **Auth injection** — injects `Authorization: Bearer <token>` on every request via `beforeRequest` hook
+- **Silent refresh** — on 401, calls `POST /identity/refresh`, retries the original request, and redirects to `/login` on failure
+
+All responses are unwrapped via `fetchApi()` which strips the `{ data, meta }` envelope.
+
+---
+
+## Realtime (SSE)
+
+Server-Sent Events from the Rust backend:
+
+- `GET /api/v1/realtime/tickets/:id` — per-ticket events (`message_added`, `status_changed`)
+- `GET /api/v1/realtime/system` — system events for agents/admins (`ticket_created`, `ticket_status_changed`)
+
+SSE hooks live in `src/infrastructure/sse/` and `src/application/`. Because `EventSource` does not support custom headers, the JWT is passed as a query param (`?token=`). The backend SSE middleware accepts this on those two endpoints.
+
+---
+
+## Dev Setup
+
+```bash
+# Install all workspace deps (from repo root)
+pnpm install
+
+# Start frontend dev server
+pnpm --filter web dev        # http://localhost:5173
+
+# Start backend (separate terminal, from repo root)
+cargo run
+
+# Type check
+pnpm --filter web exec tsc --noEmit
+
+# Unit + integration tests
+pnpm --filter web test
+
+# Production build
+pnpm --filter web build
+```
+
+### Environment
+
+Create `apps/web/.env.local`:
+
+```env
+VITE_API_URL=http://localhost:8080
+```
+
+---
+
+## Testing Strategy
+
+| Layer | Tool | What |
+|---|---|---|
+| Unit | Vitest | Domain schemas, guards, utility functions, store actions |
+| Integration | RTL + MSW | Form flows, hook behavior with mocked API |
+| E2E | Playwright *(coming)* | Full auth/ticket flows in a real browser |

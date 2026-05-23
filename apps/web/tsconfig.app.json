@@ -15,6 +15,11 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* Path aliases (TS 6 style — no baseUrl needed with bundler resolution) */
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
     /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
