@@ -40,36 +40,49 @@ export function ThemeSwitcher({ className }: { className?: string }) {
           {/* Dropdown */}
           <div
             className={cn(
-              "absolute top-full right-0 z-50 mt-1 min-w-[180px]",
+              "absolute top-full right-0 z-50 mt-1 w-72", // Aumentamos a largura para acomodar o grid
               "rounded-sm border border-(--border) bg-(--surface)",
               "overflow-hidden shadow-lg shadow-black/20"
             )}
           >
-            {themes.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => {
-                  setTheme(t.id as ThemeId)
-                  setOpen(false)
-                }}
-                className={cn(
-                  "flex w-full items-center gap-2.5 px-3 py-2 text-left",
-                  "font-mono text-xs text-(--muted)",
-                  "transition-colors hover:bg-(--surface-2) hover:text-(--fg)",
-                  theme === t.id && "bg-(--surface-2) text-(--fg)"
-                )}
-              >
-                {/* Color swatch */}
-                <span
-                  className="h-3 w-3 shrink-0 rounded-full border border-white/10"
-                  style={{ backgroundColor: t.accentHex }}
-                />
-                <span>{t.name}</span>
-                {theme === t.id && (
-                  <span className="ml-auto text-(--accent)">✓</span>
-                )}
-              </button>
-            ))}
+            {/* Cabeçalho opcional para dar um ar mais organizado */}
+            <div className="border-b border-(--border) px-3 py-2">
+              <span className="font-mono text-xs font-semibold text-(--fg)">
+                Select Theme
+              </span>
+            </div>
+
+            {/* Container rolável com Grid de 2 colunas */}
+            <div className="grid max-h-64 grid-cols-2 gap-1 overflow-y-auto p-1">
+              {themes
+                ?.sort((a, b) => a.name.localeCompare(b.name))
+                .map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      setTheme(t.id as ThemeId)
+                      setOpen(false)
+                    }}
+                    className={cn(
+                      "flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left",
+                      "font-mono text-xs text-(--muted)",
+                      "transition-colors hover:bg-(--surface-2) hover:text-(--fg)",
+                      theme === t.id &&
+                        "bg-(--surface-2) font-medium text-(--fg)"
+                    )}
+                    title={t.description} // Tooltip nativo útil caso o nome seja cortado
+                  >
+                    {/* Color swatch */}
+                    <span
+                      className="h-3 w-3 shrink-0 rounded-full border border-black/20 dark:border-white/10"
+                      style={{ backgroundColor: t.accentHex }}
+                    />
+
+                    {/* Truncate para garantir que nomes longos não quebrem o layout */}
+                    <span className="truncate">{t.name}</span>
+                  </button>
+                ))}
+            </div>
           </div>
         </>
       )}

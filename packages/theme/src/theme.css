@@ -99,3 +99,129 @@
   --destructive: #f38ba8;
   --destructive-fg: #1e1e2e;
 }
+
+/* ─── Rose Pine (soft warm dark) ────────────────────────────────────────────── */
+
+[data-theme="rose-pine"] {
+  color-scheme: dark;
+  --bg: #191724;
+  --surface: #1f1d2e;
+  --surface-2: #26233a;
+  --border: #44415a;
+  --fg: #e0def4;
+  --muted: #908caa;
+  --accent: #c4a7e7;
+  --accent-fg: #191724;
+  --success: #9ccfd8;
+  --warning: #f6c177;
+  --destructive: #eb6f92;
+  --destructive-fg: #ffffff;
+}
+
+/* ─── Solarized Light (warm reading light) ──────────────────────────────────── */
+
+[data-theme="solarized-light"] {
+  color-scheme: light;
+  --bg: #fdf6e3;
+  --surface: #eee8d5;
+  --surface-2: #e5dec9;
+  --border: #ccc4b0;
+  --fg: #657b83;
+  --muted: #93a1a1;
+  --accent: #268bd2;
+  --accent-fg: #ffffff;
+  --success: #859900;
+  --warning: #b58900;
+  --destructive: #dc322f;
+  --destructive-fg: #ffffff;
+}
+
+/* ─── Cyberpunk (high contrast neon) ────────────────────────────────────────── */
+
+[data-theme="cyberpunk"] {
+  color-scheme: dark;
+  --bg: #000b18;
+  --surface: #001730;
+  --surface-2: #002244;
+  --border: #003b6f;
+  --fg: #f0f6fc;
+  --muted: #829cb8;
+  --accent: #fdf500;
+  --accent-fg: #000000;
+  --success: #00ff9f;
+  --warning: #ffb800;
+  --destructive: #ff003c;
+  --destructive-fg: #ffffff;
+}
+
+/* ─── Forest (calm deep green) ──────────────────────────────────────────────── */
+
+[data-theme="forest"] {
+  color-scheme: dark;
+  --bg: #0f1c16;
+  --surface: #16281f;
+  --surface-2: #1d3529;
+  --border: #2e503e;
+  --fg: #d1e0d7;
+  --muted: #8fa899;
+  --accent: #4ade80;
+  --accent-fg: #062011;
+  --success: #22c55e;
+  --warning: #facc15;
+  --destructive: #ef4444;
+  --destructive-fg: #ffffff;
+}
+
+/* ─── Tokyo Night (cool, calm, and popular) ─────────────────────────────────── */
+
+[data-theme="tokyo-night"] {
+  color-scheme: dark;
+  --bg: #1a1b26;
+  --surface: #24283b;
+  --surface-2: #2f3549;
+  --border: #414868;
+  --fg: #c0caf5;
+  --muted: #565f89;
+  --accent: #7aa2f7;
+  --accent-fg: #1a1b26;
+  --success: #9ece6a;
+  --warning: #e0af68;
+  --destructive: #f7768e;
+  --destructive-fg: #ffffff;
+}
+
+/* ─── OLED Black (pure black, extreme contrast) ─────────────────────────────── */
+
+[data-theme="oled-black"] {
+  color-scheme: dark;
+  --bg: #000000;
+  --surface: #09090b;
+  --surface-2: #18181b;
+  --border: #27272a;
+  --fg: #fafafa;
+  --muted: #a1a1aa;
+  --accent: #ffffff;
+  --accent-fg: #000000;
+  --success: #4ade80;
+  --warning: #facc15;
+  --destructive: #ef4444;
+  --destructive-fg: #ffffff;
+}
+
+/* ─── Synthwave (80s retro-futuristic, very different) ──────────────────────── */
+
+[data-theme="synthwave"] {
+  color-scheme: dark;
+  --bg: #262335;
+  --surface: #34294f;
+  --surface-2: #42326b;
+  --border: #52368c;
+  --fg: #f8f8f2;
+  --muted: #848bbd;
+  --accent: #ff7edb;
+  --accent-fg: #262335;
+  --success: #36f9f6;
+  --warning: #fede5d;
+  --destructive: #fe4450;
+  --destructive-fg: #ffffff;
+}
