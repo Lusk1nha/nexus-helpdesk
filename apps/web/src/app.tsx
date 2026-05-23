@@ -1,10 +1,10 @@
-import { Navigate, Route, Routes } from 'react-router'
+import { Navigate, Route, Routes } from "react-router"
 
-import { AppLayout } from '@/presentation/layouts/app.layout'
-import { AuthLayout } from '@/presentation/layouts/auth.layout'
-import { LoginPage } from '@/presentation/pages/auth/login.page'
-import { RegisterPage } from '@/presentation/pages/auth/register.page'
-import { DashboardPage } from '@/presentation/pages/app/dashboard.page'
+import { AppLayout } from "@/presentation/layouts/app.layout"
+import { AuthLayout } from "@/presentation/layouts/auth.layout"
+import { LoginPage } from "@/presentation/pages/auth/login.page"
+import { RegisterPage } from "@/presentation/pages/auth/register.page"
+import { DashboardPage } from "@/presentation/pages/app/dashboard.page"
 
 export function App() {
   return (

@@ -10,15 +10,16 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
+    "type-check": "tsc -b --noEmit",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json,md}\" \"./*.{json,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json,md}\" \"./*.{json,md}\""
   },
   "dependencies": {
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "@hookform/resolvers": "^5.4.0",
+    "@nexus/theme": "workspace:*",
+    "@nexus/ui": "workspace:*",
     "@tanstack/react-query": "^5.100.13",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
     "ky": "^2.0.2",
     "lucide-react": "^1.16.0",
     "motion": "^12.40.0",
@@ -26,12 +27,12 @@
     "react-dom": "^19.2.5",
     "react-hook-form": "^7.76.0",
     "react-router": "^7.15.1",
-    "tailwind-merge": "^3.6.0",
     "zod": "^4.4.3",
     "zustand": "^5.0.13"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@nexus/tsconfig": "workspace:*",
     "@tailwindcss/vite": "^4.3.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

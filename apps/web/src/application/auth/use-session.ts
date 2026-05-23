@@ -1,4 +1,4 @@
-import { useAuthStore } from '@/infrastructure/store/auth.store'
+import { useAuthStore } from "@/infrastructure/store/auth.store"
 
 /** Returns the current authenticated user, or null if not logged in. */
 export function useSession() {

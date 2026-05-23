@@ -1,11 +1,16 @@
-@import '@fontsource-variable/jetbrains-mono';
-@import 'tailwindcss';
+@import "@fontsource-variable/jetbrains-mono";
+@import "tailwindcss";
+@import "@nexus/theme/theme.css";
 
-/* ─── Design tokens (resolved via CSS custom properties per theme) ─────────── */
+/* Make Tailwind scan classes used in the shared packages */
+@source "../../../packages/ui/src/**/*.{ts,tsx}";
+@source "../../../packages/theme/src/**/*.{ts,tsx}";
+
+/* ─── Design tokens (mapped to the CSS vars from @nexus/theme) ────────────── */
 
 @theme {
-  --font-sans: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
-  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
+  --font-sans: "JetBrains Mono Variable", "JetBrains Mono", monospace;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", monospace;
 
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -21,97 +26,6 @@
   --color-destructive-fg: var(--destructive-fg);
 }
 
-/* ─── Theme: Midnight (default — GitHub dark inspired) ─────────────────────── */
-
-:root,
-[data-theme='midnight'] {
-  color-scheme: dark;
-  --bg: #0d1117;
-  --surface: #161b22;
-  --surface-2: #21262d;
-  --border: #30363d;
-  --fg: #e6edf3;
-  --muted: #7d8590;
-  --accent: #58a6ff;
-  --accent-fg: #0d1117;
-  --success: #3fb950;
-  --warning: #d29922;
-  --destructive: #f85149;
-  --destructive-fg: #ffffff;
-}
-
-/* ─── Theme: Dawn (clean light) ────────────────────────────────────────────── */
-
-[data-theme='dawn'] {
-  color-scheme: light;
-  --bg: #ffffff;
-  --surface: #f6f8fa;
-  --surface-2: #eaeef2;
-  --border: #d0d7de;
-  --fg: #24292f;
-  --muted: #57606a;
-  --accent: #0969da;
-  --accent-fg: #ffffff;
-  --success: #1a7f37;
-  --warning: #9a6700;
-  --destructive: #cf222e;
-  --destructive-fg: #ffffff;
-}
-
-/* ─── Theme: Dracula ────────────────────────────────────────────────────────── */
-
-[data-theme='dracula'] {
-  color-scheme: dark;
-  --bg: #282a36;
-  --surface: #343746;
-  --surface-2: #44475a;
-  --border: #6272a4;
-  --fg: #f8f8f2;
-  --muted: #b0b3c8;
-  --accent: #bd93f9;
-  --accent-fg: #282a36;
-  --success: #50fa7b;
-  --warning: #f1fa8c;
-  --destructive: #ff5555;
-  --destructive-fg: #f8f8f2;
-}
-
-/* ─── Theme: Nord ───────────────────────────────────────────────────────────── */
-
-[data-theme='nord'] {
-  color-scheme: dark;
-  --bg: #2e3440;
-  --surface: #3b4252;
-  --surface-2: #434c5e;
-  --border: #4c566a;
-  --fg: #eceff4;
-  --muted: #a3adc0;
-  --accent: #88c0d0;
-  --accent-fg: #2e3440;
-  --success: #a3be8c;
-  --warning: #ebcb8b;
-  --destructive: #bf616a;
-  --destructive-fg: #eceff4;
-}
-
-/* ─── Theme: Catppuccin Mocha ───────────────────────────────────────────────── */
-
-[data-theme='catppuccin'] {
-  color-scheme: dark;
-  --bg: #1e1e2e;
-  --surface: #313244;
-  --surface-2: #45475a;
-  --border: #585b70;
-  --fg: #cdd6f4;
-  --muted: #a6adc8;
-  --accent: #cba6f7;
-  --accent-fg: #1e1e2e;
-  --success: #a6e3a1;
-  --warning: #f9e2af;
-  --destructive: #f38ba8;
-  --destructive-fg: #1e1e2e;
-}
-
 /* ─── Base styles ───────────────────────────────────────────────────────────── */
 
 *,
@@ -121,7 +35,7 @@
 }
 
 html {
-  font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono Variable", "JetBrains Mono", monospace;
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

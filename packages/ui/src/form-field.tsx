@@ -1,7 +1,7 @@
-import * as React from 'react'
+import * as React from "react"
 
-import { cn } from '@/lib/utils'
-import { Label } from './label'
+import { Label } from "./label"
+import { cn } from "./utils"
 
 interface FormFieldProps {
   label: string
@@ -21,12 +21,16 @@ export function FormField({
   children,
 }: FormFieldProps) {
   return (
-    <div className={cn('flex flex-col gap-1.5', className)}>
+    <div className={cn("flex flex-col gap-1.5", className)}>
       <Label htmlFor={htmlFor} required={required}>
         {label}
       </Label>
       {children}
-      {error && <p className="mt-0.5 font-mono text-xs text-[var(--destructive)]">{error}</p>}
+      {error && (
+        <p className="mt-0.5 font-mono text-xs text-[var(--destructive)]">
+          {error}
+        </p>
+      )}
     </div>
   )
 }

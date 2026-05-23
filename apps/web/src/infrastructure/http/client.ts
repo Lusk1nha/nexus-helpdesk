@@ -1,8 +1,12 @@
-import ky, { type AfterResponseState, type BeforeRequestState, type KyInstance } from 'ky'
+import ky, {
+  type AfterResponseState,
+  type BeforeRequestState,
+  type KyInstance,
+} from "ky"
 
-import { env } from '@/env'
-import { useAuthStore } from '@/infrastructure/store/auth.store'
-import { API } from './api.routes'
+import { env } from "@/env"
+import { useAuthStore } from "@/infrastructure/store/auth.store"
+import { API } from "./api.routes"
 
 /**
  * Shared ky instance with:
@@ -18,19 +22,22 @@ export const http: KyInstance = ky.create({
       ({ request }: BeforeRequestState) => {
         const token = useAuthStore.getState().accessToken
         if (token) {
-          request.headers.set('Authorization', `Bearer ${token}`)
+          request.headers.set("Authorization", `Bearer ${token}`)
         }
       },
     ],
     afterResponse: [
-      async ({ request, response }: AfterResponseState): Promise<Response | void> => {
+      async ({
+        request,
+        response,
+      }: AfterResponseState): Promise<Response | void> => {
         if (response.status !== 401) return
 
         const { refreshToken, setAccessToken, clear } = useAuthStore.getState()
 
         if (!refreshToken) {
           clear()
-          window.location.href = '/login'
+          window.location.href = "/login"
           return
         }
 
@@ -52,7 +59,7 @@ export const http: KyInstance = ky.create({
           })
         } catch {
           clear()
-          window.location.href = '/login'
+          window.location.href = "/login"
         }
       },
     ],

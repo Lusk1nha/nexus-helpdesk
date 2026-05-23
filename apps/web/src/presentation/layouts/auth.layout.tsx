@@ -1,7 +1,8 @@
-import { Navigate, Outlet } from 'react-router'
+import { Navigate, Outlet } from "react-router"
 
-import { useIsAuthenticated } from '@/application/auth/use-session'
-import { ThemeSwitcher } from '@/presentation/components/theme/theme-switcher'
+import { ThemeSwitcher } from "@nexus/theme"
+
+import { useIsAuthenticated } from "@/application/auth/use-session"
 
 /**
  * Wraps public auth pages (login, register).
@@ -20,8 +21,9 @@ export function AuthLayout() {
       <div
         className="pointer-events-none absolute inset-0"
         style={{
-          backgroundImage: 'radial-gradient(circle, var(--border) 1px, transparent 1px)',
-          backgroundSize: '28px 28px',
+          backgroundImage:
+            "radial-gradient(circle, var(--border) 1px, transparent 1px)",
+          backgroundSize: "28px 28px",
           opacity: 0.5,
         }}
       />
@@ -45,7 +47,8 @@ export function AuthLayout() {
       {/* Footer */}
       <footer className="relative z-10 border-t border-[var(--border)]/50 px-6 py-4">
         <p className="text-center font-mono text-xs text-[var(--muted)]">
-          nexus_helpdesk v1.0 — <span className="text-[var(--accent)]">multi-tenant</span> ·
+          nexus_helpdesk v1.0 —{" "}
+          <span className="text-[var(--accent)]">multi-tenant</span> ·
           ai-powered · realtime
         </p>
       </footer>

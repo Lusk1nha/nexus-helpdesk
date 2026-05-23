@@ -1,8 +1,14 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react"
 
-import { defaultTheme, type ThemeId } from '@/presentation/theme/themes'
+import { defaultTheme, type ThemeId } from "./themes"
 
-const STORAGE_KEY = 'nexus:theme'
+const STORAGE_KEY = "nexus:theme"
 
 interface ThemeContextValue {
   theme: ThemeId
@@ -15,11 +21,13 @@ function getStoredTheme(): ThemeId {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) return stored as ThemeId
-  } catch {}
+  } catch {
+    /* SSR or storage blocked — fall through */
+  }
   return defaultTheme
 }
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeId>(getStoredTheme)
 
   useEffect(() => {
@@ -36,11 +44,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setThemeState(id)
   }
 
-  return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  )
 }
 
 export function useTheme() {
   const ctx = useContext(ThemeContext)
-  if (!ctx) throw new Error('useTheme must be used inside <ThemeProvider>')
+  if (!ctx) throw new Error("useTheme must be used inside <ThemeProvider>")
   return ctx
 }

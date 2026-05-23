@@ -1,16 +1,14 @@
-import { zodResolver } from '@hookform/resolvers/zod'
-import { AnimatePresence, motion } from 'motion/react'
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { Link, useNavigate } from 'react-router'
-import { CheckCircle2, Eye, EyeOff } from 'lucide-react'
+import { zodResolver } from "@hookform/resolvers/zod"
+import { AnimatePresence, motion } from "motion/react"
+import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { Link, useNavigate } from "react-router"
+import { CheckCircle2, Eye, EyeOff } from "lucide-react"
 
-import { useRegister } from '@/application/auth/use-register'
-import { registerSchema, type RegisterInput } from '@/domain/auth/auth.schemas'
-import { Alert } from '@/presentation/components/ui/alert'
-import { Button } from '@/presentation/components/ui/button'
-import { FormField } from '@/presentation/components/ui/form-field'
-import { Input } from '@/presentation/components/ui/input'
+import { Alert, Button, FormField, Input } from "@nexus/ui"
+
+import { useRegister } from "@/application/auth/use-register"
+import { registerSchema, type RegisterInput } from "@/domain/auth/auth.schemas"
 
 export function RegisterPage() {
   const navigate = useNavigate()
@@ -51,7 +49,7 @@ export function RegisterPage() {
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => navigate('/login', { replace: true })}
+            onClick={() => navigate("/login", { replace: true })}
           >
             Go to login →
           </Button>
@@ -64,7 +62,7 @@ export function RegisterPage() {
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
       className="w-full max-w-sm"
     >
       <div className="overflow-hidden rounded-sm border border-[var(--border)] bg-[var(--surface)]">
@@ -76,27 +74,35 @@ export function RegisterPage() {
             <span className="h-2.5 w-2.5 rounded-full bg-[var(--success)] opacity-70" />
           </div>
           <p className="mb-1 font-mono text-xs text-[var(--muted)]">
-            <span className="text-[var(--success)]">$</span> nexus register --new-tenant
+            <span className="text-[var(--success)]">$</span> nexus register
+            --new-tenant
           </p>
-          <h1 className="font-mono text-lg font-semibold text-[var(--fg)]">Create workspace</h1>
+          <h1 className="font-mono text-lg font-semibold text-[var(--fg)]">
+            Create workspace
+          </h1>
           <p className="mt-0.5 text-xs text-[var(--muted)]">
             Set up your company's helpdesk in seconds
           </p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4 px-6 py-5">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+          className="space-y-4 px-6 py-5"
+        >
           <AnimatePresence mode="wait">
             {register_.isError && (
               <motion.div
                 key="error"
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
+                animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.15 }}
               >
                 <Alert variant="error">
-                  {(register_.error as Error)?.message ?? 'Registration failed. Please try again.'}
+                  {(register_.error as Error)?.message ??
+                    "Registration failed. Please try again."}
                 </Alert>
               </motion.div>
             )}
@@ -118,7 +124,7 @@ export function RegisterPage() {
                 placeholder="Acme Corp"
                 autoComplete="organization"
                 error={!!errors.tenantName}
-                {...register('tenantName')}
+                {...register("tenantName")}
               />
             </FormField>
           </div>
@@ -139,7 +145,7 @@ export function RegisterPage() {
                 placeholder="Jane Doe"
                 autoComplete="name"
                 error={!!errors.adminFullName}
-                {...register('adminFullName')}
+                {...register("adminFullName")}
               />
             </FormField>
             <FormField
@@ -154,7 +160,7 @@ export function RegisterPage() {
                 placeholder="admin@company.com"
                 autoComplete="email"
                 error={!!errors.adminEmail}
-                {...register('adminEmail')}
+                {...register("adminEmail")}
               />
             </FormField>
             <FormField
@@ -166,12 +172,12 @@ export function RegisterPage() {
               <div className="relative">
                 <Input
                   id="adminPassword"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   placeholder="min. 8 characters"
                   autoComplete="new-password"
                   error={!!errors.adminPassword}
                   className="pr-9"
-                  {...register('adminPassword')}
+                  {...register("adminPassword")}
                 />
                 <button
                   type="button"
@@ -196,12 +202,12 @@ export function RegisterPage() {
               <div className="relative">
                 <Input
                   id="confirmPassword"
-                  type={showConfirm ? 'text' : 'password'}
+                  type={showConfirm ? "text" : "password"}
                   placeholder="repeat password"
                   autoComplete="new-password"
                   error={!!errors.confirmPassword}
                   className="pr-9"
-                  {...register('confirmPassword')}
+                  {...register("confirmPassword")}
                 />
                 <button
                   type="button"
@@ -219,16 +225,25 @@ export function RegisterPage() {
             </FormField>
           </div>
 
-          <Button type="submit" className="w-full" loading={register_.isPending}>
-            {register_.isPending ? 'Creating workspace...' : 'Create workspace →'}
+          <Button
+            type="submit"
+            className="w-full"
+            loading={register_.isPending}
+          >
+            {register_.isPending
+              ? "Creating workspace..."
+              : "Create workspace →"}
           </Button>
         </form>
 
         {/* Footer */}
         <div className="px-6 pb-5">
           <p className="text-center font-mono text-xs text-[var(--muted)]">
-            Already have an account?{' '}
-            <Link to="/login" className="text-[var(--accent)] underline-offset-2 hover:underline">
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              className="text-[var(--accent)] underline-offset-2 hover:underline"
+            >
               Sign in
             </Link>
           </p>

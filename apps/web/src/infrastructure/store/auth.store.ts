@@ -1,7 +1,7 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { create } from "zustand"
+import { persist } from "zustand/middleware"
 
-import type { LoginResult, User } from '@/domain/auth/auth.types'
+import type { LoginResult, User } from "@/domain/auth/auth.types"
 
 interface AuthState {
   accessToken: string | null
@@ -39,12 +39,12 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: () => get().accessToken !== null && get().user !== null,
     }),
     {
-      name: 'nexus:auth',
+      name: "nexus:auth",
       // Only persist the refresh token and user — access token is ephemeral
       partialize: (state) => ({
         refreshToken: state.refreshToken,
         user: state.user,
       }),
-    },
-  ),
+    }
+  )
 )

@@ -27,6 +27,20 @@ React frontend for the Nexus Helpdesk platform — multi-tenant, AI-powered, rea
 
 ---
 
+## Monorepo Structure
+
+This is one app inside the larger Nexus monorepo (Turbo + pnpm workspaces). It depends on shared packages:
+
+| Package | Purpose |
+|---|---|
+| `@nexus/ui` | Design system primitives — `Button`, `Input`, `Label`, `FormField`, `Alert`, `cn()` |
+| `@nexus/theme` | Multi-theme system — `ThemeProvider`, `ThemeSwitcher`, theme registry, theme CSS vars |
+| `@nexus/tsconfig` | Shared TypeScript bases (`base`, `react`, `react-library`) |
+
+A future `apps/admin` (admin-only panel for auditing + RAG management) will reuse the same packages.
+
+---
+
 ## Architecture — Domain-Driven Design
 
 ```
@@ -88,7 +102,7 @@ Five built-in themes, infinitely extensible:
 1. Add a CSS block in `src/index.css`:
 
 ```css
-[data-theme='my-theme'] {
+[data-theme="my-theme"] {
   --bg: #...;
   --surface: #...;
   --surface-2: #...;

@@ -1,9 +1,21 @@
-import { LayoutDashboard, LogOut, MessageSquare, Settings, Shield, BookOpen } from 'lucide-react'
-import { NavLink, Navigate, Outlet, useNavigate } from 'react-router'
+import {
+  LayoutDashboard,
+  LogOut,
+  MessageSquare,
+  Settings,
+  Shield,
+  BookOpen,
+} from "lucide-react"
+import { NavLink, Navigate, Outlet, useNavigate } from "react-router"
 
-import { useIsAuthenticated, useLogout, useSession } from '@/application/auth/use-session'
-import { cn } from '@/lib/utils'
-import { ThemeSwitcher } from '@/presentation/components/theme/theme-switcher'
+import { ThemeSwitcher } from "@nexus/theme"
+import { cn } from "@nexus/ui"
+
+import {
+  useIsAuthenticated,
+  useLogout,
+  useSession,
+} from "@/application/auth/use-session"
 
 /**
  * Authenticated application shell with sidebar navigation.
@@ -21,17 +33,19 @@ export function AppLayout() {
 
   const handleLogout = () => {
     logout()
-    navigate('/login', { replace: true })
+    navigate("/login", { replace: true })
   }
 
   const navItems = [
-    { to: '/app/tickets', icon: MessageSquare, label: 'tickets' },
+    { to: "/app/tickets", icon: MessageSquare, label: "tickets" },
 
-    ...(user?.role !== 'customer'
-      ? [{ to: '/app/knowledge', icon: BookOpen, label: 'knowledge' }]
+    ...(user?.role !== "customer"
+      ? [{ to: "/app/knowledge", icon: BookOpen, label: "knowledge" }]
       : []),
 
-    ...(user?.role === 'admin' ? [{ to: '/app/admin', icon: Shield, label: 'admin' }] : []),
+    ...(user?.role === "admin"
+      ? [{ to: "/app/admin", icon: Shield, label: "admin" }]
+      : []),
   ]
 
   return (
@@ -41,7 +55,9 @@ export function AppLayout() {
         {/* Brand */}
         <div className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-4">
           <span className="text-sm font-semibold text-[var(--accent)]">◈</span>
-          <span className="font-mono text-sm font-medium text-[var(--fg)]">nexus</span>
+          <span className="font-mono text-sm font-medium text-[var(--fg)]">
+            nexus
+          </span>
         </div>
 
         {/* Nav */}
@@ -52,11 +68,11 @@ export function AppLayout() {
               to={to}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-2.5 rounded-sm px-3 py-2',
-                  'font-mono text-xs transition-colors',
+                  "flex items-center gap-2.5 rounded-sm px-3 py-2",
+                  "font-mono text-xs transition-colors",
                   isActive
-                    ? 'bg-[var(--accent)]/10 text-[var(--accent)]'
-                    : 'text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--fg)]',
+                    ? "bg-[var(--accent)]/10 text-[var(--accent)]"
+                    : "text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--fg)]"
                 )
               }
             >
@@ -69,14 +85,16 @@ export function AppLayout() {
         {/* User + logout */}
         <div className="space-y-2 border-t border-[var(--border)] p-3">
           <div className="px-2 py-1">
-            <p className="truncate font-mono text-xs text-[var(--muted)]">{user?.role}</p>
+            <p className="truncate font-mono text-xs text-[var(--muted)]">
+              {user?.role}
+            </p>
           </div>
           <button
             onClick={handleLogout}
             className={cn(
-              'flex w-full items-center gap-2.5 rounded-sm px-3 py-2',
-              'font-mono text-xs text-[var(--muted)]',
-              'transition-colors hover:bg-[var(--destructive)]/10 hover:text-[var(--destructive)]',
+              "flex w-full items-center gap-2.5 rounded-sm px-3 py-2",
+              "font-mono text-xs text-[var(--muted)]",
+              "transition-colors hover:bg-[var(--destructive)]/10 hover:text-[var(--destructive)]"
             )}
           >
             <LogOut className="h-3.5 w-3.5 shrink-0" />
