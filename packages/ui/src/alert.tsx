@@ -14,12 +14,9 @@ const icons: Record<AlertVariant, React.ElementType> = {
 
 const styles: Record<AlertVariant, string> = {
   info: "border-(--accent) text-(--accent) bg-(--accent)/8",
-  success:
-    "border-(--success) text-(--success) bg-(--success)/8",
-  warning:
-    "border-(--warning) text-(--warning) bg-(--warning)/8",
-  error:
-    "border-(--destructive) text-(--destructive) bg-(--destructive)/8",
+  success: "border-(--success) text-(--success) bg-(--success)/8",
+  warning: "border-(--warning) text-(--warning) bg-(--warning)/8",
+  error: "border-(--destructive) text-(--destructive) bg-(--destructive)/8",
 }
 
 interface AlertProps {

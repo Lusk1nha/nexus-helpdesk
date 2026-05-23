@@ -31,11 +31,11 @@ React frontend for the Nexus Helpdesk platform — multi-tenant, AI-powered, rea
 
 This is one app inside the larger Nexus monorepo (Turbo + pnpm workspaces). It depends on shared packages:
 
-| Package | Purpose |
-|---|---|
-| `@nexus/ui` | Design system primitives — `Button`, `Input`, `Label`, `FormField`, `Alert`, `cn()` |
-| `@nexus/theme` | Multi-theme system — `ThemeProvider`, `ThemeSwitcher`, theme registry, theme CSS vars |
-| `@nexus/tsconfig` | Shared TypeScript bases (`base`, `react`, `react-library`) |
+| Package           | Purpose                                                                               |
+| ----------------- | ------------------------------------------------------------------------------------- |
+| `@nexus/ui`       | Design system primitives — `Button`, `Input`, `Label`, `FormField`, `Alert`, `cn()`   |
+| `@nexus/theme`    | Multi-theme system — `ThemeProvider`, `ThemeSwitcher`, theme registry, theme CSS vars |
+| `@nexus/tsconfig` | Shared TypeScript bases (`base`, `react`, `react-library`)                            |
 
 A future `apps/admin` (admin-only panel for auditing + RAG management) will reuse the same packages.
 
@@ -65,23 +65,30 @@ src/
 │       └── auth.store.ts   # Zustand store — session persistence
 │
 └── presentation/           # UI layer
-    ├── components/
-    │   ├── ui/             # Design system primitives (Button, Input, Label…)
-    │   └── theme/          # ThemeSwitcher
     ├── layouts/
     │   ├── auth.layout.tsx # Public pages (redirects if authenticated)
     │   └── app.layout.tsx  # Protected pages (redirects if not authenticated)
     ├── pages/
-    │   ├── auth/           # login.page.tsx, register.page.tsx
-    │   └── app/            # dashboard, tickets, knowledge, admin (coming)
+    │   ├── auth/
+    │   │   ├── login.page.tsx
+    │   │   ├── register.page.tsx
+    │   │   └── routes.tsx      # ← auth routes config (data-driven)
+    │   └── app/
+    │       ├── dashboard.page.tsx
+    │       └── routes.tsx      # ← app routes config (data-driven)
     ├── providers/
-    │   ├── query.provider.tsx
-    │   └── theme.provider.tsx
-    └── theme/
-        └── themes.ts       # Theme registry
+    │   └── query.provider.tsx
+    └── router/
+        ├── types.ts        # AppRoute type (extends RouteObject + requiredRole)
+        ├── guards.tsx      # <RequireRole> component
+        ├── compose.tsx     # config → RouteObject[] transform
+        ├── routes.tsx      # top-level layout composition
+        └── index.ts
 ```
 
-**Adding a feature:** domain types → Zod schema → application hook → page component. No layer skips.
+Design-system primitives (`Button`, `Input`, `Alert`…) come from `@nexus/ui`. Theme provider + switcher come from `@nexus/theme`. See the **Monorepo Structure** section above.
+
+**Adding a feature:** domain types → Zod schema → application hook → page component → one entry in the matching `routes.tsx`. No layer skips.
 
 ---
 
@@ -97,9 +104,9 @@ Five built-in themes, infinitely extensible:
 | `nord`       | Nord       | Arctic blue           |
 | `catppuccin` | Catppuccin | Soothing mocha        |
 
-**Adding a new theme — two steps:**
+**Adding a new theme — two steps (both inside `packages/theme/`):**
 
-1. Add a CSS block in `src/index.css`:
+1. Add a CSS block in `packages/theme/src/theme.css`:
 
 ```css
 [data-theme="my-theme"] {
@@ -118,26 +125,54 @@ Five built-in themes, infinitely extensible:
 }
 ```
 
-2. Add an entry to `src/presentation/theme/themes.ts`:
+2. Add an entry to `packages/theme/src/themes.ts`:
 
 ```ts
 { id: 'my-theme', name: 'My Theme', description: '...', isDark: true, accentHex: '#...' }
 ```
 
-The `ThemeSwitcher` picks it up automatically. Theme preference is persisted in `localStorage`.
+The `ThemeSwitcher` (also exported from `@nexus/theme`) picks it up automatically. Theme preference is persisted in `localStorage` by `ThemeProvider`.
 
 ---
 
-## Routes
+## Routes — Data-driven config
+
+Routes are declared as **plain objects**, not JSX trees. The top-level composition is in `src/presentation/router/routes.tsx`; per-section routes live next to their pages in `pages/<section>/routes.tsx`. The root `App` component is one line: `useRoutes(compose(routes))`.
+
+### Adding a new page
+
+1. Create the page component: `src/presentation/pages/<section>/<name>.page.tsx`
+2. Add one entry to that section's `routes.tsx`:
+   ```tsx
+   { path: "my-page", element: <MyPage /> }
+   ```
+
+### Restricting by role (declarative)
+
+Add `requiredRole` to the route. The `compose()` helper wraps it in `<RequireRole>` automatically:
+
+```tsx
+{ path: "admin", element: <AdminPage />, requiredRole: "admin" }
+{ path: "knowledge", element: <KnowledgePage />, requiredRole: ["admin", "agent"] }
+```
+
+### Adding a new section (new layout)
+
+1. Create a layout in `presentation/layouts/`
+2. Create `presentation/pages/<section>/routes.tsx`
+3. Mount it in `presentation/router/routes.tsx`:
+   ```tsx
+   { path: "settings", element: <SettingsLayout />, children: settingsRoutes }
+   ```
+
+### Current map
 
 ```
 /                → redirect to /login
 /login           → LoginPage       (public, redirects if authenticated)
 /register        → RegisterPage    (public, redirects if authenticated)
 /app             → AppLayout       (auth required)
-  /app/tickets   → TicketListPage  (all roles)
-  /app/knowledge → KnowledgePage   (agent, admin)
-  /app/admin     → AdminLayout     (admin only)
+  /app/tickets   → DashboardPage   (all roles, placeholder)
 ```
 
 ---

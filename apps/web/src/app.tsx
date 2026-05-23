@@ -1,32 +1,13 @@
-import { Navigate, Route, Routes } from "react-router"
+import { useRoutes } from "react-router"
 
-import { AppLayout } from "@/presentation/layouts/app.layout"
-import { AuthLayout } from "@/presentation/layouts/auth.layout"
-import { LoginPage } from "@/presentation/pages/auth/login.page"
-import { RegisterPage } from "@/presentation/pages/auth/register.page"
-import { DashboardPage } from "@/presentation/pages/app/dashboard.page"
+import { compose, routes } from "@/presentation/router"
 
+/**
+ * Root component. Routes are declared as data in
+ * `src/presentation/router/routes.tsx` (per-feature files), not as JSX here.
+ *
+ * To add a new route, edit the routes file of the matching feature folder.
+ */
 export function App() {
-  return (
-    <Routes>
-      {/* Redirect root */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
-
-      {/* Public routes (unauthenticated) */}
-      <Route element={<AuthLayout />}>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-      </Route>
-
-      {/* Protected routes (authenticated) */}
-      <Route path="/app" element={<AppLayout />}>
-        <Route index element={<Navigate to="/app/tickets" replace />} />
-        <Route path="tickets" element={<DashboardPage />} />
-        {/* More routes will be added here */}
-      </Route>
-
-      {/* Fallback */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
-  )
+  return useRoutes(compose(routes))
 }

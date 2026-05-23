@@ -10,8 +10,7 @@ export function DashboardPage() {
       <MessageSquare className="h-10 w-10 text-(--border)" />
       <div>
         <h1 className="font-mono text-base font-semibold text-(--fg)">
-          Welcome back,{" "}
-          <span className="text-(--accent)">{user?.role}</span>
+          Welcome back, <span className="text-(--accent)">{user?.role}</span>
         </h1>
         <p className="mt-1 font-mono text-xs text-(--muted)">
           Ticket management is coming next.
