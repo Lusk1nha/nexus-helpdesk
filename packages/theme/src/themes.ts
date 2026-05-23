@@ -16,14 +16,15 @@ export type ThemeId =
   | "outrun"
   | "paper"
   | "slate-light"
-  | "monokai-pro"
-  
+  | "serene"
+  | "ice"
+  | "coffee"
+
 export interface Theme {
   id: ThemeId
   name: string
   description: string
   isDark: boolean
-  /** Accent hex for theme preview swatch. */
   accentHex: string
 }
 
@@ -31,7 +32,7 @@ export const themes: Theme[] = [
   {
     id: "midnight",
     name: "Midnight",
-    description: "GitHub dark — the default",
+    description: "GitHub dark",
     isDark: true,
     accentHex: "#58a6ff",
   },
@@ -45,114 +46,121 @@ export const themes: Theme[] = [
   {
     id: "dracula",
     name: "Dracula",
-    description: "Classic vampire palette",
+    description: "Classic vampire",
     isDark: true,
     accentHex: "#bd93f9",
   },
   {
     id: "nord",
     name: "Nord",
-    description: "Arctic blue tones",
+    description: "Arctic blue",
     isDark: true,
     accentHex: "#88c0d0",
   },
   {
     id: "catppuccin",
     name: "Catppuccin",
-    description: "Soothing pastel mocha",
+    description: "Pastel mocha",
     isDark: true,
     accentHex: "#cba6f7",
   },
   {
     id: "rose-pine",
     name: "Rosé Pine",
-    description: "Warm, soft, and dusty dark",
+    description: "Warm soft dark",
     isDark: true,
     accentHex: "#c4a7e7",
   },
   {
-    id: "solarized-light",
-    name: "Solarized Light",
-    description: "Warm reading-friendly light",
-    isDark: false,
-    accentHex: "#268bd2",
-  },
-  {
     id: "cyberpunk",
     name: "Cyberpunk",
-    description: "High contrast neon nights",
+    description: "Neon nights",
     isDark: true,
     accentHex: "#fdf500",
   },
   {
     id: "forest",
     name: "Forest",
-    description: "Calm deep green nature",
+    description: "Calm deep green",
     isDark: true,
     accentHex: "#4ade80",
   },
   {
     id: "tokyo-night",
     name: "Tokyo Night",
-    description: "Lights of downtown Tokyo",
+    description: "Tokyo lights",
     isDark: true,
     accentHex: "#7aa2f7",
   },
   {
     id: "oled-black",
     name: "OLED Black",
-    description: "Pure black for maximum contrast",
+    description: "Pure black",
     isDark: true,
     accentHex: "#ffffff",
   },
   {
     id: "synthwave",
     name: "Synthwave",
-    description: "Neon 80s retro-futurism",
+    description: "80s retro",
     isDark: true,
     accentHex: "#ff7edb",
   },
   {
     id: "night-runner",
     name: "Night Runner",
-    description: "Luzes de neon e asfalto molhado",
+    description: "Neon asphalt",
     isDark: true,
-    accentHex: "#00f0ff", // Ciano vibrante
+    accentHex: "#00f0ff",
   },
   {
     id: "terminal",
     name: "Terminal",
-    description: "Nostalgia hacker em fósforo verde",
+    description: "Classic hacker",
     isDark: true,
-    accentHex: "#00ff41", // Verde Matrix
+    accentHex: "#00ff41",
   },
   {
     id: "outrun",
     name: "Outrun",
-    description: "Pôr do sol digital em alta velocidade",
+    description: "Retrowave warm",
     isDark: true,
-    accentHex: "#ff9e00", // Laranja neon
+    accentHex: "#ff9e00",
   },
   {
     id: "paper",
     name: "Paper",
-    description: "Papel envelhecido relaxante",
+    description: "Aged paper comfort",
     isDark: false,
     accentHex: "#8b7355",
   },
   {
     id: "slate-light",
     name: "Slate Light",
-    description: "Cinza azulado suave",
+    description: "Professional grey",
     isDark: false,
     accentHex: "#475569",
   },
   {
-    id: "monokai-pro",
-    name: "Monokai Pro",
-    description: "Foco total e contraste equilibrado",
-    isDark: true,
-    accentHex: "#ffd866",
+    id: "serene",
+    name: "Serene",
+    description: "Calm sand tones",
+    isDark: false,
+    accentHex: "#788d75",
+  },
+  {
+    id: "ice",
+    name: "Ice",
+    description: "Cool refreshing",
+    isDark: false,
+    accentHex: "#4e8a96",
+  },
+  {
+    id: "coffee",
+    name: "Coffee",
+    description: "Warm cozy brew",
+    isDark: false,
+    accentHex: "#765d56",
   },
 ]
 
