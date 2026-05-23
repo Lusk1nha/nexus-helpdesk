@@ -67,6 +67,14 @@ impl ResetPasswordUseCase {
 
         credential.reset_attempts();
         uow.credentials().update(&credential).await?;
+
+        // Senha trocada → toda sessão emitida antes deve cair: força re-login
+        // em todos os dispositivos. Evita que uma sessão sequestrada continue
+        // válida após o reset.
+        uow.refresh_tokens()
+            .revoke_all_for_user(command.target_user_id)
+            .await?;
+
         uow.commit().await?;
 
         tracing::info!(target_user_id = %command.target_user_id, "password reset successful");

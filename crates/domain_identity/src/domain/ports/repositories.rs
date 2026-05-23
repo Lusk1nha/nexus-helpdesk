@@ -73,6 +73,14 @@ pub trait RefreshTokenRepository: Send + Sync {
     /// Busca um refresh token pelo seu jti (id pública).
     async fn find_by_jti(&self, jti: Uuid) -> Result<Option<RefreshToken>, DomainError>;
 
+    /// Igual ao `find_by_jti`, porém adquire um lock por linha (`FOR UPDATE`)
+    /// para serializar a rotação concorrente do mesmo refresh token. **Só faz
+    /// sentido dentro de uma transação.**
+    async fn find_by_jti_for_update(
+        &self,
+        jti: Uuid,
+    ) -> Result<Option<RefreshToken>, DomainError>;
+
     /// Marca como revogado um refresh token específico.
     async fn revoke(&self, jti: Uuid) -> Result<(), DomainError>;
 

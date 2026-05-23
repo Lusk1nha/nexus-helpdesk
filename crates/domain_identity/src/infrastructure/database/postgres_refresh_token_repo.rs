@@ -26,6 +26,39 @@ impl PgRefreshTokenRepository {
             conn: DatabaseConnection::Transaction(tx),
         }
     }
+
+    async fn find_by_jti_inner(
+        &self,
+        jti: Uuid,
+        lock_for_update: bool,
+    ) -> Result<Option<RefreshToken>, DomainError> {
+        // `FOR UPDATE` is meaningful only inside an explicit transaction.
+        // Postgres tolerates it on a pool connection (each query in its own
+        // implicit tx) but the lock is released immediately — so we only emit
+        // it when we know we are running inside a UoW transaction.
+        let suffix = match (&self.conn, lock_for_update) {
+            (DatabaseConnection::Transaction(_), true) => " FOR UPDATE",
+            _ => "",
+        };
+
+        let sql = format!(
+            "SELECT jti, user_id, tenant_id, token_hash, expires_at, revoked_at, created_at \
+             FROM refresh_tokens WHERE jti = $1{}",
+            suffix,
+        );
+        let q = sqlx::query_as::<_, RefreshTokenRow>(&sql).bind(jti);
+
+        let row = match &self.conn {
+            DatabaseConnection::Pool(pool) => q.fetch_optional(pool).await,
+            DatabaseConnection::Transaction(tx_mutex) => {
+                let mut guard = tx_mutex.lock().await;
+                q.fetch_optional(&mut **guard.as_mut().unwrap()).await
+            }
+        }
+        .map_err(|e| DomainError::DatabaseError(e.to_string()))?;
+
+        Ok(row.map(Into::into))
+    }
 }
 
 #[async_trait]
@@ -58,25 +91,14 @@ impl RefreshTokenRepository for PgRefreshTokenRepository {
     }
 
     async fn find_by_jti(&self, jti: Uuid) -> Result<Option<RefreshToken>, DomainError> {
-        let q = sqlx::query_as::<_, RefreshTokenRow>(
-            r#"
-            SELECT jti, user_id, tenant_id, token_hash, expires_at, revoked_at, created_at
-            FROM refresh_tokens
-            WHERE jti = $1
-            "#,
-        )
-        .bind(jti);
+        self.find_by_jti_inner(jti, false).await
+    }
 
-        let row = match &self.conn {
-            DatabaseConnection::Pool(pool) => q.fetch_optional(pool).await,
-            DatabaseConnection::Transaction(tx_mutex) => {
-                let mut guard = tx_mutex.lock().await;
-                q.fetch_optional(&mut **guard.as_mut().unwrap()).await
-            }
-        }
-        .map_err(|e| DomainError::DatabaseError(e.to_string()))?;
-
-        Ok(row.map(Into::into))
+    async fn find_by_jti_for_update(
+        &self,
+        jti: Uuid,
+    ) -> Result<Option<RefreshToken>, DomainError> {
+        self.find_by_jti_inner(jti, true).await
     }
 
     async fn revoke(&self, jti: Uuid) -> Result<(), DomainError> {
