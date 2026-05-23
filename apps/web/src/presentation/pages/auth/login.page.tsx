@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { motion } from "motion/react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
-import { Link, useNavigate } from "react-router"
+import { useNavigate } from "react-router"
 import { Eye, EyeOff } from "lucide-react"
 
 import { Button, FormError, FormField, Input } from "@nexus/ui"
@@ -119,19 +119,6 @@ export function LoginPage() {
             {login.isPending ? "Authenticating..." : "Authenticate →"}
           </Button>
         </form>
-
-        {/* Footer */}
-        <div className="px-6 pb-5">
-          <p className="text-center font-mono text-xs text-(--muted)">
-            No account?{" "}
-            <Link
-              to={paths.register}
-              className="text-(--accent) underline-offset-2 hover:underline"
-            >
-              Register your company
-            </Link>
-          </p>
-        </div>
       </div>
 
       {/* Hint below card */}

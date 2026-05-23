@@ -27,7 +27,6 @@ export const paths = {
   home: "/",
 
   login: `/${SEG.login}`,
-  register: `/${SEG.register}`,
 
   app: {
     root: `/${SEG.app}`,
