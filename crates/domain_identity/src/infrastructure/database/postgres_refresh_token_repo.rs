@@ -94,10 +94,7 @@ impl RefreshTokenRepository for PgRefreshTokenRepository {
         self.find_by_jti_inner(jti, false).await
     }
 
-    async fn find_by_jti_for_update(
-        &self,
-        jti: Uuid,
-    ) -> Result<Option<RefreshToken>, DomainError> {
+    async fn find_by_jti_for_update(&self, jti: Uuid) -> Result<Option<RefreshToken>, DomainError> {
         self.find_by_jti_inner(jti, true).await
     }
 

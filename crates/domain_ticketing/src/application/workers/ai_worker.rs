@@ -6,8 +6,9 @@ use uuid::Uuid;
 use ai_engine::AiEngine;
 
 use crate::domain::entities::message::TicketMessage;
+use crate::domain::entities::ticket::TicketStatus;
 use crate::domain::error::DomainError;
-use crate::domain::ports::TicketingUnitOfWorkManager;
+use crate::domain::ports::{TicketEventPublisher, TicketingUnitOfWorkManager};
 
 #[derive(Debug, Clone)]
 pub struct AiTask {
@@ -22,6 +23,7 @@ pub struct AiWorker {
     uow_manager: Arc<dyn TicketingUnitOfWorkManager>,
     ollama_url: String,
     ai_engine: Arc<AiEngine>,
+    event_publisher: Arc<dyn TicketEventPublisher>,
 }
 
 impl AiWorker {
@@ -30,6 +32,7 @@ impl AiWorker {
         uow_manager: Arc<dyn TicketingUnitOfWorkManager>,
         ollama_url: String,
         ai_engine: Arc<AiEngine>,
+        event_publisher: Arc<dyn TicketEventPublisher>,
     ) -> Self {
         Self {
             receiver,
@@ -37,6 +40,7 @@ impl AiWorker {
             uow_manager,
             ollama_url,
             ai_engine,
+            event_publisher,
         }
     }
 
@@ -177,7 +181,10 @@ impl AiWorker {
             .ok_or(DomainError::TicketNotFound)?;
         ticket.mark_as_processing();
         uow.tickets().update(&ticket).await?;
-        uow.commit().await
+        uow.commit().await?;
+        self.event_publisher
+            .publish_status_changed(ticket_id, &TicketStatus::ProcessingAI);
+        Ok(())
     }
 
     async fn persist_ai_response(&self, ticket_id: Uuid, reply: String) -> Result<(), DomainError> {
@@ -193,7 +200,13 @@ impl AiWorker {
 
         ticket.await_human_approval();
         uow.tickets().update(&ticket).await?;
-        uow.commit().await
+        uow.commit().await?;
+
+        self.event_publisher
+            .publish_message_added(ticket_id, &message);
+        self.event_publisher
+            .publish_status_changed(ticket_id, &TicketStatus::AwaitingAgentApproval);
+        Ok(())
     }
 
     async fn revert_to_open(&self, ticket_id: Uuid) -> Result<(), DomainError> {
@@ -205,6 +218,9 @@ impl AiWorker {
             .ok_or(DomainError::TicketNotFound)?;
         ticket.revert_to_open();
         uow.tickets().update(&ticket).await?;
-        uow.commit().await
+        uow.commit().await?;
+        self.event_publisher
+            .publish_status_changed(ticket_id, &TicketStatus::Open);
+        Ok(())
     }
 }

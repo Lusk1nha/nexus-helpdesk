@@ -20,6 +20,7 @@ use domain_identity::infrastructure::{
 };
 
 use crate::config::AppConfig;
+use crate::realtime::RealtimeHub;
 
 pub struct IdentityUseCases {
     pub register_tenant: Arc<RegisterTenantUseCase>,
@@ -54,6 +55,7 @@ pub struct AppState {
     pub identity: Arc<IdentityUseCases>,
     pub ticketing: Arc<TicketingUseCases>,
     pub ai_engine: Arc<AiEngine>,
+    pub realtime: Arc<RealtimeHub>,
 }
 
 impl AppState {
@@ -62,6 +64,7 @@ impl AppState {
         config: AppConfig,
         ai_queue_sender: Sender<AiTask>,
         ai_engine: Arc<AiEngine>,
+        realtime: Arc<RealtimeHub>,
     ) -> Self {
         let identity_uow_manager = Arc::new(PgUnitOfWorkManager::new(db_pool.clone()));
         let ticketing_uow_manager = Arc::new(PgTicketingUoWManager::new(db_pool));
@@ -96,8 +99,7 @@ impl AppState {
         let create_api_key = Arc::new(CreateApiKeyUseCase::new(identity_uow_manager.clone()));
         let revoke_api_key = Arc::new(RevokeApiKeyUseCase::new(identity_uow_manager.clone()));
         let list_api_keys = Arc::new(ListApiKeysUseCase::new(identity_uow_manager.clone()));
-        let authenticate_api_key =
-            Arc::new(AuthenticateApiKeyUseCase::new(identity_uow_manager));
+        let authenticate_api_key = Arc::new(AuthenticateApiKeyUseCase::new(identity_uow_manager));
 
         let identity_cases = Arc::new(IdentityUseCases {
             register_tenant,
@@ -146,6 +148,7 @@ impl AppState {
             identity: identity_cases,
             ticketing: ticketing_cases,
             ai_engine,
+            realtime,
         }
     }
 }

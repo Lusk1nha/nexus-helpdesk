@@ -33,7 +33,14 @@ pub fn sign_access_token(
     issuer: &str,
     ttl_minutes: u32,
 ) -> Result<SignedToken, jsonwebtoken::errors::Error> {
-    sign(user_id, tenant_id, role, secret, issuer, ttl_minutes as i64 * 60)
+    sign(
+        user_id,
+        tenant_id,
+        role,
+        secret,
+        issuer,
+        ttl_minutes as i64 * 60,
+    )
 }
 
 /// Sign a long-lived refresh token (typically 30 days). The returned JTI must be

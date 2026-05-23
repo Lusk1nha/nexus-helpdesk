@@ -23,6 +23,7 @@ use domain_ticketing::application::use_cases::{
 };
 use domain_ticketing::domain::entities::message::SenderType;
 use domain_ticketing::domain::entities::ticket::TicketStatus;
+use domain_ticketing::domain::ports::TicketEventPublisher;
 
 // ─── Create ──────────────────────────────────────────────────────────────────
 
@@ -56,6 +57,7 @@ pub async fn create_ticket_handler(
         .await?;
 
     tracing::info!(user_id = %claims.sub, ticket_id = %ticket.id, "ticket created via API");
+    state.realtime.publish_ticket_created(&ticket);
     Ok((
         StatusCode::CREATED,
         Json(ApiResponse::success(ticket.into())),
@@ -175,6 +177,9 @@ pub async fn update_ticket_status_handler(
         .await?;
 
     tracing::info!(user_id = %claims.sub, ticket_id = %updated.id, status = %updated.status.to_string(), "ticket status changed via API");
+    state
+        .realtime
+        .publish_status_changed(updated.id, &updated.status);
     Ok((StatusCode::OK, Json(ApiResponse::success(updated.into()))))
 }
 
@@ -208,6 +213,9 @@ pub async fn approve_ai_response_handler(
         .await?;
 
     tracing::info!(user_id = %claims.sub, ticket_id = %ticket.id, "AI response approved");
+    state
+        .realtime
+        .publish_status_changed(ticket.id, &ticket.status);
 
     // Fire-and-forget: index resolved Q&A in Qdrant for future RAG retrieval
     {
@@ -296,6 +304,9 @@ pub async fn reject_ai_response_handler(
         .await?;
 
     tracing::info!(user_id = %claims.sub, ticket_id = %ticket.id, "AI response rejected, ticket reopened");
+    state
+        .realtime
+        .publish_status_changed(ticket.id, &ticket.status);
     Ok((StatusCode::OK, Json(ApiResponse::success(ticket.into()))))
 }
 
@@ -371,6 +382,7 @@ pub async fn add_message_handler(
         .await?;
 
     tracing::info!(user_id = %claims.sub, ticket_id = %ticket_id, message_id = %message.id, "message added via API");
+    state.realtime.publish_message_added(ticket_id, &message);
     Ok((
         StatusCode::CREATED,
         Json(ApiResponse::success(message.into())),

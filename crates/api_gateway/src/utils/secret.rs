@@ -1,5 +1,5 @@
 use base64::Engine;
-use rand::RngCore;
+use rand::RngExt;
 use sha2::{Digest, Sha256};
 
 /// SHA-256 hash of a secret, hex-encoded. Used to store refresh tokens and
@@ -18,7 +18,8 @@ pub fn sha256_hex(value: &str) -> String {
 /// user **only once**; only `key_prefix` and `key_hash` are persisted.
 pub fn generate_api_key() -> (String, String, String) {
     let mut buf = [0u8; 24];
-    rand::thread_rng().fill_bytes(&mut buf);
+    rand::rng().fill(&mut buf);
+
     let prefix: String = buf[..6]
         .iter()
         .map(|b| format!("{:02x}", b))
@@ -28,7 +29,7 @@ pub fn generate_api_key() -> (String, String, String) {
         .collect();
 
     let mut secret_buf = [0u8; 32];
-    rand::thread_rng().fill_bytes(&mut secret_buf);
+    rand::rng().fill(&mut secret_buf);
     let secret = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(secret_buf);
 
     let full = format!("nxk_{}.{}", prefix, secret);

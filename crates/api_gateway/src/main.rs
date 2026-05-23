@@ -11,6 +11,7 @@ use domain_ticketing::infrastructure::database::postgres_uow::PgTicketingUoWMana
 
 use api_gateway::app_state::AppState;
 use api_gateway::config::AppConfig;
+use api_gateway::realtime::RealtimeHub;
 use api_gateway::routes;
 
 #[tokio::main]
@@ -53,14 +54,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Failed to initialize Qdrant collection");
 
     // 5. Spin up background workers (AI queue)
+    let realtime = Arc::new(RealtimeHub::new());
     let ai_task_sender = spawn_background_workers(
         db_pool.clone(),
         config.ollama_url.clone(),
         ai_engine.clone(),
+        realtime.clone(),
     );
 
     // 6. Build application state and router
-    let state = AppState::new(db_pool, config.clone(), ai_task_sender, ai_engine);
+    let state = AppState::new(db_pool, config.clone(), ai_task_sender, ai_engine, realtime);
     let app = routes::create_router(state)
         .layer(TraceLayer::new_for_http())
         .layer(setup_cors(&config.frontend_url));
@@ -71,9 +74,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing::info!("📚 Swagger UI disponível em http://{}/swagger-ui", addr);
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
-    // `into_make_service_with_connect_info` exposes the TCP peer address via
-    // `ConnectInfo<SocketAddr>` — needed by the rate-limit key extractor to
-    // bucket clients by real IP.
+
     axum::serve(
         listener,
         app.into_make_service_with_connect_info::<SocketAddr>(),
@@ -122,11 +123,12 @@ fn spawn_background_workers(
     db_pool: PgPool,
     ollama_url: String,
     ai_engine: Arc<AiEngine>,
+    realtime: Arc<RealtimeHub>,
 ) -> tokio::sync::mpsc::Sender<AiTask> {
     let (sender, receiver) = tokio::sync::mpsc::channel::<AiTask>(100);
     let uow_manager = Arc::new(PgTicketingUoWManager::new(db_pool));
 
-    let worker = AiWorker::new(receiver, uow_manager, ollama_url, ai_engine);
+    let worker = AiWorker::new(receiver, uow_manager, ollama_url, ai_engine, realtime);
     tokio::spawn(async move { worker.start().await });
 
     sender

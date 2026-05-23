@@ -9,6 +9,7 @@ use crate::app_state::AppState;
 
 pub mod identity;
 pub mod knowledge;
+pub mod realtime;
 pub mod ticketing;
 
 #[derive(OpenApi)]
@@ -140,5 +141,6 @@ pub fn create_router(state: AppState) -> Router {
         .nest("/api/v1/identity", identity::routes())
         .nest("/api/v1/tickets", ticketing::routes())
         .nest("/api/v1/knowledge", knowledge::routes())
+        .nest("/api/v1/realtime", realtime::routes())
         .with_state(state)
 }

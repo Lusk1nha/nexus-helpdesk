@@ -9,9 +9,9 @@ use validator::Validate;
 use super::contracts::{
     AdminResetPasswordPayload, ApiKeyResponse, ChangeUserRolePayload, CreateApiKeyPayload,
     CreateApiKeyResponse, GetMeResponse, InviteUserPayload, InviteUserResponse, LoginPayload,
-    LoginResponse, LogoutPayload, RefreshTokenPayload, RefreshTokenResponse,
-    RegisterTenantPayload, RegisterTenantResponse, ResetPasswordResponse, TenantMemberResponse,
-    TenantResponse, UpdateUserStatusPayload,
+    LoginResponse, LogoutPayload, RefreshTokenPayload, RefreshTokenResponse, RegisterTenantPayload,
+    RegisterTenantResponse, ResetPasswordResponse, TenantMemberResponse, TenantResponse,
+    UpdateUserStatusPayload,
 };
 use crate::{
     app_state::AppState,
@@ -297,9 +297,9 @@ pub async fn create_api_key_handler(
             ))
         })?;
 
-    let expires_at = payload.expires_in_days.map(|days| {
-        time::OffsetDateTime::now_utc() + time::Duration::days(days as i64)
-    });
+    let expires_at = payload
+        .expires_in_days
+        .map(|days| time::OffsetDateTime::now_utc() + time::Duration::days(days as i64));
 
     let (plaintext, prefix, hash) = generate_api_key();
 

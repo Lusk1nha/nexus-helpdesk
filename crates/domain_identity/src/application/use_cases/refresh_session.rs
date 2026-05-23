@@ -38,10 +38,6 @@ impl RefreshSessionUseCase {
     ) -> Result<RefreshSessionResult, DomainError> {
         let mut uow = self.uow_manager.begin().await?;
 
-        // Lock-da-linha: dois refreshes concorrentes com o mesmo jti vão
-        // serializar aqui. O primeiro revoga + insere o substituto; o segundo
-        // só ganha o lock depois do COMMIT do primeiro e verá o token como
-        // `revoked_at != NULL`, falhando com InvalidCredentials.
         let existing = uow
             .refresh_tokens()
             .find_by_jti_for_update(command.presented_jti)
@@ -50,14 +46,14 @@ impl RefreshSessionUseCase {
 
         if !existing.is_active() || existing.token_hash != command.presented_token_hash {
             tracing::warn!(jti = %command.presented_jti, "refresh rejected: token revoked, expired, or mismatched hash");
-            // If the hash mismatches we may be facing token theft — revoke
-            // every active session for this user as a precaution.
+
             if existing.token_hash != command.presented_token_hash {
                 uow.refresh_tokens()
                     .revoke_all_for_user(existing.user_id)
                     .await?;
                 uow.commit().await?;
             }
+
             return Err(DomainError::InvalidCredentials);
         }
 

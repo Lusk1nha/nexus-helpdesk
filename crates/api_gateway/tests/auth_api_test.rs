@@ -296,8 +296,14 @@ async fn logout_revokes_refresh_token() {
             serde_json::json!({"email": "lo@example.com", "password": "StrongPass123!"}),
         )
         .await;
-    let access = login_body["data"]["accessToken"].as_str().unwrap().to_string();
-    let refresh = login_body["data"]["refreshToken"].as_str().unwrap().to_string();
+    let access = login_body["data"]["accessToken"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    let refresh = login_body["data"]["refreshToken"]
+        .as_str()
+        .unwrap()
+        .to_string();
 
     let (status, _) = app
         .post_json_authed(

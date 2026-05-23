@@ -336,7 +336,7 @@ pub struct ApiKeyResponse {
 
     #[schema(value_type = String, nullable = true)]
     pub revoked_at: Option<OffsetDateTime>,
-    
+
     #[schema(value_type = String)]
     pub created_at: OffsetDateTime,
 }

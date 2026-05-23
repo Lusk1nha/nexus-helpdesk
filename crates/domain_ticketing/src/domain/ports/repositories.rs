@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use uuid::Uuid;
 
 use crate::domain::entities::message::TicketMessage;
-use crate::domain::entities::ticket::Ticket;
+use crate::domain::entities::ticket::{Ticket, TicketStatus};
 
 use crate::domain::error::DomainError;
 
@@ -22,4 +22,12 @@ pub trait MessageRepository: Send + Sync {
 
     // Essencial para passar o contexto do chamado para a IA do Ollama ler
     async fn find_by_ticket_id(&self, ticket_id: Uuid) -> Result<Vec<TicketMessage>, DomainError>;
+}
+
+/// Outbound port for pushing realtime events to connected clients.
+/// The implementation lives in the api_gateway layer (RealtimeHub).
+pub trait TicketEventPublisher: Send + Sync {
+    fn publish_message_added(&self, ticket_id: Uuid, message: &TicketMessage);
+    fn publish_status_changed(&self, ticket_id: Uuid, status: &TicketStatus);
+    fn publish_ticket_created(&self, ticket: &Ticket);
 }

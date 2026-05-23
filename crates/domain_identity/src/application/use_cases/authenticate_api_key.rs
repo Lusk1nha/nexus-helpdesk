@@ -21,10 +21,7 @@ impl AuthenticateApiKeyUseCase {
     /// record, enforcing that the key is active. Updates `last_used_at` as a
     /// side-effect.
     #[tracing::instrument(name = "authenticate_api_key", skip(self, command))]
-    pub async fn execute(
-        &self,
-        command: AuthenticateApiKeyCommand,
-    ) -> Result<ApiKey, DomainError> {
+    pub async fn execute(&self, command: AuthenticateApiKeyCommand) -> Result<ApiKey, DomainError> {
         let mut uow = self.uow_manager.begin().await?;
 
         let api_key = uow

@@ -109,8 +109,7 @@ impl FromRequestParts<AppState> for AuthUser {
 /// authenticated the request (e.g. to forbid API keys on certain endpoints).
 #[allow(dead_code)]
 pub fn is_api_key_subject(claims: &Claims) -> bool {
-    claims.sub == claims.jti
-        && claims.iat == claims.exp.saturating_sub(60 * 60)
+    claims.sub == claims.jti && claims.iat == claims.exp.saturating_sub(60 * 60)
 }
 
 #[allow(dead_code)]
