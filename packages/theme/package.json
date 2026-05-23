@@ -13,6 +13,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@nexus/utils": "workspace:*",
     "lucide-react": "^1.16.0"
   },
   "peerDependencies": {

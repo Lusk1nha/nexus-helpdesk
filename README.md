@@ -19,94 +19,95 @@ Este projeto nasceu da evolução natural após a construção de sistemas deskt
 
 ## 🚀 Tecnologias e Stack
 
-A stack foi cuidadosamente selecionada para garantir performance máxima no processamento de dados e uma experiência fluida no frontend, isolando backend (`crates`) e frontend (`apps`) em um ambiente de Monorepo (Cargo Workspace + PNPM).
+A stack foi cuidadosamente selecionada para garantir performance máxima no processamento de dados e uma experiência fluida no frontend, isolando backend (`crates`) e frontend (`apps` e `packages`) em um ambiente de Monorepo via **Turborepo + pnpm workspaces**.
 
 ### 🦀 Core & Backend (Rust)
-
 - **Axum:** Framework web assíncrono de altíssima performance para a API REST.
 - **SQLx:** ORM e Query Builder com validação de queries SQL em tempo de compilação.
 - **Tokio (`mpsc` & `Mutex`):** Gerenciamento de filas em memória e controle de concorrência para os _Workers_ de IA e transações do banco.
 - **Clean Architecture:** Divisão estrita de responsabilidades (Ports, Adapters, Use Cases).
 
 ### 🧠 Motor de Inteligência Artificial (Local)
-
 - **Ollama:** Orquestrador de LLMs rodando localmente (Modelos: `Phi-3` ou `Llama-3`).
 - **Qdrant:** Banco de dados vetorial de altíssima performance (escrito em Rust) para armazenar os _embeddings_ da base de conhecimento (RAG).
 - **Embeddings:** Modelo `nomic-embed-text` para busca semântica de documentos.
 
-### ⚛️ Workspace do Agente (Frontend)
-
-- **React 19 + TypeScript + Vite:** Base da interface SPA.
-- **Zustand:** Gerenciamento de estado global leve (sessões e estado da interface).
-- **TanStack Query:** Sincronização assíncrona, cache e chamadas otimizadas para a API.
-- **Tailwind CSS + Shadcn/UI:** Componentes de interface modernos, responsivos e acessíveis.
+### ⚛️ Frontend & Ecossistema (React)
+- **React 19 + TypeScript + Vite:** Base das interfaces SPA.
+- **Zustand & TanStack Query:** Gerenciamento de estado global e cache assíncrono.
+- **Tailwind CSS v4 + Shadcn/UI:** Sistema de design e componentes.
+- **SSO & Cookies:** Sessão cross-subdomínio ancorada no domínio principal (`.nexus.com`).
 
 ---
 
-## 🏗️ Arquitetura de Domínios (Módulos)
+## 🏗️ Arquitetura do Monorepo
 
-O projeto é dividido em _crates_ focados em contextos delimitados:
+O projeto é estritamente modularizado em contextos delimitados, abrangendo tanto a camada de dados quanto a de apresentação.
 
-1. **`shared_kernel`**: Infraestrutura comum a todo o sistema, como o **DatabaseConnection** que permite o compartilhamento dinâmico de transações via `Arc<Mutex<Option<Transaction>>>`.
-2. **`domain_identity`**: Gerencia a autenticação (JWT), locatários (Tenants) e controle de acesso baseado em funções (RBAC).
-3. **`domain_ticketing`**: A máquina de estados dos tickets. Contém os Casos de Uso e o **Worker de IA** que processa chamados em background sem travar a thread principal.
-4. **`api_gateway`**: A porta de entrada HTTP. Contém as rotas Axum, o `AppState` (Injeção de Dependências) e os Middlewares.
+### 🦀 Crates (Backend Rust)
+1. **`shared_kernel`**: Infraestrutura comum (ex: `DatabaseConnection` para controle do **Unit of Work**).
+2. **`domain_identity`**: Gerenciamento de Tenants (empresas), usuários, RBAC e JWT.
+3. **`domain_ticketing`**: Máquina de estados dos chamados e **Workers de IA** que operam de forma assíncrona.
+4. **`api_gateway`**: Porta de entrada HTTP (Axum), injeção de dependências (`AppState`) e extratores de subdomínio.
+5. **`ai_engine`**: Interface com LLMs locais e banco vetorial (Qdrant).
+
+### 🌐 Apps (Fronteiras de Apresentação)
+Para evitar sobreposição de responsabilidades e otimizar o roteamento, o frontend é dividido em três aplicações isoladas:
+1. **`apps/onboarding` (Global):** Porta de entrada (`app.nexus.localhost`). Responsável por Landing Pages, escolha do *slug* (nome do subdomínio) e criação de novas empresas.
+2. **`apps/web` (Tenant-Local):** O workspace diário (`[tenant].nexus.localhost`). Funciona apenas no contexto de uma empresa já existente. Contém a fila de tickets dos agentes e as telas de autoatendimento para clientes finais.
+3. **`apps/admin` (Backoffice Global):** Área restrita para os mantenedores da plataforma (gestão de tenants, uso de recursos e auditoria).
+
+### 📦 Packages (Bibliotecas Internas)
+- **`@nexus/ui`**: Sistema de design primário (Botões, Inputs, Modais).
+- **`@nexus/theme`**: Sistema avançado de multi-temas injetável (CSS puro + tokens).
+- **`@nexus/auth`**: Lógica compartilhada de hooks de sessão.
 
 ---
 
 ## 🗺️ Roadmap de Desenvolvimento e Status
 
 ### ✅ Fase 1: Arquitetura Base e Infraestrutura de Dados
-
-- [x] Configuração do Monorepo (Cargo Workspaces + pnpm).
+- [x] Configuração do Monorepo (Cargo Workspaces + pnpm + Turborepo).
 - [x] Modelagem do banco de dados relacional para Multi-Tenancy.
 - [x] Implementação do padrão **Unit of Work (UoW)** e repositórios genéricos com `SQLx`.
 - [x] Tratamento avançado de concorrência de transações de banco (`Shared Kernel`).
 
 ### ✅ Fase 2: Motor de Tarefas e IA Base
-
 - [x] Criação do **AiWorker** rodando em background.
 - [x] Comunicação via canais `tokio::mpsc` entre a API e os Workers.
-- [x] Integração HTTP via `reqwest` com a LLM local (Ollama).
+- [x] Integração HTTP com a LLM local (Ollama).
 - [x] Máquina de estados robusta (Fallback de falha da IA e rollback de banco automático).
-- [x] Construção do `AppState` injetando dependências nos _Use Cases_.
 
-### ⏳ Fase 3: Gateway e Rotas HTTP (Próximo Passo)
-
-- [ ] Criar os _Handlers_ do Axum (receber requisições e mapear para os _Use Cases_).
-- [ ] Implementar middleware de autenticação (validação de JWT).
-- [ ] Implementar extrator de Tenant (descobrir de qual empresa é a requisição).
+### ⏳ Fase 3: Gateway e Rotas HTTP (Em Andamento)
+- [ ] Criar os _Handlers_ do Axum mapeando para os _Use Cases_.
+- [ ] Implementar middleware de autenticação (SSO Cookies/JWT).
+- [ ] Implementar extrator de Subdomínio no Axum (identificar requisições vindas de `*.nexus.localhost`).
 
 ### ✅ Fase 4: Core de IA Avançado e RAG
-
 - [x] Criar crate `ai_engine` para centralizar lógica vetorial.
-- [x] Gerar _embeddings_ via Ollama (`nomic-embed-text`) e injetar no banco de dados vetorial (Qdrant).
-- [x] Implementar busca de contexto semântico (_Retrieval_) para enviar ao `AiWorker` antes de responder o ticket.
-- [x] Indexar tickets resolvidos automaticamente ao aprovar resposta da IA.
-- [x] Endpoint `POST /api/v1/knowledge` para agentes/admins injetarem artigos na base de conhecimento.
+- [x] Gerar _embeddings_ via Ollama e injetar no Qdrant.
+- [x] Implementar busca de contexto semântico (_Retrieval_) para o `AiWorker`.
+- [x] Endpoint para agentes/admins injetarem artigos na base de conhecimento.
 
-### 🔜 Fase 5: Frontend e UX
-
-- [ ] Configuração do cliente do `TanStack Query`.
-- [ ] Gerenciamento de sessão com `Zustand`.
-- [ ] Construção do painel do Agente com fila em tempo real.
+### 🔜 Fase 5: Ecossistema Frontend
+- [ ] Migrar layout atual para estrutura isolada (`apps/web` e `apps/onboarding`).
+- [ ] Roteamento dinâmico baseado em Tenant slug (`[tenant].localhost`).
+- [ ] Sincronização em tempo real via Server-Sent Events (SSE).
 
 ---
 
 ## 🛠️ Configuração do Ambiente de Desenvolvimento
 
 ### Pré-requisitos
-
 - [Rust](https://www.rust-lang.org/tools/install) (cargo, rustc)
 - [Node.js](https://nodejs.org/) & [PNPM](https://pnpm.io/)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- [Ollama](https://ollama.com/) (Instalado e rodando em background)
+- [Ollama](https://ollama.com/) (Instalado e rodando)
 
 ### Passos para Rodar
 
 1. **Preparar a Inteligência Artificial:**
-   Faça o pull dos modelos locais no seu terminal:
-   ```bash
+   Faça o pull dos modelos no seu terminal:
+```bash
    ollama run phi3
    ollama pull nomic-embed-text
-   ```

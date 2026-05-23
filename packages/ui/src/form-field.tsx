@@ -1,7 +1,7 @@
 import * as React from "react"
 
 import { Label } from "./label"
-import { cn } from "./utils"
+import { cn } from "@nexus/utils"
 
 interface FormFieldProps {
   label: string

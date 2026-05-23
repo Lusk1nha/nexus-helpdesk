@@ -1,7 +1,7 @@
 import { AlertCircle, CheckCircle2, Info, TriangleAlert } from "lucide-react"
 import * as React from "react"
 
-import { cn } from "./utils"
+import { cn } from "@nexus/utils"
 
 type AlertVariant = "info" | "success" | "warning" | "error"
 

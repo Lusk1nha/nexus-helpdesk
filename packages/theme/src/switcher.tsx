@@ -4,10 +4,7 @@ import { useState } from "react"
 import { useTheme } from "./provider"
 import { themes, type ThemeId } from "./themes"
 
-// Inline class joiner — avoids cross-package dep on @nexus/ui
-function cn(...classes: Array<string | false | undefined | null>): string {
-  return classes.filter(Boolean).join(" ")
-}
+import { cn } from "@nexus/utils"
 
 export function ThemeSwitcher({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme()

@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import { cn } from "./utils"
+import { cn } from "@nexus/utils"
 
 export interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {
   required?: boolean

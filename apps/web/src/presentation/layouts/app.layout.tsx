@@ -9,7 +9,7 @@ import {
 import { NavLink, Navigate, Outlet, useNavigate } from "react-router"
 
 import { ThemeSwitcher } from "@nexus/theme"
-import { cn } from "@nexus/ui"
+import { cn } from "@nexus/utils"
 
 import {
   useIsAuthenticated,

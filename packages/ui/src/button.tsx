@@ -2,9 +2,9 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Loader2 } from "lucide-react"
 import * as React from "react"
 
-import { cn } from "./utils"
+import { cn } from "@nexus/utils"
 
-const buttonVariants = cva(
+export const buttonVariants = cva(
   [
     "inline-flex items-center justify-center gap-2",
     "font-mono text-sm font-medium",
