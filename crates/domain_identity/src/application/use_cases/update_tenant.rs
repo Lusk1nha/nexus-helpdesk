@@ -9,6 +9,7 @@ pub struct UpdateTenantCommand {
 
     pub new_name: Option<String>,
     pub new_description: Option<String>,
+    pub new_theme: Option<String>,
 }
 
 pub struct UpdateTenantUseCase {
@@ -43,6 +44,10 @@ impl UpdateTenantUseCase {
         }
 
         tenant.update_description(command.new_description);
+
+        if let Some(theme) = command.new_theme {
+            tenant.update_theme(theme)?;
+        }
 
         uow.tenants().update(&tenant).await?;
         uow.commit().await?;

@@ -46,7 +46,11 @@ pub fn routes() -> Router<AppState> {
             "/users/{id}/status",
             patch(handlers::update_user_status_handler),
         )
-        .route("/tenant", get(handlers::get_tenant_handler))
+        .route("/tenant/branding", get(handlers::get_tenant_branding_handler))
+        .route(
+            "/tenant",
+            get(handlers::get_tenant_handler).patch(handlers::update_tenant_handler),
+        )
         .route(
             "/api-keys",
             post(handlers::create_api_key_handler).get(handlers::list_api_keys_handler),

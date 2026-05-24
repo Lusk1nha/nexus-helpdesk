@@ -32,12 +32,13 @@ impl TenantRepository for PgTenantRepository {
     async fn create(&self, tenant: &Tenant) -> Result<(), DomainError> {
         let query = sqlx::query!(
             r#"
-            INSERT INTO tenants (id, name, slug, plan, is_active, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            INSERT INTO tenants (id, name, slug, theme, plan, is_active, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             "#,
             tenant.id,
             tenant.name,
             tenant.slug,
+            tenant.theme,
             tenant.plan,
             tenant.is_active,
             tenant.created_at,
@@ -60,14 +61,17 @@ impl TenantRepository for PgTenantRepository {
     async fn update(&self, tenant: &Tenant) -> Result<(), DomainError> {
         let query = sqlx::query!(
             r#"
-            UPDATE tenants 
-            SET name = $1, slug = $2, plan = $3, is_active = $4
-            WHERE id = $5
+            UPDATE tenants
+            SET name = $1, description = $2, slug = $3, theme = $4, plan = $5, is_active = $6, updated_at = $7
+            WHERE id = $8
             "#,
             tenant.name,
+            tenant.description,
             tenant.slug,
+            tenant.theme,
             tenant.plan,
             tenant.is_active,
+            tenant.updated_at,
             tenant.id,
         );
 
@@ -115,7 +119,7 @@ impl TenantRepository for PgTenantRepository {
         let query = sqlx::query_as!(
             Tenant,
             r#"
-            SELECT id, name, description, slug, plan, is_active, created_at, updated_at
+            SELECT id, name, description, slug, theme, plan, is_active, created_at, updated_at
             FROM tenants
             WHERE id = $1
             "#,
@@ -138,7 +142,7 @@ impl TenantRepository for PgTenantRepository {
         let query = sqlx::query_as!(
             Tenant,
             r#"
-            SELECT id, name, description, slug, plan, is_active, created_at, updated_at
+            SELECT id, name, description, slug, theme, plan, is_active, created_at, updated_at
             FROM tenants
             WHERE slug = $1
             "#,

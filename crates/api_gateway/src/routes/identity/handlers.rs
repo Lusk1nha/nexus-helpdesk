@@ -9,10 +9,11 @@ use validator::Validate;
 
 use super::contracts::{
     AdminResetPasswordPayload, ApiKeyResponse, ChangeUserRolePayload, CheckSlugQuery,
-    CheckSlugResponse, CreateApiKeyPayload, CreateApiKeyResponse, GetMeResponse,
-    InviteUserPayload, InviteUserResponse, LoginPayload, LoginResponse, LogoutPayload,
-    RefreshTokenResponse, RegisterTenantPayload, RegisterTenantResponse, ResetPasswordResponse,
-    TenantMemberResponse, TenantResponse, UpdateUserStatusPayload,
+    CheckSlugResponse, CreateApiKeyPayload, CreateApiKeyResponse, GetMeResponse, InviteUserPayload,
+    InviteUserResponse, LoginPayload, LoginResponse, LogoutPayload, RefreshTokenResponse,
+    RegisterTenantPayload, RegisterTenantResponse, ResetPasswordResponse, TenantBrandingQuery,
+    TenantBrandingResponse, TenantMemberResponse, TenantResponse, UpdateTenantPayload,
+    UpdateUserStatusPayload,
 };
 use crate::{
     app_state::AppState,
@@ -27,12 +28,39 @@ use crate::{
 };
 
 use domain_identity::application::use_cases::{
-    CheckSlugAvailabilityCommand, CreateApiKeyCommand, IssueRefreshTokenCommand,
-    ListApiKeysCommand, LoginCommand, LogoutCommand, RefreshSessionCommand, ResetPasswordCommand,
-    RevokeApiKeyCommand, change_user_role::ChangeUserRoleCommand, get_tenant::GetTenantCommand,
+    CheckSlugAvailabilityCommand, CreateApiKeyCommand, GetTenantBySlugCommand,
+    IssueRefreshTokenCommand, ListApiKeysCommand, LoginCommand, LogoutCommand,
+    RefreshSessionCommand, ResetPasswordCommand, RevokeApiKeyCommand,
+    change_user_role::ChangeUserRoleCommand, get_tenant::GetTenantCommand,
     invite_user::InviteUserCommand, list_users::ListUsersCommand,
-    register_tenant::RegisterTenantCommand, update_user_status::UpdateUserStatusCommand,
+    register_tenant::RegisterTenantCommand, update_tenant::UpdateTenantCommand,
+    update_user_status::UpdateUserStatusCommand,
 };
+
+// ─── Tenant branding (public) ─────────────────────────────────────────────────
+
+#[utoipa::path(
+    get, path = "/api/v1/identity/tenant/branding",
+    tag = "Identity",
+    params(("slug" = String, Query, description = "Tenant slug")),
+    responses(
+        (status = 200, description = "Branding público do tenant", body = TenantBrandingResponse),
+        (status = 404, description = "Tenant não encontrado")
+    )
+)]
+pub async fn get_tenant_branding_handler(
+    State(state): State<AppState>,
+    axum::extract::Query(query): axum::extract::Query<TenantBrandingQuery>,
+) -> Result<(StatusCode, Json<ApiResponse<TenantBrandingResponse>>), ApiError> {
+    let tenant = state
+        .identity
+        .get_tenant_by_slug
+        .execute(GetTenantBySlugCommand { slug: query.slug })
+        .await
+        .map_err(ApiError::from)?;
+
+    Ok((StatusCode::OK, Json(ApiResponse::success(tenant.into()))))
+}
 
 // ─── Me ───────────────────────────────────────────────────────────────────────
 
@@ -216,10 +244,14 @@ pub async fn refresh_token_handler(
             ApiError::Identity(domain_identity::domain::error::DomainError::InvalidCredentials)
         })?;
 
-    let claims = verify_jwt(&presented, &state.config.jwt_secret, &state.config.jwt_issuer)
-        .map_err(|_| {
-            ApiError::Identity(domain_identity::domain::error::DomainError::InvalidCredentials)
-        })?;
+    let claims = verify_jwt(
+        &presented,
+        &state.config.jwt_secret,
+        &state.config.jwt_issuer,
+    )
+    .map_err(|_| {
+        ApiError::Identity(domain_identity::domain::error::DomainError::InvalidCredentials)
+    })?;
 
     let new_refresh = sign_refresh_token(
         claims.sub,
@@ -287,10 +319,14 @@ pub async fn logout_handler(
     // Resolve which session to revoke: the JTI from the current cookie (single-device logout)
     // OR all sessions when `everywhere=true`.
     let refresh_jti = jar.get(REFRESH_COOKIE_NAME).and_then(|c| {
-        verify_jwt(c.value(), &state.config.jwt_secret, &state.config.jwt_issuer)
-            .ok()
-            .filter(|claims_| claims_.sub == claims.sub)
-            .map(|claims_| claims_.jti)
+        verify_jwt(
+            c.value(),
+            &state.config.jwt_secret,
+            &state.config.jwt_issuer,
+        )
+        .ok()
+        .filter(|claims_| claims_.sub == claims.sub)
+        .map(|claims_| claims_.jti)
     });
 
     state
@@ -665,4 +701,39 @@ pub async fn get_tenant_handler(
         .await?;
 
     Ok((StatusCode::OK, Json(ApiResponse::success(tenant.into()))))
+}
+
+#[utoipa::path(
+    patch, path = "/api/v1/identity/tenant",
+    tag = "Identity",
+    request_body = UpdateTenantPayload,
+    responses(
+        (status = 200, description = "Tenant atualizado", body = TenantResponse),
+        (status = 400, description = "Erro de validação"),
+        (status = 401, description = "Não autorizado"),
+        (status = 403, description = "Somente admin"),
+        (status = 404, description = "Tenant não encontrado")
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn update_tenant_handler(
+    State(state): State<AppState>,
+    AdminUser(admin_claims): AdminUser,
+    Json(payload): Json<UpdateTenantPayload>,
+) -> Result<(StatusCode, Json<ApiResponse<TenantResponse>>), ApiError> {
+    payload.validate()?;
+
+    let tenant_updated = state
+        .identity
+        .update_tenant
+        .execute(UpdateTenantCommand {
+            tenant_id: admin_claims.tenant_id,
+            new_name: payload.name,
+            new_description: payload.description,
+            new_theme: payload.theme,
+        })
+        .await?;
+
+    tracing::info!(tenant_id = %tenant_updated.id, "tenant updated via API");
+    Ok((StatusCode::OK, Json(ApiResponse::success(tenant_updated.into()))))
 }

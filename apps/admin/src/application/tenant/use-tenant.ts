@@ -8,6 +8,7 @@ export interface Tenant {
   name: string
   description?: string
   slug: string
+  theme: string
   createdAt: string
 }
 
@@ -20,7 +21,9 @@ export function useTenant() {
 }
 
 export interface UpdateTenantInput {
-  name: string
+  name?: string
+  description?: string
+  theme?: string
 }
 
 export function useUpdateTenant() {
