@@ -13,6 +13,7 @@ pub mod refresh_session;
 pub mod register_tenant;
 pub mod reset_password;
 pub mod revoke_api_key;
+pub mod update_tenant;
 pub mod update_user_status;
 
 pub use authenticate_api_key::{AuthenticateApiKeyCommand, AuthenticateApiKeyUseCase};

@@ -115,7 +115,7 @@ impl TenantRepository for PgTenantRepository {
         let query = sqlx::query_as!(
             Tenant,
             r#"
-            SELECT id, name, slug, plan, is_active, created_at, updated_at
+            SELECT id, name, description, slug, plan, is_active, created_at, updated_at
             FROM tenants
             WHERE id = $1
             "#,
@@ -138,7 +138,7 @@ impl TenantRepository for PgTenantRepository {
         let query = sqlx::query_as!(
             Tenant,
             r#"
-            SELECT id, name, slug, plan, is_active, created_at, updated_at
+            SELECT id, name, description, slug, plan, is_active, created_at, updated_at
             FROM tenants
             WHERE slug = $1
             "#,

@@ -23,16 +23,64 @@ importers:
 
   apps/admin:
     dependencies:
+      '@fontsource-variable/jetbrains-mono':
+        specifier: ^5.2.8
+        version: 5.2.8
+      '@hookform/resolvers':
+        specifier: ^5.4.0
+        version: 5.4.0(react-hook-form@7.76.0(react@19.2.6))
+      '@nexus/api':
+        specifier: workspace:*
+        version: link:../../packages/api
+      '@nexus/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
+      '@nexus/query':
+        specifier: workspace:*
+        version: link:../../packages/query
+      '@nexus/theme':
+        specifier: workspace:*
+        version: link:../../packages/theme
+      '@nexus/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      '@nexus/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.10
+        version: 2.1.10(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@tanstack/react-query':
+        specifier: ^5.100.13
+        version: 5.100.13(react@19.2.6)
+      motion:
+        specifier: ^12.40.0
+        version: 12.40.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
         specifier: ^19.2.6
         version: 19.2.6
       react-dom:
         specifier: ^19.2.6
         version: 19.2.6(react@19.2.6)
+      react-hook-form:
+        specifier: ^7.76.0
+        version: 7.76.0(react@19.2.6)
+      react-router:
+        specifier: ^7.15.1
+        version: 7.15.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.4.0(jiti@2.7.0))
+      '@nexus/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      '@tailwindcss/vite':
+        specifier: ^4.3.0
+        version: 4.3.0(vite@8.0.14(@types/node@24.12.4)(jiti@2.7.0))
       '@types/node':
         specifier: ^24.12.3
         version: 24.12.4
@@ -57,6 +105,9 @@ importers:
       globals:
         specifier: ^17.6.0
         version: 17.6.0
+      tailwindcss:
+        specifier: ^4.3.0
+        version: 4.3.0
       typescript:
         specifier: ~6.0.2
         version: 6.0.3
@@ -66,6 +117,9 @@ importers:
       vite:
         specifier: ^8.0.12
         version: 8.0.14(@types/node@24.12.4)(jiti@2.7.0)
+      vite-tsconfig-paths:
+        specifier: ^6.1.1
+        version: 6.1.1(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(jiti@2.7.0))
 
   apps/onboarding:
     dependencies:

@@ -61,6 +61,7 @@ pub fn validate_slug(slug: &str) -> Result<(), DomainError> {
 pub struct Tenant {
     pub id: Uuid,
     pub name: String,
+    pub description: Option<String>,
     pub slug: String,
     pub plan: String,
     pub is_active: bool,
@@ -74,6 +75,7 @@ impl Tenant {
         Self {
             id: Uuid::new_v4(),
             name,
+            description: None,
             slug,
             plan: "free".to_string(),
             is_active: true,
@@ -82,8 +84,23 @@ impl Tenant {
         }
     }
 
+    pub fn update_name(&mut self, new_name: String) {
+        self.name = new_name;
+        self.updated_at = OffsetDateTime::now_utc();
+    }
+
+    pub fn update_description(&mut self, new_description: Option<String>) {
+        self.description = new_description;
+        self.updated_at = OffsetDateTime::now_utc();
+    }
+
     pub fn deactivate(&mut self) {
         self.is_active = false;
+        self.updated_at = OffsetDateTime::now_utc();
+    }
+
+    pub fn reactivate(&mut self) {
+        self.is_active = true;
         self.updated_at = OffsetDateTime::now_utc();
     }
 }

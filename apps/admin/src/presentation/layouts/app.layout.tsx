@@ -1,10 +1,8 @@
 import {
+  BookOpenIcon,
+  BuildingsIcon,
   LayoutIcon,
   SignOutIcon,
-  ChatTextIcon,
-  GearIcon,
-  ShieldIcon,
-  BookOpenIcon,
 } from "@phosphor-icons/react"
 import { NavLink, Navigate, Outlet, useNavigate } from "react-router"
 
@@ -16,26 +14,29 @@ import {
   useLogout,
   useSession,
 } from "@/application/auth/use-session"
-import { useTenantSlug } from "@/application/tenant/use-tenant-slug"
-import { NoTenantPage } from "@/presentation/pages/no-tenant/no-tenant.page"
 import { paths } from "@/presentation/router/paths"
 
-/**
- * Authenticated application shell with sidebar navigation.
- * Redirects to /login if the user is not authenticated.
- * Shows NoTenantPage if accessed without a tenant subdomain.
- */
 export function AppLayout() {
-  const slug = useTenantSlug()
   const isAuthenticated = useIsAuthenticated()
   const user = useSession()
   const logout = useLogout()
   const navigate = useNavigate()
 
-  if (!slug) return <NoTenantPage />
-
   if (!isAuthenticated) {
     return <Navigate to={paths.login} replace />
+  }
+
+  if (user?.role !== "admin") {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-(--bg)">
+        <div className="text-center font-mono">
+          <p className="text-sm text-(--destructive)">access denied</p>
+          <p className="mt-1 text-xs text-(--muted)">
+            admin role required
+          </p>
+        </div>
+      </div>
+    )
   }
 
   const handleLogout = () => {
@@ -44,30 +45,23 @@ export function AppLayout() {
   }
 
   const navItems = [
-    { to: paths.app.tickets, icon: ChatTextIcon, label: "tickets" },
-
-    ...(user?.role !== "customer"
-      ? [{ to: paths.app.knowledge, icon: BookOpenIcon, label: "knowledge" }]
-      : []),
-
-    ...(user?.role === "admin"
-      ? [{ to: paths.app.admin, icon: ShieldIcon, label: "admin" }]
-      : []),
+    { to: paths.app.tenant, icon: BuildingsIcon, label: "tenant" },
+    { to: paths.app.knowledge, icon: BookOpenIcon, label: "knowledge" },
   ]
 
   return (
     <div className="flex min-h-dvh bg-(--bg)">
-      {/* Sidebar */}
       <aside className="flex w-56 shrink-0 flex-col border-r border-(--border) bg-(--surface)">
-        {/* Brand */}
         <div className="flex items-center gap-2 border-b border-(--border) px-4 py-4">
           <span className="text-sm font-semibold text-(--accent)">◈</span>
           <span className="font-mono text-sm font-medium text-(--fg)">
             nexus
           </span>
+          <span className="ml-auto rounded-sm bg-(--accent)/10 px-1.5 py-0.5 font-mono text-[10px] text-(--accent)">
+            admin
+          </span>
         </div>
 
-        {/* Nav */}
         <nav className="flex-1 space-y-0.5 px-2 py-3">
           {navItems.map(({ to, icon: Icon, label }) => (
             <NavLink
@@ -89,11 +83,13 @@ export function AppLayout() {
           ))}
         </nav>
 
-        {/* User + logout */}
         <div className="space-y-2 border-t border-(--border) p-3">
           <div className="px-2 py-1">
             <p className="truncate font-mono text-xs text-(--muted)">
               {user?.role}
+            </p>
+            <p className="truncate font-mono text-[10px] text-(--border)">
+              {user?.tenantId}
             </p>
           </div>
           <button
@@ -110,23 +106,15 @@ export function AppLayout() {
         </div>
       </aside>
 
-      {/* Main area */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Top bar */}
         <header className="flex items-center justify-between border-b border-(--border) bg-(--surface) px-6 py-3">
           <div className="flex items-center gap-1 font-mono text-xs text-(--muted)">
             <LayoutIcon className="h-3.5 w-3.5" />
-            <span className="ml-1">dashboard</span>
+            <span className="ml-1">admin panel</span>
           </div>
-          <div className="flex items-center gap-3">
-            <ThemeSwitcher />
-            <button className="text-(--muted) transition-colors hover:text-(--fg)">
-              <GearIcon className="h-4 w-4" />
-            </button>
-          </div>
+          <ThemeSwitcher />
         </header>
 
-        {/* Page content */}
         <main className="flex-1 overflow-auto p-6">
           <Outlet />
         </main>

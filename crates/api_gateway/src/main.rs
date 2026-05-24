@@ -3,7 +3,10 @@ use axum::http::{HeaderName, HeaderValue, Method, header};
 use sqlx::{PgPool, postgres::PgPoolOptions};
 use std::net::SocketAddr;
 use std::sync::Arc;
-use tower_http::{cors::CorsLayer, trace::TraceLayer};
+use tower_http::{
+    cors::{AllowOrigin, CorsLayer},
+    trace::TraceLayer,
+};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use domain_ticketing::application::workers::ai_worker::{AiTask, AiWorker};
@@ -103,22 +106,46 @@ async fn setup_database(database_url: &str) -> Result<PgPool, sqlx::Error> {
 }
 
 fn setup_cors(frontend_url: &str) -> CorsLayer {
-    // Accept a comma-separated list so multiple subdomains (web, onboarding,
-    // admin) can share the same backend with credentials.
-    let origins: Vec<HeaderValue> = frontend_url
+    // Transforma a string em um array de origens válidas.
+    // Agora aceitaremos sufixos curingas começando com ".", por exemplo: ".nexus.test:5173"
+    let allowed_origins: Vec<String> = frontend_url
         .split(',')
-        .map(|s| s.trim())
+        .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
-        .map(|o| {
-            o.parse::<HeaderValue>()
-                .unwrap_or_else(|_| panic!("FRONTEND_URL inválida: {o}"))
-        })
         .collect();
 
-    // When allow_credentials is true, allow_headers/allow_origin cannot be Any —
-    // they must be explicit. The browser refuses the response otherwise.
+    // O predicate avalia a origin de CADA requisição que chega
+    let allow_origin = AllowOrigin::predicate(move |origin: &HeaderValue, _request_parts| {
+        let Ok(origin_str) = origin.to_str() else {
+            return false;
+        };
+
+        allowed_origins.iter().any(|allowed| {
+            // Exact match: "http://localhost:5173"
+            if origin_str == allowed {
+                return true;
+            }
+
+            // Wildcard subdomain: allowed = ".nexus.localhost"
+            // Splits scheme from host so "http://evil" can't spoof ".localhost".
+            // Accepts "http://acme.nexus.localhost" and "http://acme.nexus.localhost:5173".
+            if allowed.starts_with('.') {
+                // Extract just the host[:port] from origin (drop scheme "http(s)://")
+                let host_part = origin_str
+                    .trim_start_matches("https://")
+                    .trim_start_matches("http://");
+                // Strip optional port before suffix check so ".nexus.localhost"
+                // matches "acme.nexus.localhost:5173" correctly.
+                let host_no_port = host_part.split(':').next().unwrap_or(host_part);
+                return host_no_port.ends_with(allowed);
+            }
+
+            false
+        })
+    });
+
     CorsLayer::new()
-        .allow_origin(origins)
+        .allow_origin(allow_origin) // Passa o predicate aqui!
         .allow_credentials(true)
         .allow_methods([
             Method::GET,

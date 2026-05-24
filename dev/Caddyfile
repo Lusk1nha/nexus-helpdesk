@@ -1,0 +1,38 @@
+# Nexus Helpdesk — Local dev reverse proxy
+#
+# Setup:
+#   1. Install Caddy: https://caddyserver.com/docs/install
+#   2. Add the /etc/hosts entries below (one-time, per machine)
+#   3. Start all Vite dev servers (pnpm dev in each app)
+#   4. Run: caddy run --config dev/Caddyfile  (from workspace root)
+#
+# /etc/hosts entries needed (add once):
+#   127.0.0.1  nexus.localhost
+#   127.0.0.1  onboarding.nexus.localhost
+#   127.0.0.1  admin.nexus.localhost
+#   127.0.0.1  acme.nexus.localhost        # add one per tenant slug you test with
+#   127.0.0.1  demo.nexus.localhost
+#
+# Backend .env changes:
+#   FRONTEND_URL=.nexus.localhost
+#   COOKIE_DOMAIN=.nexus.localhost
+#   COOKIE_SECURE=false
+
+# ── Onboarding ────────────────────────────────────────────────────────────────
+# Static URL — no tenant slug needed.
+onboarding.nexus.localhost {
+    reverse_proxy localhost:5174
+}
+
+# ── Web app (per-tenant) ───────────────────────────────────────────────────────
+# Each subdomain routes to the same Vite dev server.
+# The app can read window.location.hostname to extract the slug if needed.
+*.nexus.localhost {
+    reverse_proxy localhost:5173
+}
+
+# ── Admin panel ───────────────────────────────────────────────────────────────
+# Single URL — tenant is determined by the JWT, not the hostname.
+admin.nexus.localhost {
+    reverse_proxy localhost:5175
+}
