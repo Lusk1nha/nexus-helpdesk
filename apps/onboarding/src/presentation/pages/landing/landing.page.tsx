@@ -11,7 +11,7 @@ import {
 import { buttonVariants } from "@nexus/ui"
 import { cn } from "@nexus/utils"
 
-import { TitleTypingAnimation } from "../components/title-typing"
+import { TitleTypingAnimation } from "@/presentation/components/title-typing"
 
 export function LandingPage() {
   const container: Variants = {

@@ -6,13 +6,19 @@ import { EyeIcon, EyeClosedIcon, GlobeIcon } from "@phosphor-icons/react"
 
 import { registerSchema, type RegisterInput } from "@nexus/auth"
 import { Button, FormError, FormField, Input } from "@nexus/ui"
-
-import { useRegister } from "@/application/auth/use-register"
 import { generateSlug } from "@nexus/utils"
+
+import { useCheckSlugAvailability } from "@/application/auth/use-check-slug"
+import { useRegister } from "@/application/auth/use-register"
+import { workspaceUrl } from "@/env"
+
+import { SlugStatusIcon } from "./slug-status-icon"
+import { SuccessSplash } from "./success-splash"
 
 export function RegisterPage() {
   const registerTenant = useRegister()
   const [showPassword, setShowPassword] = useState(false)
+  const [provisionedSlug, setProvisionedSlug] = useState<string | null>(null)
 
   const {
     register,
@@ -22,40 +28,53 @@ export function RegisterPage() {
     formState: { errors, isSubmitting, dirtyFields },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
-    defaultValues: {
-      tenantName: "",
-      tenantSlug: "",
-    },
+    defaultValues: { tenantName: "", tenantSlug: "" },
+    mode: "onChange",
   })
 
   const currentSlug = watch("tenantSlug")
   const tenantName = watch("tenantName")
 
+  // Auto-suggest a slug from the company name until the user manually edits it.
   useEffect(() => {
     if (!dirtyFields.tenantSlug) {
-      const suggestedSlug = generateSlug(tenantName || "")
-
-      setValue("tenantSlug", suggestedSlug, {
+      setValue("tenantSlug", generateSlug(tenantName || ""), {
         shouldValidate: false,
         shouldDirty: false,
       })
     }
   }, [tenantName, dirtyFields.tenantSlug, setValue])
 
+  // Real-time availability check against the backend.
+  const slugCheck = useCheckSlugAvailability(currentSlug)
+
+  const slugLocallyInvalid = Boolean(errors.tenantSlug)
+  const slugAvailable = slugCheck.data?.available
+  const slugReason = slugCheck.data?.reason
+
+  // Register hook with `setValueAs` so the value reaching Zod is always
+  // normalized — protects against paste from address bar, browser autofill, etc.
+  const slugRegister = register("tenantSlug", {
+    setValueAs: (v: unknown) =>
+      String(v ?? "")
+        .toLowerCase()
+        .trim(),
+  })
+
   const onSubmit = async (data: RegisterInput) => {
     try {
-      // 1. Chama a API em Rust via TanStack Query
       const { tenantSlug } = await registerTenant.mutateAsync(data)
-
-      // 2. Redirecionamento Mágico para o Workspace criado
-      const protocol = window.location.protocol
-
-      // Monta a URL: http://[slug].localhost:5173/login (ou .nexus.com em prod)
-      window.location.href = `${protocol}//${tenantSlug}.localhost:5173/login?registered=true`
+      // Hand off to <SuccessSplash />, which handles the actual redirect.
+      setProvisionedSlug(tenantSlug)
     } catch (error) {
-      // O React Query já vai setar registerTenant.isError como true
+      // React Query already exposes the error via registerTenant.isError /
+      // registerTenant.error — the surface is handled by <FormError /> below.
       console.error("Falha ao provisionar o Tenant:", error)
     }
+  }
+
+  if (provisionedSlug) {
+    return <SuccessSplash tenantSlug={provisionedSlug} />
   }
 
   return (
@@ -66,7 +85,6 @@ export function RegisterPage() {
       className="w-full max-w-xl"
     >
       <div className="overflow-hidden rounded-sm border border-(--border) bg-(--surface)">
-        {/* Header imitando terminal */}
         <div className="border-b border-(--border) bg-(--surface-2) px-6 pt-6 pb-4">
           <div className="mb-4 flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-(--destructive) opacity-70" />
@@ -85,14 +103,13 @@ export function RegisterPage() {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="p-6">
-          {/* Tratativa visual de erro da API */}
           <FormError
             error={registerTenant.error}
             fallbackMessage="It was not possible to proceed with this request!"
           />
 
           <div className="space-y-8">
-            {/* Secão 1: Organização */}
+            {/* Section 1: Organization */}
             <section className="space-y-4">
               <h2 className="font-mono text-xs font-semibold tracking-wider text-(--muted) uppercase">
                 1. Organization Details
@@ -116,35 +133,58 @@ export function RegisterPage() {
                 <FormField
                   label="Workspace URL"
                   htmlFor="tenantSlug"
-                  error={errors.tenantSlug?.message}
+                  error={
+                    errors.tenantSlug?.message ??
+                    (slugAvailable === false
+                      ? (slugReason ?? undefined)
+                      : undefined)
+                  }
                   required
                 >
                   <div className="relative">
-                    <GlobeIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-(--muted)" />
+                    <GlobeIcon className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-(--muted)" />
                     <Input
                       id="tenantSlug"
                       placeholder="acme"
-                      className="pl-9 font-mono text-sm"
-                      error={!!errors.tenantSlug}
-                      {...register("tenantSlug")}
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      className="pr-9 pl-9 font-mono text-sm lowercase"
+                      error={!!errors.tenantSlug || slugAvailable === false}
+                      {...slugRegister}
+                      onChange={(e) => {
+                        // Strip invalid chars + force lowercase as the user types
+                        // so what they see is what gets validated/submitted.
+                        const cleaned = e.target.value
+                          .toLowerCase()
+                          .replace(/[^a-z0-9-]/g, "")
+                        e.target.value = cleaned
+                        slugRegister.onChange(e)
+                      }}
                     />
+                    <div className="absolute top-1/2 right-3 -translate-y-1/2">
+                      <SlugStatusIcon
+                        loading={slugCheck.isFetching}
+                        available={slugAvailable}
+                        invalid={slugLocallyInvalid}
+                      />
+                    </div>
                   </div>
                 </FormField>
               </div>
 
-              {/* Preview da URL */}
               <div className="rounded border border-(--border)/50 bg-(--bg) p-3 font-mono text-xs text-(--muted)">
                 Your workspace will be accessible at:{" "}
                 <span className="text-(--accent)">
-                  {currentSlug ? currentSlug.toLowerCase() : "<slug>"}
+                  {currentSlug ? currentSlug : "<slug>"}
                 </span>
-                .nexus.localhost
+                .nexus.com
               </div>
             </section>
 
             <hr className="border-(--border)/50" />
 
-            {/* Secão 2: Admin */}
+            {/* Section 2: Admin */}
             <section className="space-y-4">
               <h2 className="font-mono text-xs font-semibold tracking-wider text-(--muted) uppercase">
                 2. Administrator Account
@@ -201,6 +241,9 @@ export function RegisterPage() {
                       onClick={() => setShowPassword((v) => !v)}
                       className="absolute top-1/2 right-2.5 -translate-y-1/2 text-(--muted) hover:text-(--fg)"
                       tabIndex={-1}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                     >
                       {showPassword ? (
                         <EyeClosedIcon className="h-3.5 w-3.5" />
@@ -233,11 +276,28 @@ export function RegisterPage() {
               type="submit"
               className="w-full cursor-pointer"
               loading={isSubmitting || registerTenant.isPending}
+              disabled={slugAvailable === false}
             >
               {isSubmitting || registerTenant.isPending
                 ? "Provisioning Workspace..."
                 : "Initialize Workspace →"}
             </Button>
+
+            <p className="mt-4 text-center font-mono text-xs text-(--muted)">
+              Already have a workspace?{" "}
+              {currentSlug ? (
+                <a
+                  href={workspaceUrl(currentSlug, "/login")}
+                  className="text-(--accent) underline-offset-2 hover:underline"
+                >
+                  Sign in at {currentSlug}.nexus.com →
+                </a>
+              ) : (
+                <span className="text-(--muted)/70">
+                  enter your slug above to sign in
+                </span>
+              )}
+            </p>
           </div>
         </form>
       </div>
