@@ -13,15 +13,52 @@ import { cn } from "@nexus/utils"
 
 import { TitleTypingAnimation } from "@/presentation/components/title-typing"
 
+const STATS = [
+  { value: "100%", label: "Private" },
+  { value: "Rust", label: "Backend" },
+  { value: "Local", label: "LLMs" },
+  { value: "RAG", label: "AI Engine" },
+]
+
+const TERMINAL_LINES = [
+  { prompt: true,  text: "nexus status --workspace acme" },
+  { prompt: false, col1: "tenant",    col2: "acme.nexus.com",   col3: "online" },
+  { prompt: false, col1: "model",     col2: "llama3.2-3b",      col3: "loaded" },
+  { prompt: false, col1: "latency",   col2: "84ms",             col3: "p99" },
+  { prompt: false, col1: "tickets",   col2: "3 open · 1 pending", col3: "ai-draft" },
+  { prompt: false, col1: "knowledge", col2: "42 articles",      col3: "indexed" },
+  { prompt: true,  text: "" },
+]
+
+const FEATURES = [
+  {
+    icon: CpuIcon,
+    title: "Agentic RAG",
+    color: "accent",
+    description:
+      "Automated context retrieval with Qdrant and Ollama. Draft responses generated locally — sensitive data never leaves your infra.",
+  },
+  {
+    icon: ShieldCheckIcon,
+    title: "Strict Multi-Tenancy",
+    color: "success",
+    description:
+      "Enterprise-grade isolation. Data separated at database level with shared Unit of Work abstractions in Rust.",
+  },
+  {
+    icon: LightningIcon,
+    title: "Event-Driven",
+    color: "warning",
+    description:
+      "Built on Axum + Tokio. Async processing via mpsc queues means the interface never blocks while AI generates answers.",
+  },
+]
+
 export function LandingPage() {
   const container: Variants = {
     hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.15 },
-    },
+    show: { opacity: 1, transition: { staggerChildren: 0.12 } },
   }
-
   const item: Variants = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
@@ -34,31 +71,29 @@ export function LandingPage() {
       animate="show"
       className="relative flex w-full max-w-5xl flex-col items-center text-center"
     >
-      {/* 
-        Hero Glow 
-        Usa o --accent do tema atual. O blur e a opacidade baixa garantem 
-        que fique bom tanto em temas claros (Dawn) quanto escuros (OLED/Cyberpunk).
-      */}
-      <div className="pointer-events-none absolute top-1/4 left-1/2 -z-10 h-64 w-full max-w-2xl -translate-x-1/2 rounded-full bg-(--accent)/15 blur-[100px]" />
+      {/* Hero glow */}
+      <div className="pointer-events-none absolute top-0 left-1/2 -z-10 h-72 w-full max-w-3xl -translate-x-1/2 rounded-full bg-(--accent)/12 blur-[120px]" />
 
-      {/* Etiqueta / Status */}
+      {/* Status badge */}
       <motion.div
         variants={item}
-        className="mb-8 flex items-center gap-2 rounded-full border border-(--accent)/30 bg-(--accent)/10 px-4 py-1.5 font-mono text-xs font-medium text-(--accent) backdrop-blur-md"
+        className="mb-6 flex items-center gap-2 rounded-full border border-(--accent)/30 bg-(--accent)/8 px-3 py-1.5 font-mono text-[10px] font-medium text-(--accent) backdrop-blur-sm sm:px-4 sm:text-xs"
       >
-        <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-(--accent) opacity-75"></span>
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-(--accent)"></span>
+        <span className="relative flex h-2 w-2 shrink-0">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-(--accent) opacity-75" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-(--accent)" />
         </span>
-        nexus_engine v1.0 online
+        <span className="hidden sm:inline">nexus_engine v1.0 · all systems operational</span>
+        <span className="sm:hidden">nexus_engine v1.0 · online</span>
       </motion.div>
 
-      {/* Hero Section */}
+      {/* Headline */}
       <motion.h1
         variants={item}
-        className="mb-6 max-w-4xl font-mono text-4xl font-bold tracking-tight text-(--fg) sm:text-5xl"
+        className="mb-5 max-w-4xl font-mono text-3xl font-bold tracking-tight text-(--fg) sm:text-4xl lg:text-5xl"
       >
-        Support at the speed of <br className="hidden sm:block" />
+        Support at the speed of{" "}
+        <br className="hidden sm:block" />
         <span className="relative inline-flex flex-col text-(--accent) sm:flex-row">
           <TitleTypingAnimation
             delay={500}
@@ -69,50 +104,53 @@ export function LandingPage() {
               "Rust Performance.",
             ]}
           />
-          {/* Sublinhado Decorativo 
-        A largura dele agora acompanha o texto sendo digitado! 
-    */}
-          <span className="absolute -bottom-2 left-0 h-1.5 w-full rounded-full bg-(--accent)/30 transition-all duration-100" />
+          <span className="absolute -bottom-2 left-0 h-1 w-full rounded-full bg-(--accent)/25" />
         </span>
       </motion.h1>
 
       <motion.p
         variants={item}
-        className="mb-8 max-w-2xl text-lg leading-relaxed text-(--muted) sm:text-xl"
+        className="mb-6 max-w-2xl text-base leading-relaxed text-(--muted) sm:text-lg"
       >
-        The multi-tenant helpdesk built for privacy and performance. Powered by
-        a blazingly fast{" "}
+        The multi-tenant helpdesk built for privacy and performance. Powered by a
+        blazingly fast{" "}
         <strong className="font-semibold text-(--fg)">Rust</strong> backend and
         zero-cost{" "}
         <strong className="font-semibold text-(--fg)">local LLMs</strong>.
       </motion.p>
 
-      {/* Tech Stack Badges (Usando --surface e --surface-2 para profundidade) */}
+      {/* Stats strip — 2×2 on mobile, single row on sm+ */}
       <motion.div
         variants={item}
-        className="mb-10 flex flex-wrap justify-center gap-3"
+        className="mb-8 w-full max-w-xs overflow-hidden rounded-sm border border-(--border) bg-(--surface) sm:max-w-none sm:w-auto"
       >
-        {["Rust (Axum)", "React 19", "Ollama", "Qdrant Vector DB"].map(
-          (tech) => (
-            <span
-              key={tech}
-              className="rounded-md border border-(--border) bg-(--surface) px-3 py-1.5 font-mono text-xs tracking-wider text-(--muted) uppercase shadow-sm transition-colors hover:border-(--accent)/50 hover:text-(--fg)"
+        <div className="grid grid-cols-2 sm:flex">
+          {STATS.map((s, i) => (
+            <div
+              key={s.label}
+              className={cn(
+                "flex flex-col items-center px-5 py-3 font-mono sm:px-6",
+                i % 2 !== 0 && "border-l border-(--border)",
+                i >= 2 && "border-t border-(--border) sm:border-t-0",
+                i !== 0 && "sm:border-l sm:border-(--border)"
+              )}
             >
-              {tech}
-            </span>
-          )
-        )}
+              <span className="text-sm font-semibold text-(--accent) sm:text-base">{s.value}</span>
+              <span className="text-[10px] text-(--muted) mt-0.5 sm:text-[11px]">{s.label}</span>
+            </div>
+          ))}
+        </div>
       </motion.div>
 
-      {/* CTA Buttons */}
+      {/* CTA */}
       <motion.div
         variants={item}
-        className="mb-24 flex w-full flex-col items-center justify-center gap-4 sm:w-auto sm:flex-row"
+        className="mb-12 flex w-full flex-col items-center justify-center gap-3 sm:w-auto sm:flex-row"
       >
         <Link
           className={cn(
             buttonVariants({ size: "lg" }),
-            "h-12 w-full px-8 font-mono text-base shadow-sm sm:w-auto"
+            "h-11 w-full px-8 font-mono text-sm sm:w-auto"
           )}
           to="/register"
         >
@@ -121,73 +159,98 @@ export function LandingPage() {
         <Link
           className={cn(
             buttonVariants({ variant: "outline", size: "lg" }),
-            "h-12 w-full bg-(--surface) px-8 font-mono text-base transition-colors hover:bg-(--surface-2) sm:w-auto"
+            "h-11 w-full bg-(--surface) px-8 font-mono text-sm hover:bg-(--surface-2) sm:w-auto"
           )}
           to="/about"
         >
-          <TerminalWindowIcon className="mr-2 h-5 w-5" /> Explore Architecture
+          <TerminalWindowIcon className="mr-2 h-4 w-4" /> Explore Architecture
         </Link>
       </motion.div>
 
-      {/* Features Grid */}
-      <motion.div
-        variants={item}
-        className="grid w-full gap-6 text-left md:grid-cols-3"
-      >
-        {/* Feature 1 */}
-        <motion.div
-          whileHover={{ y: -5 }}
-          transition={{ duration: 0.2 }}
-          className="group flex flex-col rounded-xl border border-(--border) bg-(--surface) p-6 transition-colors hover:border-(--accent)/60 hover:bg-(--surface-2)"
-        >
-          <div className="mb-5 inline-flex self-start rounded-lg bg-(--accent)/10 p-3 transition-colors group-hover:bg-(--accent)/20">
-            <CpuIcon className="h-6 w-6 text-(--accent)" />
+      {/* Terminal demo — overflow-x-auto to prevent page-level scroll */}
+      <motion.div variants={item} className="mb-12 w-full max-w-2xl">
+        <div className="overflow-hidden rounded-sm border border-(--border) bg-(--surface) text-left shadow-xl shadow-black/10">
+          {/* Window chrome */}
+          <div className="flex items-center gap-2 border-b border-(--border) bg-(--surface-2) px-3 py-2.5 sm:px-4 sm:py-3">
+            <span className="h-2.5 w-2.5 rounded-full bg-(--destructive) opacity-60" />
+            <span className="h-2.5 w-2.5 rounded-full bg-(--warning) opacity-60" />
+            <span className="h-2.5 w-2.5 rounded-full bg-(--success) opacity-60" />
+            <span className="ml-3 font-mono text-[11px] text-(--muted)">
+              nexus — terminal
+            </span>
           </div>
-          <h3 className="mb-3 font-mono text-lg font-semibold text-(--fg)">
-            Agentic RAG
-          </h3>
-          <p className="text-sm leading-relaxed text-(--muted) transition-colors group-hover:text-(--fg)/90">
-            Automated context retrieval using Qdrant and Ollama. Draft responses
-            are generated locally, ensuring sensitive data never leaves your
-            infrastructure.
-          </p>
-        </motion.div>
+          {/* Scrollable content area */}
+          <div className="overflow-x-auto">
+            <div className="min-w-[360px] px-3 py-4 font-mono text-xs space-y-1.5 sm:px-4">
+              {TERMINAL_LINES.map((line, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.8 + i * 0.12, duration: 0.2 }}
+                >
+                  {line.prompt ? (
+                    <p className="text-(--muted)">
+                      <span className="text-(--accent) mr-2">$</span>
+                      <span className="text-(--fg)">{line.text}</span>
+                      {i === TERMINAL_LINES.length - 1 && (
+                        <motion.span
+                          animate={{ opacity: [1, 0, 1] }}
+                          transition={{ duration: 0.9, repeat: Infinity }}
+                          className="inline-block ml-0.5 h-3 w-1.5 bg-(--accent) align-middle"
+                        />
+                      )}
+                    </p>
+                  ) : (
+                    <div className="flex gap-3 text-(--fg)">
+                      <span className="w-20 shrink-0 text-(--muted)">{line.col1}</span>
+                      <span className="flex-1 truncate">{line.col2}</span>
+                      <span className="shrink-0 text-(--success)">{line.col3}</span>
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </motion.div>
 
-        {/* Feature 2 */}
-        <motion.div
-          whileHover={{ y: -5 }}
-          transition={{ duration: 0.2 }}
-          className="group flex flex-col rounded-xl border border-(--border) bg-(--surface) p-6 transition-colors hover:border-(--success)/60 hover:bg-(--surface-2)"
-        >
-          <div className="mb-5 inline-flex self-start rounded-lg bg-(--success)/10 p-3 transition-colors group-hover:bg-(--success)/20">
-            <ShieldCheckIcon className="h-6 w-6 text-(--success)" />
-          </div>
-          <h3 className="mb-3 font-mono text-lg font-semibold text-(--fg)">
-            Strict Multi-Tenancy
-          </h3>
-          <p className="text-sm leading-relaxed text-(--muted) transition-colors group-hover:text-(--fg)/90">
-            Enterprise-grade isolation. Data is logically separated at the
-            database level with shared Unit of Work abstractions in Rust.
-          </p>
-        </motion.div>
-
-        {/* Feature 3 */}
-        <motion.div
-          whileHover={{ y: -5 }}
-          transition={{ duration: 0.2 }}
-          className="group flex flex-col rounded-xl border border-(--border) bg-(--surface) p-6 transition-colors hover:border-(--warning)/60 hover:bg-(--surface-2)"
-        >
-          <div className="mb-5 inline-flex self-start rounded-lg bg-(--warning)/10 p-3 transition-colors group-hover:bg-(--warning)/20">
-            <LightningIcon className="h-6 w-6 text-(--warning)" />
-          </div>
-          <h3 className="mb-3 font-mono text-lg font-semibold text-(--fg)">
-            Event-Driven
-          </h3>
-          <p className="text-sm leading-relaxed text-(--muted) transition-colors group-hover:text-(--fg)/90">
-            Built on Axum and Tokio. Asynchronous processing via `mpsc` queues
-            means the interface never blocks while the AI generates answers.
-          </p>
-        </motion.div>
+      {/* Features grid */}
+      <motion.div variants={item} className="grid w-full gap-4 text-left sm:gap-5 md:grid-cols-3">
+        {FEATURES.map(({ icon: Icon, title, color, description }) => (
+          <motion.div
+            key={title}
+            whileHover={{ y: -4 }}
+            transition={{ duration: 0.18 }}
+            className={cn(
+              "group flex flex-col rounded-sm border border-(--border) bg-(--surface) p-5 sm:p-6",
+              "transition-colors hover:bg-(--surface-2)",
+              color === "accent" && "hover:border-(--accent)/50",
+              color === "success" && "hover:border-(--success)/50",
+              color === "warning" && "hover:border-(--warning)/50"
+            )}
+          >
+            <div
+              className={cn(
+                "mb-4 inline-flex self-start rounded-sm p-2.5 transition-colors",
+                color === "accent" && "bg-(--accent)/10 group-hover:bg-(--accent)/20",
+                color === "success" && "bg-(--success)/10 group-hover:bg-(--success)/20",
+                color === "warning" && "bg-(--warning)/10 group-hover:bg-(--warning)/20"
+              )}
+            >
+              <Icon
+                className={cn(
+                  "h-5 w-5",
+                  color === "accent" && "text-(--accent)",
+                  color === "success" && "text-(--success)",
+                  color === "warning" && "text-(--warning)"
+                )}
+              />
+            </div>
+            <h3 className="mb-2 font-mono text-sm font-semibold text-(--fg)">{title}</h3>
+            <p className="text-sm leading-relaxed text-(--muted)">{description}</p>
+          </motion.div>
+        ))}
       </motion.div>
     </motion.div>
   )

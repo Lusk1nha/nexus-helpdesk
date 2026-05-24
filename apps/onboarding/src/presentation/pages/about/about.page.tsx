@@ -7,10 +7,7 @@ import { AboutArchitect } from "@/presentation/components/about/about-architect"
 export function AboutPage() {
   const container: Variants = {
     hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 },
-    },
+    show: { opacity: 1, transition: { staggerChildren: 0.1 } },
   }
 
   const item: Variants = {
@@ -23,14 +20,16 @@ export function AboutPage() {
       variants={container}
       initial="hidden"
       animate="show"
-      className="w-full max-w-4xl space-y-8"
+      className="w-full max-w-5xl space-y-4 sm:space-y-6"
     >
+      {/* Disclaimer — compact, not dominating */}
       <AboutDisclaimer variants={item} />
 
-      <div className="grid gap-8 md:grid-cols-2">
-        <AboutProject variants={item} />
-        <AboutArchitect variants={item} />
-      </div>
+      {/* Architect hero — full width */}
+      <AboutArchitect variants={item} />
+
+      {/* Project + architecture — below */}
+      <AboutProject variants={item} />
     </motion.div>
   )
 }

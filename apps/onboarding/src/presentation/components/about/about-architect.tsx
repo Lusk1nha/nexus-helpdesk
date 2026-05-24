@@ -3,11 +3,10 @@ import {
   GithubLogoIcon,
   LinkedinLogoIcon,
   EnvelopeSimpleIcon,
-  TerminalIcon,
+  MapPinIcon,
+  ActivityIcon,
   CoffeeIcon,
   GameControllerIcon,
-  ActivityIcon,
-  MapPinIcon,
   HeartIcon,
 } from "@phosphor-icons/react"
 
@@ -19,119 +18,159 @@ interface AboutArchitectProps {
   variants: Variants
 }
 
+const STACK_BADGES = [
+  "React 19",
+  "TypeScript",
+  "Rust",
+  "Axum",
+  "Node.js",
+  "NestJS",
+  "GCP",
+  "Docker",
+  "PostgreSQL",
+  "Ollama",
+]
+
+const INTERESTS = [
+  { icon: ActivityIcon, label: "5k/10k Runner" },
+  { icon: CoffeeIcon, label: "Coffee Enthusiast" },
+  { icon: GameControllerIcon, label: "Indie Gamer" },
+  { icon: HeartIcon, label: "Lover" },
+]
+
+const SOCIAL_LINKS = [
+  {
+    href: "https://github.com/Lusk1nha",
+    icon: GithubLogoIcon,
+    label: "GitHub",
+  },
+  {
+    href: "https://www.linkedin.com/in/olucaspedro/",
+    icon: LinkedinLogoIcon,
+    label: "LinkedIn",
+  },
+  {
+    href: "mailto:lucaspedro517@gmail.com",
+    icon: EnvelopeSimpleIcon,
+    label: "Email",
+  },
+]
+
 export function AboutArchitect({ variants }: AboutArchitectProps) {
   return (
-    <motion.div variants={variants} className="flex flex-col gap-4">
-      <div className="flex items-center gap-2 border-b border-(--border) pb-2">
-        <TerminalIcon className="h-5 w-5 text-(--accent)" />
+    <motion.div
+      variants={variants}
+      className="overflow-hidden rounded-sm border border-(--border) bg-(--surface)"
+    >
+      {/* Top accent strip */}
+      <div className="h-0.5 w-full bg-(--accent)" />
 
-        <h2 className="font-mono text-xl font-semibold text-(--fg)">
-          <TitleTypingAnimation
-            delay={300}
-            typeSpeed={70}
-            texts={[
-              "The Architect_",
-              "Senior Developer_",
-              "sysadmin@nexus_",
-              "root@localhost_",
-              "Lucas Pedro_",
-            ]}
-          />
-        </h2>
-      </div>
+      <div className="p-5 sm:p-6 lg:p-8">
+        <div className="flex flex-col gap-6 sm:gap-8 md:flex-row md:gap-8 lg:gap-12">
 
-      <div>
-        {/* Header do Autor com Avatar */}
-        <div className="mb-4 flex items-center gap-4">
-          <Avatar className="size-16 ring-2 ring-(--border)">
-            <AvatarImage
-              src="https://avatars.githubusercontent.com/u/61957312?v=4"
-              alt="Lucas Pedro da Hora"
-            />
-            <AvatarFallback>LP</AvatarFallback>
-          </Avatar>
+          {/* Left: identity */}
+          <div className="flex flex-col items-start gap-4 md:w-48 md:shrink-0 lg:w-56">
+            <Avatar className="size-20 ring-2 ring-(--border) ring-offset-2 ring-offset-(--bg)">
+              <AvatarImage
+                src="https://avatars.githubusercontent.com/u/61957312?v=4"
+                alt="Lucas Pedro da Hora"
+              />
+              <AvatarFallback className="font-mono text-lg">LP</AvatarFallback>
+            </Avatar>
 
-          <div>
-            <h3 className="font-mono text-lg font-bold text-(--fg)">
-              Lucas Pedro da Hora
-            </h3>
-            <p className="mb-1 font-mono text-xs text-(--accent)">
-              Senior Full Stack Developer
+            <div>
+              <h2 className="font-mono text-lg font-bold text-(--fg) leading-tight">
+                Lucas Pedro da Hora
+              </h2>
+              <p className="font-mono text-xs text-(--accent) mt-0.5">
+                Senior Full Stack Developer
+              </p>
+              <p className="flex items-center gap-1 font-mono text-[10px] text-(--muted) mt-1">
+                <MapPinIcon className="h-3 w-3" />
+                São Paulo, SP
+              </p>
+            </div>
+
+            {/* Social */}
+            <div className="flex flex-wrap gap-2">
+              {SOCIAL_LINKS.map(({ href, icon: Icon, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1.5 rounded-sm border border-(--border) bg-(--surface-2) px-2.5 py-1.5 font-mono text-xs text-(--muted) transition-colors hover:border-(--accent)/50 hover:text-(--accent)"
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {label}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Right: content */}
+          <div className="flex-1 space-y-6">
+            {/* Typing title */}
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs text-(--accent) mr-1">$</span>
+              <span className="font-mono text-base font-semibold text-(--fg)">
+                <TitleTypingAnimation
+                  delay={300}
+                  typeSpeed={70}
+                  texts={[
+                    "The Architect_",
+                    "Senior Developer_",
+                    "sysadmin@nexus_",
+                    "root@localhost_",
+                    "Lucas Pedro_",
+                  ]}
+                />
+              </span>
+            </div>
+
+            {/* Bio */}
+            <p className="min-h-16 text-sm leading-relaxed text-(--muted)">
+              <TerminalTyping
+                delay={600}
+                text="With over 4 years of experience building high-performance web systems, I currently work at Hub Brasil, focusing on scalable cloud platforms and LLM integrations. I value clean code, strict typing, and well-defined architectures like DDD and Microservices."
+              />
             </p>
-            <p className="flex items-center gap-1 font-mono text-[10px] tracking-wider text-(--muted) uppercase">
-              <MapPinIcon className="h-3 w-3" /> São Paulo, SP
-            </p>
-          </div>
-        </div>
 
-        {/* Efeito de Terminal na Bio */}
-        <p className="mb-5 min-h-25 text-sm leading-relaxed text-(--muted) sm:min-h-20">
-          <TerminalTyping
-            delay={600}
-            text="With over 4 years of experience building high-performance web systems, I currently work at Hub Brasil, focusing on scalable cloud platforms and LLM integrations. I value clean code, strict typing, and well-defined architectures like DDD and Microservices."
-          />
-        </p>
+            {/* Tech stack badges */}
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-(--muted) mb-2">
+                Tech Stack
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {STACK_BADGES.map((tech) => (
+                  <span
+                    key={tech}
+                    className="rounded-sm border border-(--border) bg-(--surface-2) px-2 py-1 font-mono text-[11px] text-(--fg) transition-colors hover:border-(--accent)/40 hover:text-(--accent)"
+                  >
+                    {tech}
+                  </span>
+                ))}
+              </div>
+            </div>
 
-        <div className="mb-6 grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <span className="font-mono text-xs tracking-wider text-(--muted) uppercase">
-              Tech Stack
-            </span>
-            <ul className="space-y-1 text-sm text-(--fg)">
-              <li>• React & TypeScript</li>
-              <li>• Node.js & NestJS</li>
-              <li>• Rust (Axum, Tauri)</li>
-              <li>• GCP & Docker</li>
-            </ul>
+            {/* Interests */}
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-(--muted) mb-2">
+                Beyond Code
+              </p>
+              <div className="flex flex-wrap gap-4">
+                {INTERESTS.map(({ icon: Icon, label }) => (
+                  <div
+                    key={label}
+                    className="flex items-center gap-1.5 font-mono text-xs text-(--muted)"
+                  >
+                    <Icon className="h-3.5 w-3.5 text-(--border)" />
+                    {label}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-          <div className="space-y-2">
-            <span className="font-mono text-xs tracking-wider text-(--muted) uppercase">
-              Beyond Code
-            </span>
-            <ul className="space-y-2 text-sm text-(--fg)">
-              <li className="flex items-center gap-2">
-                <ActivityIcon className="h-4 w-4 text-(--muted)" /> 5k/10k
-                Runner
-              </li>
-              <li className="flex items-center gap-2">
-                <CoffeeIcon className="h-4 w-4 text-(--muted)" /> Coffee
-                Enthusiast
-              </li>
-              <li className="flex items-center gap-2">
-                <GameControllerIcon className="h-4 w-4 text-(--muted)" /> Indie
-                Gamer
-              </li>
-              <li className="flex items-center gap-2">
-                <HeartIcon className="h-4 w-4 text-(--muted)" /> Mutual Lover
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Redes Sociais */}
-        <div className="flex gap-3">
-          <a
-            href="https://github.com/Lusk1nha"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 rounded-md border border-(--border) bg-(--surface) px-3 py-1.5 text-sm transition-colors hover:border-(--accent) hover:text-(--accent)"
-          >
-            <GithubLogoIcon className="h-4 w-4" /> GitHub
-          </a>
-          <a
-            href="https://www.linkedin.com/in/olucaspedro/"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 rounded-md border border-(--border) bg-(--surface) px-3 py-1.5 text-sm transition-colors hover:border-(--accent) hover:text-(--accent)"
-          >
-            <LinkedinLogoIcon className="h-4 w-4" /> LinkedIn
-          </a>
-          <a
-            href="mailto:lucaspedro517@gmail.com"
-            className="flex items-center gap-2 rounded-md border border-(--border) bg-(--surface) px-3 py-1.5 text-sm transition-colors hover:border-(--accent) hover:text-(--accent)"
-          >
-            <EnvelopeSimpleIcon className="h-4 w-4" /> Email
-          </a>
         </div>
       </div>
     </motion.div>
