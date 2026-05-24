@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from "react-router"
-import { ShieldCheckIcon, GearSixIcon, UsersIcon, BookOpenIcon } from "@phosphor-icons/react"
+import { GearSixIcon, UsersIcon, BookOpenIcon } from "@phosphor-icons/react"
 
 import { ThemeSwitcher } from "@nexus/theme"
 

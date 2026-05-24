@@ -19,7 +19,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           "placeholder:text-(--muted)",
 
           // Foco
-          "focus-visible:border-(--accent) focus-visible:ring-1 focus-visible:ring-(--accent)",
+          "focus-visible:border-(--accent) focus-visible:ring-(--accent)",
 
           // Desabilitado
           "disabled:cursor-not-allowed disabled:opacity-40",

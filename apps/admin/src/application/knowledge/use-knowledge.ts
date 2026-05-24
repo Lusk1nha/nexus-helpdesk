@@ -12,11 +12,16 @@ export interface KnowledgeArticle {
   updatedAt: string
 }
 
+export interface KnowledgeResponse {
+  data: KnowledgeArticle[]
+  count: number
+}
+
 export function useKnowledge() {
   return useQuery({
     queryKey: ["knowledge"],
     queryFn: () =>
-      fetchApi<KnowledgeArticle[]>(() => http.get(API.knowledge.list).json()),
+      fetchApi<KnowledgeResponse>(() => http.get(API.knowledge.list).json()),
   })
 }
 
