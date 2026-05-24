@@ -1,9 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod"
+import { ShieldCheckIcon, EyeIcon, EyeClosedIcon } from "@phosphor-icons/react"
 import { motion } from "motion/react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router"
-import { EyeIcon, EyeClosedIcon } from "@phosphor-icons/react"
 
 import { Button, FormError, FormField, Input } from "@nexus/ui"
 import { loginSchema, type LoginInput } from "@nexus/auth"
@@ -31,38 +31,34 @@ export function LoginPage() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
       className="w-full max-w-sm"
     >
       <div className="overflow-hidden rounded-sm border border-(--border) bg-(--surface)">
-        <div className="border-b border-(--border) px-6 pt-6 pb-4">
-          <div className="mb-4 flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-(--destructive) opacity-70" />
-            <span className="h-2.5 w-2.5 rounded-full bg-(--warning) opacity-70" />
-            <span className="h-2.5 w-2.5 rounded-full bg-(--success) opacity-70" />
+        {/* Header */}
+        <div className="border-b border-(--border) px-6 pt-7 pb-5">
+          <div className="mb-5 flex h-9 w-9 items-center justify-center rounded-sm bg-(--accent)/10">
+            <ShieldCheckIcon className="h-4.5 w-4.5 text-(--accent)" weight="duotone" />
           </div>
-          <p className="mb-1 font-mono text-xs text-(--muted)">
-            <span className="text-(--success)">$</span> nexus admin
-            authenticate
-          </p>
           <h1 className="font-mono text-lg font-semibold text-(--fg)">
             Admin sign in
           </h1>
-          <p className="mt-0.5 text-xs text-(--muted)">
+          <p className="mt-1 text-xs text-(--muted)">
             Restricted to admin accounts only
           </p>
         </div>
 
+        {/* Form */}
         <form
           onSubmit={handleSubmit(onSubmit)}
           noValidate
-          className="space-y-4 px-6 py-5"
+          className="space-y-4 px-6 py-6"
         >
           <FormError
             error={login.error}
-            fallbackMessage="Invalid credentials. Please try again."
+            fallbackMessage="Invalid credentials."
           />
 
           <FormField
@@ -113,13 +109,13 @@ export function LoginPage() {
           </FormField>
 
           <Button type="submit" className="w-full" loading={login.isPending}>
-            {login.isPending ? "Authenticating..." : "Authenticate →"}
+            {login.isPending ? "Signing in..." : "Sign in"}
           </Button>
         </form>
       </div>
 
-      <p className="mt-4 text-center font-mono text-xs text-(--border)">
-        <span className="text-(--muted)">restricted:</span> admin accounts only
+      <p className="mt-4 text-center font-mono text-[11px] text-(--border)">
+        All access attempts are logged and audited
       </p>
     </motion.div>
   )

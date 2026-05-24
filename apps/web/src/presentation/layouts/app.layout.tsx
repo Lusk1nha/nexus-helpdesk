@@ -1,10 +1,8 @@
 import {
-  LayoutIcon,
-  SignOutIcon,
-  ChatTextIcon,
-  GearIcon,
-  ShieldIcon,
   BookOpenIcon,
+  ChatTextIcon,
+  ShieldIcon,
+  SignOutIcon,
 } from "@phosphor-icons/react"
 import { NavLink, Navigate, Outlet, useNavigate } from "react-router"
 
@@ -17,18 +15,15 @@ import {
   useSession,
 } from "@/application/auth/use-session"
 import { useTenantSlug } from "@/application/tenant/use-tenant-slug"
+import { useTenantBranding } from "@/application/tenant/use-tenant-branding"
 import { NoTenantPage } from "@/presentation/pages/no-tenant/no-tenant.page"
 import { paths } from "@/presentation/router/paths"
 
-/**
- * Authenticated application shell with sidebar navigation.
- * Redirects to /login if the user is not authenticated.
- * Shows NoTenantPage if accessed without a tenant subdomain.
- */
 export function AppLayout() {
   const slug = useTenantSlug()
   const isAuthenticated = useIsAuthenticated()
   const user = useSession()
+  const { data: branding } = useTenantBranding(slug)
   const logout = useLogout()
   const navigate = useNavigate()
 
@@ -55,16 +50,27 @@ export function AppLayout() {
       : []),
   ]
 
+  const roleColors: Record<string, string> = {
+    admin: "text-(--accent)",
+    agent: "text-(--success)",
+    customer: "text-(--muted)",
+  }
+
   return (
     <div className="flex min-h-dvh bg-(--bg)">
       {/* Sidebar */}
-      <aside className="flex w-56 shrink-0 flex-col border-r border-(--border) bg-(--surface)">
-        {/* Brand */}
-        <div className="flex items-center gap-2 border-b border-(--border) px-4 py-4">
-          <span className="text-sm font-semibold text-(--accent)">◈</span>
-          <span className="font-mono text-sm font-medium text-(--fg)">
-            nexus
-          </span>
+      <aside className="flex w-52 shrink-0 flex-col border-r border-(--border) bg-(--surface)">
+        {/* Brand + tenant */}
+        <div className="border-b border-(--border) px-4 py-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-sm font-semibold text-(--accent)">◈</span>
+            <span className="font-mono text-sm font-medium text-(--fg)">nexus</span>
+          </div>
+          {branding && (
+            <p className="font-mono text-[11px] text-(--muted) truncate" title={branding.name}>
+              {branding.name}
+            </p>
+          )}
         </div>
 
         {/* Nav */}
@@ -89,11 +95,14 @@ export function AppLayout() {
           ))}
         </nav>
 
-        {/* User + logout */}
-        <div className="space-y-2 border-t border-(--border) p-3">
-          <div className="px-2 py-1">
-            <p className="truncate font-mono text-xs text-(--muted)">
+        {/* User footer */}
+        <div className="border-t border-(--border) p-3 space-y-1">
+          <div className="px-3 py-2">
+            <p className={cn("font-mono text-xs font-medium", roleColors[user?.role ?? ""] ?? "text-(--muted)")}>
               {user?.role}
+            </p>
+            <p className="font-mono text-[10px] text-(--border) truncate mt-0.5">
+              {slug}.nexus
             </p>
           </div>
           <button
@@ -105,7 +114,7 @@ export function AppLayout() {
             )}
           >
             <SignOutIcon className="h-3.5 w-3.5 shrink-0" />
-            logout
+            sign out
           </button>
         </div>
       </aside>
@@ -113,17 +122,8 @@ export function AppLayout() {
       {/* Main area */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="flex items-center justify-between border-b border-(--border) bg-(--surface) px-6 py-3">
-          <div className="flex items-center gap-1 font-mono text-xs text-(--muted)">
-            <LayoutIcon className="h-3.5 w-3.5" />
-            <span className="ml-1">dashboard</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <ThemeSwitcher />
-            <button className="text-(--muted) transition-colors hover:text-(--fg)">
-              <GearIcon className="h-4 w-4" />
-            </button>
-          </div>
+        <header className="flex items-center justify-end border-b border-(--border) bg-(--surface) px-5 py-3">
+          <ThemeSwitcher />
         </header>
 
         {/* Page content */}
