@@ -9,7 +9,9 @@ export function ThemeSwitcher({ className }: { className?: string }) {
   const [open, setOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<"dark" | "light">("dark")
   const [isAutoPlaying, setIsAutoPlaying] = useState(false)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(
+    undefined
+  )
   // Remember the theme that was active when showcase started so we can restore it.
   const themeBeforeShowcase = useRef<ThemeId | null>(null)
 
@@ -100,7 +102,8 @@ export function ThemeSwitcher({ className }: { className?: string }) {
                     className={cn(
                       "flex items-center gap-2 rounded-sm px-2 py-1.5 text-left font-mono text-xs text-(--muted)",
                       "hover:bg-(--surface-2) hover:text-(--fg)",
-                      theme === t.id && "bg-(--surface-2) font-medium text-(--fg)"
+                      theme === t.id &&
+                        "bg-(--surface-2) font-medium text-(--fg)"
                     )}
                   >
                     <span

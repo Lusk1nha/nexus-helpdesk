@@ -10,5 +10,9 @@ export function fmtDate(value?: string | null): string {
     )
   const d = new Date(normalized)
   if (isNaN(d.getTime())) return "—"
-  return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
+  return d.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  })
 }

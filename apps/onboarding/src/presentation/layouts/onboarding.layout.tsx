@@ -35,16 +35,16 @@ export function OnboardingLayout() {
           className="flex items-center gap-2 font-mono text-sm transition-opacity hover:opacity-75"
         >
           <span className="font-semibold text-(--accent)">◈</span>
-          <span className="text-(--fg) font-medium">nexus</span>
+          <span className="font-medium text-(--fg)">nexus</span>
           <span className="text-(--border)">/</span>
           <span className="text-(--muted)">onboarding</span>
         </Link>
 
         <div className="flex items-center gap-3">
-          <nav className="hidden sm:flex items-center gap-1">
+          <nav className="hidden items-center gap-1 sm:flex">
             <Link
               to="/about"
-              className="font-mono text-xs text-(--muted) px-3 py-1.5 rounded-sm hover:bg-(--surface) hover:text-(--fg) transition-colors"
+              className="rounded-sm px-3 py-1.5 font-mono text-xs text-(--muted) transition-colors hover:bg-(--surface) hover:text-(--fg)"
             >
               about
             </Link>
@@ -52,13 +52,13 @@ export function OnboardingLayout() {
               href="https://github.com/Lusk1nha/nexus-helpdesk"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 font-mono text-xs text-(--muted) px-3 py-1.5 rounded-sm hover:bg-(--surface) hover:text-(--fg) transition-colors"
+              className="flex items-center gap-1.5 rounded-sm px-3 py-1.5 font-mono text-xs text-(--muted) transition-colors hover:bg-(--surface) hover:text-(--fg)"
             >
               <GithubLogoIcon className="h-3.5 w-3.5" />
               github
             </a>
           </nav>
-          <div className="h-4 w-px bg-(--border) hidden sm:block" />
+          <div className="hidden h-4 w-px bg-(--border) sm:block" />
           <ThemeSwitcher />
         </div>
       </header>
@@ -70,7 +70,7 @@ export function OnboardingLayout() {
 
       {/* Footer */}
       <footer className="relative z-10 border-t border-(--border)/40 px-6 py-4">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="flex flex-col items-center justify-between gap-2 sm:flex-row">
           <p className="font-mono text-[11px] text-(--border)">
             nexus_engine v1.0 ·{" "}
             <span className="text-(--accent)">multi-tenant</span> · ai-powered ·
@@ -82,7 +82,7 @@ export function OnboardingLayout() {
               href="https://github.com/Lusk1nha"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-(--muted) hover:text-(--fg) transition-colors"
+              className="text-(--muted) transition-colors hover:text-(--fg)"
             >
               Lucas Pedro da Hora
             </a>

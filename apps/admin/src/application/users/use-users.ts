@@ -1,5 +1,5 @@
 import { API } from "@nexus/api"
-import { useQuery } from "@tanstack/react-query"
+import { useSuspenseQuery } from "@tanstack/react-query"
 
 import { fetchApi, http } from "@/infrastructure/http/client"
 
@@ -11,7 +11,7 @@ export interface TenantUser {
 }
 
 export function useUsers() {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: ["users"],
     queryFn: () =>
       fetchApi<TenantUser[]>(() => http.get(API.identity.users).json()),

@@ -46,7 +46,7 @@ export function ArticleForm({ onCancel, onSuccess }: Props) {
     >
       <div className="relative border-b border-(--border) px-5 py-4">
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-(--accent)/50 via-(--accent)/25 to-transparent" />
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-widest text-(--muted)">
+        <p className="font-mono text-[10px] font-semibold tracking-widest text-(--muted) uppercase">
           new article
         </p>
         <p className="mt-1 font-mono text-xs text-(--fg)">
@@ -54,10 +54,22 @@ export function ArticleForm({ onCancel, onSuccess }: Props) {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4 px-5 py-5">
-        <FormError error={create.error} fallbackMessage="Failed to create article." />
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        noValidate
+        className="space-y-4 px-5 py-5"
+      >
+        <FormError
+          error={create.error}
+          fallbackMessage="Failed to create article."
+        />
 
-        <FormField label="Title" htmlFor="title" error={errors.title?.message} required>
+        <FormField
+          label="Title"
+          htmlFor="title"
+          error={errors.title?.message}
+          required
+        >
           <Input
             id="title"
             placeholder="How to reset password"
@@ -66,14 +78,19 @@ export function ArticleForm({ onCancel, onSuccess }: Props) {
           />
         </FormField>
 
-        <FormField label="Content" htmlFor="content" error={errors.content?.message} required>
+        <FormField
+          label="Content"
+          htmlFor="content"
+          error={errors.content?.message}
+          required
+        >
           <textarea
             id="content"
             placeholder="Write the article content here..."
             rows={6}
             className={cn(
               "flex w-full min-w-0 rounded-sm border border-(--border) bg-(--surface) px-3 py-2",
-              "font-mono text-sm text-(--fg) transition-colors outline-none resize-y",
+              "resize-y font-mono text-sm text-(--fg) transition-colors outline-none",
               "placeholder:text-(--muted) focus-visible:border-(--accent)",
               errors.content && "border-(--destructive)"
             )}
@@ -86,7 +103,10 @@ export function ArticleForm({ onCancel, onSuccess }: Props) {
             type="button"
             variant="secondary"
             size="sm"
-            onClick={() => { reset(); onCancel() }}
+            onClick={() => {
+              reset()
+              onCancel()
+            }}
           >
             cancel
           </Button>

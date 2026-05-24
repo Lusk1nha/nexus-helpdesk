@@ -31,5 +31,8 @@ function getSlugFromHostname(): string | null {
  * context — the NoTenantPage guard will handle it.
  */
 export function useTenantSlug(): string | null {
-  return (import.meta.env.VITE_TENANT_SLUG as string | undefined) ?? getSlugFromHostname()
+  return (
+    (import.meta.env.VITE_TENANT_SLUG as string | undefined) ??
+    getSlugFromHostname()
+  )
 }

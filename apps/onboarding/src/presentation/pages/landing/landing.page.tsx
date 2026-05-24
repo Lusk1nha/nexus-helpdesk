@@ -21,13 +21,18 @@ const STATS = [
 ]
 
 const TERMINAL_LINES = [
-  { prompt: true,  text: "nexus status --workspace acme" },
-  { prompt: false, col1: "tenant",    col2: "acme.nexus.com",   col3: "online" },
-  { prompt: false, col1: "model",     col2: "llama3.2-3b",      col3: "loaded" },
-  { prompt: false, col1: "latency",   col2: "84ms",             col3: "p99" },
-  { prompt: false, col1: "tickets",   col2: "3 open · 1 pending", col3: "ai-draft" },
-  { prompt: false, col1: "knowledge", col2: "42 articles",      col3: "indexed" },
-  { prompt: true,  text: "" },
+  { prompt: true, text: "nexus status --workspace acme" },
+  { prompt: false, col1: "tenant", col2: "acme.nexus.com", col3: "online" },
+  { prompt: false, col1: "model", col2: "llama3.2-3b", col3: "loaded" },
+  { prompt: false, col1: "latency", col2: "84ms", col3: "p99" },
+  {
+    prompt: false,
+    col1: "tickets",
+    col2: "3 open · 1 pending",
+    col3: "ai-draft",
+  },
+  { prompt: false, col1: "knowledge", col2: "42 articles", col3: "indexed" },
+  { prompt: true, text: "" },
 ]
 
 const FEATURES = [
@@ -83,7 +88,9 @@ export function LandingPage() {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-(--accent) opacity-75" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-(--accent)" />
         </span>
-        <span className="hidden sm:inline">nexus_engine v1.0 · all systems operational</span>
+        <span className="hidden sm:inline">
+          nexus_engine v1.0 · all systems operational
+        </span>
         <span className="sm:hidden">nexus_engine v1.0 · online</span>
       </motion.div>
 
@@ -92,8 +99,7 @@ export function LandingPage() {
         variants={item}
         className="mb-5 max-w-4xl font-mono text-3xl font-bold tracking-tight text-(--fg) sm:text-4xl lg:text-5xl"
       >
-        Support at the speed of{" "}
-        <br className="hidden sm:block" />
+        Support at the speed of <br className="hidden sm:block" />
         <span className="relative inline-flex flex-col text-(--accent) sm:flex-row">
           <TitleTypingAnimation
             delay={500}
@@ -112,8 +118,8 @@ export function LandingPage() {
         variants={item}
         className="mb-6 max-w-2xl text-base leading-relaxed text-(--muted) sm:text-lg"
       >
-        The multi-tenant helpdesk built for privacy and performance. Powered by a
-        blazingly fast{" "}
+        The multi-tenant helpdesk built for privacy and performance. Powered by
+        a blazingly fast{" "}
         <strong className="font-semibold text-(--fg)">Rust</strong> backend and
         zero-cost{" "}
         <strong className="font-semibold text-(--fg)">local LLMs</strong>.
@@ -122,7 +128,7 @@ export function LandingPage() {
       {/* Stats strip — 2×2 on mobile, single row on sm+ */}
       <motion.div
         variants={item}
-        className="mb-8 w-full max-w-xs overflow-hidden rounded-sm border border-(--border) bg-(--surface) sm:max-w-none sm:w-auto"
+        className="mb-8 w-full max-w-xs overflow-hidden rounded-sm border border-(--border) bg-(--surface) sm:w-auto sm:max-w-none"
       >
         <div className="grid grid-cols-2 sm:flex">
           {STATS.map((s, i) => (
@@ -135,8 +141,12 @@ export function LandingPage() {
                 i !== 0 && "sm:border-l sm:border-(--border)"
               )}
             >
-              <span className="text-sm font-semibold text-(--accent) sm:text-base">{s.value}</span>
-              <span className="text-[10px] text-(--muted) mt-0.5 sm:text-[11px]">{s.label}</span>
+              <span className="text-sm font-semibold text-(--accent) sm:text-base">
+                {s.value}
+              </span>
+              <span className="mt-0.5 text-[10px] text-(--muted) sm:text-[11px]">
+                {s.label}
+              </span>
             </div>
           ))}
         </div>
@@ -181,7 +191,7 @@ export function LandingPage() {
           </div>
           {/* Scrollable content area */}
           <div className="overflow-x-auto">
-            <div className="min-w-[360px] px-3 py-4 font-mono text-xs space-y-1.5 sm:px-4">
+            <div className="min-w-[360px] space-y-1.5 px-3 py-4 font-mono text-xs sm:px-4">
               {TERMINAL_LINES.map((line, i) => (
                 <motion.div
                   key={i}
@@ -191,21 +201,25 @@ export function LandingPage() {
                 >
                   {line.prompt ? (
                     <p className="text-(--muted)">
-                      <span className="text-(--accent) mr-2">$</span>
+                      <span className="mr-2 text-(--accent)">$</span>
                       <span className="text-(--fg)">{line.text}</span>
                       {i === TERMINAL_LINES.length - 1 && (
                         <motion.span
                           animate={{ opacity: [1, 0, 1] }}
                           transition={{ duration: 0.9, repeat: Infinity }}
-                          className="inline-block ml-0.5 h-3 w-1.5 bg-(--accent) align-middle"
+                          className="ml-0.5 inline-block h-3 w-1.5 bg-(--accent) align-middle"
                         />
                       )}
                     </p>
                   ) : (
                     <div className="flex gap-3 text-(--fg)">
-                      <span className="w-20 shrink-0 text-(--muted)">{line.col1}</span>
+                      <span className="w-20 shrink-0 text-(--muted)">
+                        {line.col1}
+                      </span>
                       <span className="flex-1 truncate">{line.col2}</span>
-                      <span className="shrink-0 text-(--success)">{line.col3}</span>
+                      <span className="shrink-0 text-(--success)">
+                        {line.col3}
+                      </span>
                     </div>
                   )}
                 </motion.div>
@@ -216,7 +230,10 @@ export function LandingPage() {
       </motion.div>
 
       {/* Features grid */}
-      <motion.div variants={item} className="grid w-full gap-4 text-left sm:gap-5 md:grid-cols-3">
+      <motion.div
+        variants={item}
+        className="grid w-full gap-4 text-left sm:gap-5 md:grid-cols-3"
+      >
         {FEATURES.map(({ icon: Icon, title, color, description }) => (
           <motion.div
             key={title}
@@ -233,9 +250,12 @@ export function LandingPage() {
             <div
               className={cn(
                 "mb-4 inline-flex self-start rounded-sm p-2.5 transition-colors",
-                color === "accent" && "bg-(--accent)/10 group-hover:bg-(--accent)/20",
-                color === "success" && "bg-(--success)/10 group-hover:bg-(--success)/20",
-                color === "warning" && "bg-(--warning)/10 group-hover:bg-(--warning)/20"
+                color === "accent" &&
+                  "bg-(--accent)/10 group-hover:bg-(--accent)/20",
+                color === "success" &&
+                  "bg-(--success)/10 group-hover:bg-(--success)/20",
+                color === "warning" &&
+                  "bg-(--warning)/10 group-hover:bg-(--warning)/20"
               )}
             >
               <Icon
@@ -247,8 +267,12 @@ export function LandingPage() {
                 )}
               />
             </div>
-            <h3 className="mb-2 font-mono text-sm font-semibold text-(--fg)">{title}</h3>
-            <p className="text-sm leading-relaxed text-(--muted)">{description}</p>
+            <h3 className="mb-2 font-mono text-sm font-semibold text-(--fg)">
+              {title}
+            </h3>
+            <p className="text-sm leading-relaxed text-(--muted)">
+              {description}
+            </p>
           </motion.div>
         ))}
       </motion.div>

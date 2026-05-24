@@ -62,12 +62,17 @@ export function AppLayout() {
       <aside className="flex w-52 shrink-0 flex-col border-r border-(--border) bg-(--surface)">
         {/* Brand + tenant */}
         <div className="border-b border-(--border) px-4 py-4">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="mb-2 flex items-center gap-2">
             <span className="text-sm font-semibold text-(--accent)">◈</span>
-            <span className="font-mono text-sm font-medium text-(--fg)">nexus</span>
+            <span className="font-mono text-sm font-medium text-(--fg)">
+              nexus
+            </span>
           </div>
           {branding && (
-            <p className="font-mono text-[11px] text-(--muted) truncate" title={branding.name}>
+            <p
+              className="truncate font-mono text-[11px] text-(--muted)"
+              title={branding.name}
+            >
               {branding.name}
             </p>
           )}
@@ -96,12 +101,17 @@ export function AppLayout() {
         </nav>
 
         {/* User footer */}
-        <div className="border-t border-(--border) p-3 space-y-1">
+        <div className="space-y-1 border-t border-(--border) p-3">
           <div className="px-3 py-2">
-            <p className={cn("font-mono text-xs font-medium", roleColors[user?.role ?? ""] ?? "text-(--muted)")}>
+            <p
+              className={cn(
+                "font-mono text-xs font-medium",
+                roleColors[user?.role ?? ""] ?? "text-(--muted)"
+              )}
+            >
               {user?.role}
             </p>
-            <p className="font-mono text-[10px] text-(--border) truncate mt-0.5">
+            <p className="mt-0.5 truncate font-mono text-[10px] text-(--border)">
               {slug}.nexus
             </p>
           </div>

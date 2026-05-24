@@ -40,7 +40,10 @@ export function LoginPage() {
         {/* Header */}
         <div className="border-b border-(--border) px-6 pt-7 pb-5">
           <div className="mb-5 flex h-9 w-9 items-center justify-center rounded-sm bg-(--accent)/10">
-            <ShieldCheckIcon className="h-4.5 w-4.5 text-(--accent)" weight="duotone" />
+            <ShieldCheckIcon
+              className="h-4.5 w-4.5 text-(--accent)"
+              weight="duotone"
+            />
           </div>
           <h1 className="font-mono text-lg font-semibold text-(--fg)">
             Admin sign in

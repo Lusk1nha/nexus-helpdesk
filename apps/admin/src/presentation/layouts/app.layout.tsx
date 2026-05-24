@@ -8,8 +8,9 @@ import {
   UsersIcon,
   XIcon,
 } from "@phosphor-icons/react"
+import { QueryErrorResetBoundary } from "@tanstack/react-query"
 import { motion, AnimatePresence } from "motion/react"
-import { useState, useRef, useEffect } from "react"
+import { Suspense, useState, useRef, useEffect } from "react"
 import { NavLink, Navigate, Outlet, useNavigate } from "react-router"
 
 import { ThemeSwitcher } from "@nexus/theme"
@@ -20,6 +21,9 @@ import {
   useLogout,
   useSession,
 } from "@/application/auth/use-session"
+import { ErrorBoundary } from "@/presentation/components/ui/error-boundary"
+import { PageError } from "@/presentation/components/ui/page-error"
+import { PageLoader } from "@/presentation/components/ui/page-loader"
 import { paths } from "@/presentation/router/paths"
 
 const NAV_ITEMS = [
@@ -53,8 +57,12 @@ export function AppLayout() {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-(--bg)">
         <div className="rounded-sm border border-(--destructive)/30 bg-(--destructive)/5 px-8 py-6 text-center">
-          <p className="font-mono text-sm font-medium text-(--destructive)">access denied</p>
-          <p className="mt-1 font-mono text-xs text-(--muted)">This panel requires an admin account</p>
+          <p className="font-mono text-sm font-medium text-(--destructive)">
+            access denied
+          </p>
+          <p className="mt-1 font-mono text-xs text-(--muted)">
+            This panel requires an admin account
+          </p>
         </div>
       </div>
     )
@@ -74,10 +82,12 @@ export function AppLayout() {
 
         <div className="flex h-12 items-center gap-4 px-4 sm:gap-6 sm:px-6">
           {/* Brand */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex shrink-0 items-center gap-2">
             <span className="font-semibold text-(--accent)">◈</span>
-            <span className="font-mono text-sm font-medium text-(--fg)">nexus</span>
-            <span className="rounded-sm bg-(--accent)/15 px-1.5 py-0.5 font-mono text-[10px] font-medium text-(--accent) border border-(--accent)/20">
+            <span className="font-mono text-sm font-medium text-(--fg)">
+              nexus
+            </span>
+            <span className="rounded-sm border border-(--accent)/20 bg-(--accent)/15 px-1.5 py-0.5 font-mono text-[10px] font-medium text-(--accent)">
               admin
             </span>
           </div>
@@ -128,7 +138,8 @@ export function AppLayout() {
                   "flex items-center gap-1.5 rounded-sm px-2.5 py-1.5",
                   "font-mono text-xs text-(--muted) transition-colors",
                   "border border-(--border) hover:border-(--muted)/60 hover:text-(--fg)",
-                  userMenuOpen && "border-(--accent)/40 text-(--fg) bg-(--accent)/5"
+                  userMenuOpen &&
+                    "border-(--accent)/40 bg-(--accent)/5 text-(--fg)"
                 )}
               >
                 <UserCircleIcon className="h-3.5 w-3.5" />
@@ -148,10 +159,10 @@ export function AppLayout() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -4, scale: 0.97 }}
                     transition={{ duration: 0.12 }}
-                    className="absolute right-0 top-full mt-1.5 w-48 overflow-hidden rounded-sm border border-(--border) bg-(--surface) shadow-xl shadow-black/20"
+                    className="absolute top-full right-0 mt-1.5 w-48 overflow-hidden rounded-sm border border-(--border) bg-(--surface) shadow-xl shadow-black/20"
                   >
                     <div className="border-b border-(--border) px-3 py-2.5">
-                      <p className="font-mono text-[10px] uppercase tracking-wider text-(--muted)">
+                      <p className="font-mono text-[10px] tracking-wider text-(--muted) uppercase">
                         Signed in as
                       </p>
                       <p className="mt-0.5 font-mono text-xs font-medium text-(--fg)">
@@ -231,7 +242,20 @@ export function AppLayout() {
       {/* Page content */}
       <main className="flex-1 overflow-auto">
         <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
-          <Outlet />
+          <QueryErrorResetBoundary>
+            {({ reset }) => (
+              <ErrorBoundary
+                onReset={reset}
+                fallback={(error, retry) => (
+                  <PageError error={error} retry={retry} />
+                )}
+              >
+                <Suspense fallback={<PageLoader />}>
+                  <Outlet />
+                </Suspense>
+              </ErrorBoundary>
+            )}
+          </QueryErrorResetBoundary>
         </div>
       </main>
     </div>

@@ -48,7 +48,9 @@ export function LoginPage() {
         {/* Card header */}
         <div className="border-b border-(--border) px-6 pt-6 pb-5">
           <div className="mb-1 flex items-center gap-2">
-            <span className="font-mono text-xs font-semibold text-(--accent)">◈</span>
+            <span className="font-mono text-xs font-semibold text-(--accent)">
+              ◈
+            </span>
             <span className="font-mono text-xs text-(--muted)">
               {branding?.name ?? slug ?? "nexus"}
             </span>

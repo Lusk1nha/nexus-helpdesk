@@ -67,7 +67,6 @@ export function AboutArchitect({ variants }: AboutArchitectProps) {
 
       <div className="p-5 sm:p-6 lg:p-8">
         <div className="flex flex-col gap-6 sm:gap-8 md:flex-row md:gap-8 lg:gap-12">
-
           {/* Left: identity */}
           <div className="flex flex-col items-start gap-4 md:w-48 md:shrink-0 lg:w-56">
             <Avatar className="size-20 ring-2 ring-(--border) ring-offset-2 ring-offset-(--bg)">
@@ -79,13 +78,13 @@ export function AboutArchitect({ variants }: AboutArchitectProps) {
             </Avatar>
 
             <div>
-              <h2 className="font-mono text-lg font-bold text-(--fg) leading-tight">
+              <h2 className="font-mono text-lg leading-tight font-bold text-(--fg)">
                 Lucas Pedro da Hora
               </h2>
-              <p className="font-mono text-xs text-(--accent) mt-0.5">
+              <p className="mt-0.5 font-mono text-xs text-(--accent)">
                 Senior Full Stack Developer
               </p>
-              <p className="flex items-center gap-1 font-mono text-[10px] text-(--muted) mt-1">
+              <p className="mt-1 flex items-center gap-1 font-mono text-[10px] text-(--muted)">
                 <MapPinIcon className="h-3 w-3" />
                 São Paulo, SP
               </p>
@@ -112,7 +111,7 @@ export function AboutArchitect({ variants }: AboutArchitectProps) {
           <div className="flex-1 space-y-6">
             {/* Typing title */}
             <div className="flex items-center gap-2">
-              <span className="font-mono text-xs text-(--accent) mr-1">$</span>
+              <span className="mr-1 font-mono text-xs text-(--accent)">$</span>
               <span className="font-mono text-base font-semibold text-(--fg)">
                 <TitleTypingAnimation
                   delay={300}
@@ -138,7 +137,7 @@ export function AboutArchitect({ variants }: AboutArchitectProps) {
 
             {/* Tech stack badges */}
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-(--muted) mb-2">
+              <p className="mb-2 font-mono text-[10px] tracking-widest text-(--muted) uppercase">
                 Tech Stack
               </p>
               <div className="flex flex-wrap gap-1.5">
@@ -155,7 +154,7 @@ export function AboutArchitect({ variants }: AboutArchitectProps) {
 
             {/* Interests */}
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-(--muted) mb-2">
+              <p className="mb-2 font-mono text-[10px] tracking-widest text-(--muted) uppercase">
                 Beyond Code
               </p>
               <div className="flex flex-wrap gap-4">

@@ -11,5 +11,5 @@ export {
   AvatarGroupCount,
 } from "./avatar"
 export { Input, type InputProps } from "./input"
-export { Textarea, type TextareaProps } from './textarea'
+export { Textarea, type TextareaProps } from "./textarea"
 export { Label, type LabelProps } from "./label"

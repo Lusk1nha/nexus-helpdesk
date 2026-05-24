@@ -17,7 +17,9 @@ export function TenantPage() {
           <BuildingsIcon className="h-3.5 w-3.5 text-(--accent)" />
         </div>
         <div>
-          <h1 className="font-mono text-sm font-semibold text-(--fg)">tenant settings</h1>
+          <h1 className="font-mono text-sm font-semibold text-(--fg)">
+            tenant settings
+          </h1>
           <p className="font-mono text-[10px] text-(--muted)">
             Organization details and workspace configuration
           </p>

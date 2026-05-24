@@ -1,6 +1,10 @@
 import { motion } from "motion/react"
 import { useEffect, useState } from "react"
-import { CheckIcon, SpinnerGapIcon, ArrowRightIcon } from "@phosphor-icons/react"
+import {
+  CheckIcon,
+  SpinnerGapIcon,
+  ArrowRightIcon,
+} from "@phosphor-icons/react"
 
 import { workspaceUrl } from "@/env"
 
@@ -61,10 +65,10 @@ export function SuccessSplash({ tenantSlug, delayMs = 3200 }: Props) {
           </span>
         </div>
 
-        <div className="px-4 py-5 font-mono text-sm space-y-3 sm:px-6 sm:py-6">
+        <div className="space-y-3 px-4 py-5 font-mono text-sm sm:px-6 sm:py-6">
           {/* Prompt line */}
           <p className="text-xs text-(--muted)">
-            <span className="text-(--accent) mr-2">$</span>
+            <span className="mr-2 text-(--accent)">$</span>
             nexus provision --workspace {tenantSlug}
           </p>
 
@@ -87,7 +91,11 @@ export function SuccessSplash({ tenantSlug, delayMs = 3200 }: Props) {
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 15,
+                        }}
                       >
                         <CheckIcon
                           weight="bold"
@@ -111,7 +119,7 @@ export function SuccessSplash({ tenantSlug, delayMs = 3200 }: Props) {
                   >
                     {step}
                     {done && (
-                      <span className="ml-2 text-(--success) text-xs">✓</span>
+                      <span className="ml-2 text-xs text-(--success)">✓</span>
                     )}
                   </span>
                 </motion.div>
@@ -125,12 +133,13 @@ export function SuccessSplash({ tenantSlug, delayMs = 3200 }: Props) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
-              className="pt-3 border-t border-(--border) space-y-3"
+              className="space-y-3 border-t border-(--border) pt-3"
             >
               <p className="text-xs text-(--success)">
                 <span className="mr-2">✓</span>
-                Workspace{" "}
-                <span className="font-semibold">{tenantSlug}</span>{" "}
+                Workspace <span className="font-semibold">
+                  {tenantSlug}
+                </span>{" "}
                 provisioned successfully.
               </p>
 

@@ -22,21 +22,24 @@ export function AuthLayout() {
   return (
     <div className="flex min-h-dvh bg-(--bg)">
       {/* Left panel */}
-      <div className="hidden lg:flex lg:w-[420px] lg:shrink-0 flex-col justify-between bg-(--surface) border-r border-(--border) px-10 py-12">
+      <div className="hidden flex-col justify-between border-r border-(--border) bg-(--surface) px-10 py-12 lg:flex lg:w-[420px] lg:shrink-0">
         <div>
-          <div className="flex items-center gap-2.5 mb-12">
+          <div className="mb-12 flex items-center gap-2.5">
             <span className="text-xl font-semibold text-(--accent)">◈</span>
-            <span className="font-mono text-base font-medium text-(--fg)">nexus</span>
+            <span className="font-mono text-base font-medium text-(--fg)">
+              nexus
+            </span>
             <span className="rounded-sm bg-(--accent)/15 px-2 py-0.5 font-mono text-[11px] font-medium text-(--accent)">
               admin
             </span>
           </div>
 
-          <h1 className="font-mono text-2xl font-semibold text-(--fg) leading-tight mb-3">
+          <h1 className="mb-3 font-mono text-2xl leading-tight font-semibold text-(--fg)">
             Admin Console
           </h1>
-          <p className="font-mono text-sm text-(--muted) leading-relaxed mb-10">
-            Restricted access panel for tenant administrators. Manage your workspace, team, and knowledge base from one place.
+          <p className="mb-10 font-mono text-sm leading-relaxed text-(--muted)">
+            Restricted access panel for tenant administrators. Manage your
+            workspace, team, and knowledge base from one place.
           </p>
 
           <div className="space-y-4">
@@ -45,7 +48,9 @@ export function AuthLayout() {
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm bg-(--accent)/10">
                   <Icon className="h-3.5 w-3.5 text-(--accent)" />
                 </div>
-                <span className="font-mono text-xs text-(--muted)">{label}</span>
+                <span className="font-mono text-xs text-(--muted)">
+                  {label}
+                </span>
               </div>
             ))}
           </div>

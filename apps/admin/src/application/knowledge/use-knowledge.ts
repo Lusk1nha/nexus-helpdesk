@@ -1,5 +1,9 @@
 import { API } from "@nexus/api"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import {
+  useSuspenseQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query"
 
 import { fetchApi, http } from "@/infrastructure/http/client"
 
@@ -18,7 +22,7 @@ export interface KnowledgeResponse {
 }
 
 export function useKnowledge() {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: ["knowledge"],
     queryFn: () =>
       fetchApi<KnowledgeResponse>(() => http.get(API.knowledge.list).json()),

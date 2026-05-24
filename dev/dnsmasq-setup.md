@@ -10,6 +10,7 @@ NetworkManager já inclui dnsmasq. São dois passos:
 ### 1. Habilitar dnsmasq no NetworkManager
 
 Crie o arquivo `/etc/NetworkManager/conf.d/dnsmasq.conf`:
+
 ```ini
 [main]
 dns=dnsmasq
@@ -18,6 +19,7 @@ dns=dnsmasq
 ### 2. Adicionar a regra wildcard
 
 Crie `/etc/NetworkManager/dnsmasq.d/nexus-local.conf`:
+
 ```
 address=/nexus.localhost/127.0.0.1
 ```

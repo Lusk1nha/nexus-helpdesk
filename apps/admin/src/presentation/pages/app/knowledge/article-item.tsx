@@ -26,7 +26,8 @@ const STATUS_STYLES: Record<
   },
   rejected: {
     dot: "bg-(--destructive)",
-    badge: "bg-(--destructive)/10 text-(--destructive) border border-(--destructive)/20",
+    badge:
+      "bg-(--destructive)/10 text-(--destructive) border border-(--destructive)/20",
     label: "rejected",
   },
 }
@@ -59,14 +60,30 @@ export function ArticleItem({ article }: Props) {
     >
       <div className="min-w-0 flex-1 space-y-1.5">
         <div className="flex items-center gap-2">
-          <span className={cn("inline-flex shrink-0 rounded-full px-2 py-0.5 font-mono text-[10px] font-medium", s.badge)}>
-            <span className={cn("mr-1.5 mt-px h-1.5 w-1.5 shrink-0 rounded-full self-center", s.dot)} />
+          <span
+            className={cn(
+              "inline-flex shrink-0 rounded-full px-2 py-0.5 font-mono text-[10px] font-medium",
+              s.badge
+            )}
+          >
+            <span
+              className={cn(
+                "mt-px mr-1.5 h-1.5 w-1.5 shrink-0 self-center rounded-full",
+                s.dot
+              )}
+            />
             {s.label}
           </span>
         </div>
-        <p className="truncate font-mono text-xs font-medium text-(--fg)">{article.title}</p>
-        <p className="line-clamp-1 font-mono text-[10px] text-(--muted)">{article.content}</p>
-        <p className="font-mono text-[10px] text-(--border)">{fmtDate(article.createdAt)}</p>
+        <p className="truncate font-mono text-xs font-medium text-(--fg)">
+          {article.title}
+        </p>
+        <p className="line-clamp-1 font-mono text-[10px] text-(--muted)">
+          {article.content}
+        </p>
+        <p className="font-mono text-[10px] text-(--border)">
+          {fmtDate(article.createdAt)}
+        </p>
       </div>
 
       <div className="flex shrink-0 items-center gap-2 pt-0.5">

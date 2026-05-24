@@ -1,5 +1,9 @@
 import { API } from "@nexus/api"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import {
+  useSuspenseQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query"
 
 import { fetchApi, http } from "@/infrastructure/http/client"
 
@@ -13,10 +17,9 @@ export interface Tenant {
 }
 
 export function useTenant() {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: ["tenant"],
-    queryFn: () =>
-      fetchApi<Tenant>(() => http.get(API.identity.tenant).json()),
+    queryFn: () => fetchApi<Tenant>(() => http.get(API.identity.tenant).json()),
   })
 }
 

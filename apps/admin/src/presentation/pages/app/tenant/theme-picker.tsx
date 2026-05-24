@@ -1,4 +1,8 @@
-import { FloppyDiskIcon, PaintBrushIcon, CheckIcon } from "@phosphor-icons/react"
+import {
+  CheckIcon,
+  FloppyDiskIcon,
+  PaintBrushIcon,
+} from "@phosphor-icons/react"
 import { themes, type ThemeId } from "@nexus/theme"
 import { useEffect, useState } from "react"
 
@@ -11,19 +15,19 @@ export function ThemePicker() {
   const { data: tenant } = useTenant()
   const update = useUpdateTenant()
 
-  const [selected, setSelected] = useState<ThemeId>("midnight")
+  const [selected, setSelected] = useState<ThemeId>(
+    (tenant.theme as ThemeId) ?? "midnight"
+  )
   const [isDirty, setIsDirty] = useState(false)
 
   useEffect(() => {
-    if (tenant) {
-      setSelected((tenant.theme as ThemeId) ?? "midnight")
-      setIsDirty(false)
-    }
+    setSelected((tenant.theme as ThemeId) ?? "midnight")
+    setIsDirty(false)
   }, [tenant])
 
   const handlePick = (id: ThemeId) => {
     setSelected(id)
-    setIsDirty(id !== ((tenant?.theme as ThemeId) ?? "midnight"))
+    setIsDirty(id !== ((tenant.theme as ThemeId) ?? "midnight"))
   }
 
   const handleSave = async () => {
@@ -37,7 +41,7 @@ export function ThemePicker() {
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-(--accent)/40 via-(--accent)/20 to-transparent" />
         <div className="flex items-center gap-2">
           <PaintBrushIcon className="h-3.5 w-3.5 text-(--accent)" />
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-widest text-(--muted)">
+          <p className="font-mono text-[10px] font-semibold tracking-widest text-(--muted) uppercase">
             workspace theme
           </p>
         </div>
@@ -47,7 +51,10 @@ export function ThemePicker() {
       </div>
 
       <div className="space-y-5 px-5 py-5">
-        <FormError error={update.error} fallbackMessage="Failed to update theme." />
+        <FormError
+          error={update.error}
+          fallbackMessage="Failed to update theme."
+        />
 
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
           {themes.map((t) => {
@@ -71,8 +78,10 @@ export function ThemePicker() {
                 />
                 <span
                   className={cn(
-                    "font-mono text-[10px] leading-tight text-center transition-colors",
-                    isSelected ? "text-(--fg)" : "text-(--muted) group-hover:text-(--fg)"
+                    "text-center font-mono text-[10px] leading-tight transition-colors",
+                    isSelected
+                      ? "text-(--fg)"
+                      : "text-(--muted) group-hover:text-(--fg)"
                   )}
                 >
                   {t.name}
@@ -89,10 +98,18 @@ export function ThemePicker() {
 
         <div className="flex items-center justify-between border-t border-(--border) pt-4">
           {update.isSuccess && (
-            <p className="font-mono text-xs text-(--success)">✓ theme applied</p>
+            <p className="font-mono text-xs text-(--success)">
+              ✓ theme applied
+            </p>
           )}
           <div className="ml-auto">
-            <Button type="button" size="sm" disabled={!isDirty} loading={update.isPending} onClick={handleSave}>
+            <Button
+              type="button"
+              size="sm"
+              disabled={!isDirty}
+              loading={update.isPending}
+              onClick={handleSave}
+            >
               <FloppyDiskIcon className="h-3.5 w-3.5" />
               {update.isPending ? "Applying..." : "Apply theme"}
             </Button>

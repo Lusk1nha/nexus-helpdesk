@@ -15,11 +15,7 @@ import { ArticleItem } from "./article-item"
 
 type StatusFilter = "all" | KnowledgeArticle["status"]
 
-const STATUS_FILTERS: {
-  value: StatusFilter
-  label: string
-  dot?: string
-}[] = [
+const STATUS_FILTERS: { value: StatusFilter; label: string; dot?: string }[] = [
   { value: "all", label: "All" },
   { value: "pending", label: "Pending", dot: "bg-(--warning)" },
   { value: "approved", label: "Approved", dot: "bg-(--success)" },
@@ -27,12 +23,14 @@ const STATUS_FILTERS: {
 ]
 
 export function KnowledgePage() {
-  const { data: articles, isLoading } = useKnowledge()
+  const { data: articles } = useKnowledge()
   const [showForm, setShowForm] = useState(false)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all")
   const [search, setSearch] = useState("")
 
-  const filtered = articles?.data?.filter((a) => {
+  const list = articles.data ?? []
+
+  const filtered = list.filter((a) => {
     const matchStatus = statusFilter === "all" || a.status === statusFilter
     const matchSearch = a.title.toLowerCase().includes(search.toLowerCase())
     return matchStatus && matchSearch
@@ -40,14 +38,22 @@ export function KnowledgePage() {
 
   const countFor = (status: StatusFilter) =>
     status === "all"
-      ? (articles?.data?.length ?? 0)
-      : (articles?.data?.filter((a) => a.status === status).length ?? 0)
+      ? list.length
+      : list.filter((a) => a.status === status).length
 
   const STAT_ITEMS = [
-    { label: "total", value: articles?.data?.length ?? 0, color: "text-(--fg)" },
+    { label: "total", value: list.length, color: "text-(--fg)" },
     { label: "pending", value: countFor("pending"), color: "text-(--warning)" },
-    { label: "approved", value: countFor("approved"), color: "text-(--success)" },
-    { label: "rejected", value: countFor("rejected"), color: "text-(--destructive)" },
+    {
+      label: "approved",
+      value: countFor("approved"),
+      color: "text-(--success)",
+    },
+    {
+      label: "rejected",
+      value: countFor("rejected"),
+      color: "text-(--destructive)",
+    },
   ]
 
   return (
@@ -64,38 +70,51 @@ export function KnowledgePage() {
             <BookOpenIcon className="h-3.5 w-3.5 text-(--accent)" />
           </div>
           <div>
-            <h1 className="font-mono text-sm font-semibold text-(--fg)">knowledge base</h1>
-            <p className="font-mono text-[10px] text-(--muted)">Manage articles and content</p>
+            <h1 className="font-mono text-sm font-semibold text-(--fg)">
+              knowledge base
+            </h1>
+            <p className="font-mono text-[10px] text-(--muted)">
+              Manage articles and content
+            </p>
           </div>
         </div>
         <Button size="sm" onClick={() => setShowForm((v) => !v)}>
           {showForm ? (
-            <><XIcon className="h-3.5 w-3.5" /> cancel</>
+            <>
+              <XIcon className="h-3.5 w-3.5" /> cancel
+            </>
           ) : (
-            <><PlusIcon className="h-3.5 w-3.5" /> new article</>
+            <>
+              <PlusIcon className="h-3.5 w-3.5" /> new article
+            </>
           )}
         </Button>
       </div>
 
       {/* Stats row */}
-      {!isLoading && articles && (
-        <div className="grid grid-cols-4 overflow-hidden rounded-sm border border-(--border) bg-(--surface)">
-          {STAT_ITEMS.map(({ label, value, color }, i) => (
-            <div
-              key={label}
+      <div className="grid grid-cols-4 overflow-hidden rounded-sm border border-(--border) bg-(--surface)">
+        {STAT_ITEMS.map(({ label, value, color }, i) => (
+          <div
+            key={label}
+            className={cn(
+              "flex flex-col items-center px-3 py-3 sm:px-5",
+              i !== 0 && "border-l border-(--border)"
+            )}
+          >
+            <span
               className={cn(
-                "flex flex-col items-center px-3 py-3 sm:px-5",
-                i !== 0 && "border-l border-(--border)"
+                "font-mono text-base font-semibold sm:text-lg",
+                color
               )}
             >
-              <span className={cn("font-mono text-base font-semibold sm:text-lg", color)}>
-                {value}
-              </span>
-              <span className="mt-0.5 font-mono text-[10px] text-(--muted)">{label}</span>
-            </div>
-          ))}
-        </div>
-      )}
+              {value}
+            </span>
+            <span className="mt-0.5 font-mono text-[10px] text-(--muted)">
+              {label}
+            </span>
+          </div>
+        ))}
+      </div>
 
       {/* Article form */}
       <AnimatePresence>
@@ -107,7 +126,7 @@ export function KnowledgePage() {
         )}
       </AnimatePresence>
 
-      {/* Articles table */}
+      {/* Articles list */}
       <div className="overflow-hidden rounded-sm border border-(--border) bg-(--surface)">
         {/* Filters + search */}
         <div className="relative flex flex-col gap-3 border-b border-(--border) px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
@@ -125,7 +144,9 @@ export function KnowledgePage() {
                 )}
               >
                 {dot && (
-                  <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", dot)} />
+                  <span
+                    className={cn("h-1.5 w-1.5 shrink-0 rounded-full", dot)}
+                  />
                 )}
                 {label}
                 <span className="rounded-sm bg-(--surface-2) px-1 py-0.5 text-[10px] text-(--border)">
@@ -134,7 +155,6 @@ export function KnowledgePage() {
               </button>
             ))}
           </div>
-
           <input
             type="text"
             placeholder="search articles..."
@@ -143,30 +163,21 @@ export function KnowledgePage() {
             className={cn(
               "h-7 w-full rounded-sm border border-(--border) bg-(--bg) px-3",
               "font-mono text-xs text-(--fg) placeholder:text-(--border)",
-              "outline-none focus:border-(--accent) transition-colors",
-              "sm:w-48"
+              "transition-colors outline-none focus:border-(--accent) sm:w-48"
             )}
           />
         </div>
 
-        {isLoading ? (
-          <div className="space-y-px p-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex flex-col gap-2 rounded-sm p-4">
-                <div className="h-3 w-16 animate-pulse rounded-sm bg-(--surface-2)" />
-                <div className="h-3 w-48 animate-pulse rounded-sm bg-(--surface-2)" />
-                <div className="h-2 w-64 animate-pulse rounded-sm bg-(--surface-2)" />
-              </div>
-            ))}
-          </div>
-        ) : !filtered || filtered.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="flex flex-col items-center gap-3 px-5 py-14 text-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-sm border border-(--border) bg-(--surface-2)">
               <BookOpenIcon className="h-5 w-5 text-(--border)" />
             </div>
             <div>
               <p className="font-mono text-xs font-medium text-(--fg)">
-                {search || statusFilter !== "all" ? "no articles match" : "no articles yet"}
+                {search || statusFilter !== "all"
+                  ? "no articles match"
+                  : "no articles yet"}
               </p>
               {!search && statusFilter === "all" && (
                 <p className="mt-1 font-mono text-[10px] text-(--muted)">
@@ -179,7 +190,10 @@ export function KnowledgePage() {
           <motion.ul
             initial="hidden"
             animate="show"
-            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.04 } } }}
+            variants={{
+              hidden: {},
+              show: { transition: { staggerChildren: 0.04 } },
+            }}
             className="divide-y divide-(--border)"
           >
             <AnimatePresence>

@@ -98,31 +98,36 @@ export function RegisterPage() {
       className="w-full max-w-5xl"
     >
       <div className="overflow-hidden rounded-sm border border-(--border) bg-(--surface) shadow-xl shadow-black/10 md:grid md:grid-cols-[300px_1fr] lg:grid-cols-[340px_1fr]">
-
         {/* ── Left panel ───────────────────────────────────────────── */}
-        <div className="flex flex-col justify-between border-b border-(--border) bg-(--surface-2) px-5 py-5 sm:px-8 sm:py-8 md:border-b-0 md:border-r">
+        <div className="flex flex-col justify-between border-b border-(--border) bg-(--surface-2) px-5 py-5 sm:px-8 sm:py-8 md:border-r md:border-b-0">
           <div>
             {/* Brand */}
-            <div className="flex items-center gap-2 mb-5 sm:mb-8">
+            <div className="mb-5 flex items-center gap-2 sm:mb-8">
               <span className="text-lg font-semibold text-(--accent)">◈</span>
-              <span className="font-mono text-sm font-medium text-(--fg)">nexus</span>
+              <span className="font-mono text-sm font-medium text-(--fg)">
+                nexus
+              </span>
             </div>
 
-            <h2 className="font-mono text-lg font-semibold text-(--fg) leading-snug mb-1.5 sm:text-xl sm:mb-2">
-              Your workspace<br />in 60 seconds
+            <h2 className="mb-1.5 font-mono text-lg leading-snug font-semibold text-(--fg) sm:mb-2 sm:text-xl">
+              Your workspace
+              <br />
+              in 60 seconds
             </h2>
-            <p className="font-mono text-xs text-(--muted) leading-relaxed mb-5 sm:mb-8">
+            <p className="mb-5 font-mono text-xs leading-relaxed text-(--muted) sm:mb-8">
               Set up your AI-powered helpdesk. No credit card required.
             </p>
 
             {/* Feature list — hidden on pure mobile (stacked layout), shown md+ */}
-            <div className="hidden md:block space-y-3 mb-10">
+            <div className="mb-10 hidden space-y-3 md:block">
               {FEATURES.map(({ icon: Icon, text }) => (
                 <div key={text} className="flex items-start gap-3">
-                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm bg-(--accent)/10 mt-0.5">
+                  <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-sm bg-(--accent)/10">
                     <Icon className="h-3 w-3 text-(--accent)" />
                   </div>
-                  <span className="font-mono text-xs text-(--muted) leading-relaxed">{text}</span>
+                  <span className="font-mono text-xs leading-relaxed text-(--muted)">
+                    {text}
+                  </span>
                 </div>
               ))}
             </div>
@@ -130,14 +135,14 @@ export function RegisterPage() {
 
           {/* Live URL preview */}
           <div className="rounded-sm border border-(--border) bg-(--bg) p-3 sm:p-4">
-            <p className="font-mono text-[10px] text-(--muted) uppercase tracking-wider mb-2">
+            <p className="mb-2 font-mono text-[10px] tracking-wider text-(--muted) uppercase">
               Your workspace URL
             </p>
             <div className="flex items-center gap-1.5 font-mono text-xs">
               <GlobeIcon className="h-3.5 w-3.5 shrink-0 text-(--accent)" />
               <span
                 className={cn(
-                  "transition-colors truncate",
+                  "truncate transition-colors",
                   currentSlug ? "text-(--fg)" : "text-(--border)"
                 )}
               >
@@ -145,7 +150,7 @@ export function RegisterPage() {
                 <span className="text-(--muted)">.nexus.com</span>
               </span>
               {slugAvailable === true && (
-                <span className="ml-auto shrink-0 flex items-center gap-1 text-(--success) text-[10px]">
+                <span className="ml-auto flex shrink-0 items-center gap-1 text-[10px] text-(--success)">
                   <CheckIcon className="h-3 w-3" weight="bold" />
                   available
                 </span>
@@ -157,7 +162,7 @@ export function RegisterPage() {
                 href={previewUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 flex items-center gap-1 font-mono text-[10px] text-(--muted) hover:text-(--accent) transition-colors"
+                className="mt-2 flex items-center gap-1 font-mono text-[10px] text-(--muted) transition-colors hover:text-(--accent)"
               >
                 <ArrowSquareOutIcon className="h-3 w-3" />
                 preview link (dev)
@@ -177,7 +182,11 @@ export function RegisterPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-8">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            noValidate
+            className="space-y-8"
+          >
             <FormError
               error={registerTenant.error}
               fallbackMessage="Could not provision workspace. Please try again."
@@ -185,7 +194,7 @@ export function RegisterPage() {
 
             {/* Section 1 */}
             <section className="space-y-4">
-              <h2 className="font-mono text-[10px] font-semibold uppercase tracking-widest text-(--muted)">
+              <h2 className="font-mono text-[10px] font-semibold tracking-widest text-(--muted) uppercase">
                 1 — Organization
               </h2>
 
@@ -209,7 +218,9 @@ export function RegisterPage() {
                   htmlFor="tenantSlug"
                   error={
                     errors.tenantSlug?.message ??
-                    (slugAvailable === false ? (slugReason ?? undefined) : undefined)
+                    (slugAvailable === false
+                      ? (slugReason ?? undefined)
+                      : undefined)
                   }
                   required
                 >
@@ -248,7 +259,7 @@ export function RegisterPage() {
 
             {/* Section 2 */}
             <section className="space-y-4">
-              <h2 className="font-mono text-[10px] font-semibold uppercase tracking-widest text-(--muted)">
+              <h2 className="font-mono text-[10px] font-semibold tracking-widest text-(--muted) uppercase">
                 2 — Administrator account
               </h2>
 
@@ -303,7 +314,9 @@ export function RegisterPage() {
                       onClick={() => setShowPassword((v) => !v)}
                       className="absolute top-1/2 right-2.5 -translate-y-1/2 text-(--muted) hover:text-(--fg)"
                       tabIndex={-1}
-                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                     >
                       {showPassword ? (
                         <EyeClosedIcon className="h-3.5 w-3.5" />
@@ -330,7 +343,7 @@ export function RegisterPage() {
               </div>
             </section>
 
-            <div className="border-t border-(--border) pt-6 space-y-3">
+            <div className="space-y-3 border-t border-(--border) pt-6">
               <Button
                 type="submit"
                 className="w-full"
