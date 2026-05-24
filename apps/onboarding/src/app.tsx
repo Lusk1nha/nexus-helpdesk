@@ -12,7 +12,7 @@ export function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/register" element={<RegisterPage />} />
         {/* Nova Rota adicionada */}
-        <Route path="/about" element={<AboutPage />} /> 
+        <Route path="/about" element={<AboutPage />} />
       </Route>
     </Routes>
   )

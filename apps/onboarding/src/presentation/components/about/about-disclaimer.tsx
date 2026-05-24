@@ -19,8 +19,8 @@ export function AboutDisclaimer({ variants }: AboutDisclaimerProps) {
         <p className="mt-1 text-sm text-(--warning)/80">
           Nexus Helpdesk is a test application built to demonstrate advanced
           software engineering concepts, including Multi-Tenancy (DDD),
-          Event-Driven Architecture in Rust, and Local-First AI integrations.
-          It is not a commercial product intended for production use.
+          Event-Driven Architecture in Rust, and Local-First AI integrations. It
+          is not a commercial product intended for production use.
         </p>
       </div>
     </motion.div>

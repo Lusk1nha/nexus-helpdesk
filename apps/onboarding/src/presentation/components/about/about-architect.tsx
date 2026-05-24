@@ -90,13 +90,16 @@ export function AboutArchitect({ variants }: AboutArchitectProps) {
             </span>
             <ul className="space-y-2 text-sm text-(--fg)">
               <li className="flex items-center gap-2">
-                <ActivityIcon className="h-4 w-4 text-(--muted)" /> 5k/10k Runner
+                <ActivityIcon className="h-4 w-4 text-(--muted)" /> 5k/10k
+                Runner
               </li>
               <li className="flex items-center gap-2">
-                <CoffeeIcon className="h-4 w-4 text-(--muted)" /> Coffee Enthusiast
+                <CoffeeIcon className="h-4 w-4 text-(--muted)" /> Coffee
+                Enthusiast
               </li>
               <li className="flex items-center gap-2">
-                <GameControllerIcon className="h-4 w-4 text-(--muted)" /> Indie Gamer
+                <GameControllerIcon className="h-4 w-4 text-(--muted)" /> Indie
+                Gamer
               </li>
               <li className="flex items-center gap-2">
                 <HeartIcon className="h-4 w-4 text-(--muted)" /> Mutual Lover

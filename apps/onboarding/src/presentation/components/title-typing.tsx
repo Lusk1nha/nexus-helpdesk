@@ -85,7 +85,7 @@ export function TitleTypingAnimation({
     pauseDuration,
     hasStarted,
     delay,
-    loop
+    loop,
   ])
 
   return (

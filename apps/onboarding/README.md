@@ -12,9 +12,9 @@ This application acts as the entry point for the entire platform. It runs under 
 
 **Core Responsibilities:**
 
-* **Landing Page:** Showcasing the project's vision, architecture, and local-first AI philosophy.
-* **Tenant Provisioning:** Handling the registration flow where new companies define their workspace name, unique slug (subdomain), and administrator credentials.
-* **Verification:** Real-time availability checks for workspace slugs.
+- **Landing Page:** Showcasing the project's vision, architecture, and local-first AI philosophy.
+- **Tenant Provisioning:** Handling the registration flow where new companies define their workspace name, unique slug (subdomain), and administrator credentials.
+- **Verification:** Real-time availability checks for workspace slugs.
 
 **What this app DOES NOT do:**
 It does not manage tickets, customers, or agents. Once a tenant is provisioned, this app performs a cross-subdomain navigation to the new workspace managed by `apps/web`.
@@ -23,19 +23,19 @@ It does not manage tickets, customers, or agents. Once a tenant is provisioned, 
 
 ## Stack
 
-| Layer | Technology |
-| --- | --- |
-| Framework | React 19 + Vite 8 |
-| Language | TypeScript 6 |
-| Styling | Tailwind CSS v4 |
-| Font | JetBrains Mono Variable |
-| Routing | React Router v7 |
+| Layer        | Technology                         |
+| ------------ | ---------------------------------- |
+| Framework    | React 19 + Vite 8                  |
+| Language     | TypeScript 6                       |
+| Styling      | Tailwind CSS v4                    |
+| Font         | JetBrains Mono Variable            |
+| Routing      | React Router v7                    |
 | Server state | TanStack Query v5 + `@nexus/query` |
-| Validation | Zod |
-| Forms | React Hook Form + Zod resolver |
-| HTTP | ky (fetch wrapper) |
-| Animations | Motion (Framer Motion) |
-| Icons | Lucide React + Phosphor Icons |
+| Validation   | Zod                                |
+| Forms        | React Hook Form + Zod resolver     |
+| HTTP         | ky (fetch wrapper)                 |
+| Animations   | Motion (Framer Motion)             |
+| Icons        | Lucide React + Phosphor Icons      |
 
 ---
 
@@ -43,14 +43,14 @@ It does not manage tickets, customers, or agents. Once a tenant is provisioned, 
 
 This is one app inside the larger Nexus monorepo (Turbo + pnpm workspaces). It depends on shared packages:
 
-| Package | Purpose |
-| --- | --- |
-| `@nexus/ui` | Design system primitives — `Button`, `Input`, `FormField`, `FormError`, `Alert`, `cn()` |
-| `@nexus/theme` | Multi-theme system — `ThemeProvider`, `ThemeSwitcher`, theme CSS vars |
-| `@nexus/auth` | Shared registration logic and validation schemas (`registerSchema`) |
-| `@nexus/query` | Shared TanStack Query configuration and providers |
-| `@nexus/api` | Shared HTTP client factory (`createApiClient`) |
-| `@nexus/utils` | Shared utilities (e.g., `generateSlug`) |
+| Package        | Purpose                                                                                 |
+| -------------- | --------------------------------------------------------------------------------------- |
+| `@nexus/ui`    | Design system primitives — `Button`, `Input`, `FormField`, `FormError`, `Alert`, `cn()` |
+| `@nexus/theme` | Multi-theme system — `ThemeProvider`, `ThemeSwitcher`, theme CSS vars                   |
+| `@nexus/auth`  | Shared registration logic and validation schemas (`registerSchema`)                     |
+| `@nexus/query` | Shared TanStack Query configuration and providers                                       |
+| `@nexus/api`   | Shared HTTP client factory (`createApiClient`)                                          |
+| `@nexus/utils` | Shared utilities (e.g., `generateSlug`)                                                 |
 
 ---
 
@@ -81,15 +81,14 @@ src/
 ## Setup
 
 1. **Install Dependencies:**
+
 ```bash
 
 ```
 
-
-
 pnpm install
 
-```
+````
 
 2. **Environment Variables:**
    Ensure `VITE_API_URL` is set in your `.env.local` pointing to your Rust backend (usually `[http://api.localhost:8080](http://api.localhost:8080)`).
@@ -98,9 +97,10 @@ pnpm install
    ```bash
    pnpm dev
 
-```
+````
 
 4. **Testing:**
+
 ```bash
 pnpm test        # Run vitest
 pnpm type-check  # Run tsc

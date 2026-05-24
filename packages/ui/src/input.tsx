@@ -3,7 +3,9 @@ import { Input as InputPrimitive } from "@base-ui/react/input"
 
 import { cn } from "@nexus/utils"
 
-export interface InputProps extends React.ComponentPropsWithoutRef<typeof InputPrimitive> {
+export interface InputProps extends React.ComponentPropsWithoutRef<
+  typeof InputPrimitive
+> {
   error?: boolean
 }
 
