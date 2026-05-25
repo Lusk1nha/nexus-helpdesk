@@ -1,4 +1,6 @@
 use ai_engine::AiEngine;
+use domain_identity::application::use_cases::get_tenant_by_slug::GetTenantBySlugUseCase;
+use domain_identity::application::use_cases::update_tenant::UpdateTenantUseCase;
 use sqlx::PgPool;
 use std::sync::Arc;
 use tokio::sync::mpsc::Sender;
@@ -32,6 +34,8 @@ pub struct IdentityUseCases {
     pub change_user_role: Arc<ChangeUserRoleUseCase>,
     pub update_user_status: Arc<UpdateUserStatusUseCase>,
     pub get_tenant: Arc<GetTenantUseCase>,
+    pub get_tenant_by_slug: Arc<GetTenantBySlugUseCase>,
+    pub update_tenant: Arc<UpdateTenantUseCase>,
     pub issue_refresh_token: Arc<IssueRefreshTokenUseCase>,
     pub refresh_session: Arc<RefreshSessionUseCase>,
     pub logout: Arc<LogoutUseCase>,
@@ -96,6 +100,9 @@ impl AppState {
         let update_user_status =
             Arc::new(UpdateUserStatusUseCase::new(identity_uow_manager.clone()));
         let get_tenant = Arc::new(GetTenantUseCase::new(identity_uow_manager.clone()));
+        let get_tenant_by_slug =
+            Arc::new(GetTenantBySlugUseCase::new(identity_uow_manager.clone()));
+        let update_tenant = Arc::new(UpdateTenantUseCase::new(identity_uow_manager.clone()));
         let issue_refresh_token =
             Arc::new(IssueRefreshTokenUseCase::new(identity_uow_manager.clone()));
         let refresh_session = Arc::new(RefreshSessionUseCase::new(identity_uow_manager.clone()));
@@ -115,6 +122,8 @@ impl AppState {
             change_user_role,
             update_user_status,
             get_tenant,
+            get_tenant_by_slug,
+            update_tenant,
             issue_refresh_token,
             refresh_session,
             logout,

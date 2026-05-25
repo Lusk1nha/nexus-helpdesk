@@ -3,6 +3,7 @@ pub mod change_user_role;
 pub mod check_slug_availability;
 pub mod create_api_key;
 pub mod get_tenant;
+pub mod get_tenant_by_slug;
 pub mod invite_user;
 pub mod issue_refresh_token;
 pub mod list_api_keys;
@@ -13,6 +14,7 @@ pub mod refresh_session;
 pub mod register_tenant;
 pub mod reset_password;
 pub mod revoke_api_key;
+pub mod update_tenant;
 pub mod update_user_status;
 
 pub use authenticate_api_key::{AuthenticateApiKeyCommand, AuthenticateApiKeyUseCase};
@@ -22,6 +24,7 @@ pub use check_slug_availability::{
 };
 pub use create_api_key::{CreateApiKeyCommand, CreateApiKeyUseCase};
 pub use get_tenant::{GetTenantCommand, GetTenantUseCase};
+pub use get_tenant_by_slug::{GetTenantBySlugCommand, GetTenantBySlugUseCase};
 pub use invite_user::{InviteUserCommand, InviteUserUseCase};
 pub use issue_refresh_token::{IssueRefreshTokenCommand, IssueRefreshTokenUseCase};
 pub use list_api_keys::{ListApiKeysCommand, ListApiKeysUseCase};
@@ -33,3 +36,4 @@ pub use register_tenant::{RegisterTenantCommand, RegisterTenantUseCase};
 pub use reset_password::{ResetPasswordCommand, ResetPasswordUseCase};
 pub use revoke_api_key::{RevokeApiKeyCommand, RevokeApiKeyUseCase};
 pub use update_user_status::{UpdateUserStatusCommand, UpdateUserStatusUseCase};
+pub use update_tenant::{UpdateTenantCommand, UpdateTenantUseCase};

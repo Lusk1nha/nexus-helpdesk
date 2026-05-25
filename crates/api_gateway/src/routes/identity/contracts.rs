@@ -275,6 +275,21 @@ pub struct UpdateUserStatusPayload {
     pub active: bool,
 }
 
+// ─── Tenant branding (public) ─────────────────────────────────────────────────
+
+#[derive(Deserialize, ToSchema)]
+pub struct TenantBrandingQuery {
+    pub slug: String,
+}
+
+#[derive(Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct TenantBrandingResponse {
+    pub slug: String,
+    pub name: String,
+    pub theme: String,
+}
+
 // ─── Tenant info ──────────────────────────────────────────────────────────────
 
 #[derive(Serialize, ToSchema)]
@@ -282,12 +297,35 @@ pub struct UpdateUserStatusPayload {
 pub struct TenantResponse {
     pub id: Uuid,
     pub name: String,
+    pub description: Option<String>,
     pub slug: String,
+    pub theme: String,
     #[schema(example = "free")]
     pub plan: String,
     pub is_active: bool,
     #[schema(value_type = String)]
     pub created_at: OffsetDateTime,
+    #[schema(value_type = String)]
+    pub updated_at: OffsetDateTime,
+}
+
+#[derive(Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateTenantPayload {
+    #[validate(length(
+        min = 2,
+        max = 120,
+        message = "O nome deve ter entre 2 e 120 caracteres."
+    ))]
+    #[schema(example = "Acme Corp")]
+    pub name: Option<String>,
+
+    #[validate(length(max = 500, message = "A descrição não pode ter mais de 500 caracteres."))]
+    pub description: Option<String>,
+
+    /// Must be a valid ThemeId from packages/theme/src/themes.ts.
+    #[schema(example = "midnight")]
+    pub theme: Option<String>,
 }
 
 // ─── API keys ────────────────────────────────────────────────────────────────
@@ -377,10 +415,23 @@ impl From<Tenant> for TenantResponse {
         Self {
             id: t.id,
             name: t.name,
+            description: t.description,
             slug: t.slug,
+            theme: t.theme,
             plan: t.plan,
             is_active: t.is_active,
             created_at: t.created_at,
+            updated_at: t.updated_at,
+        }
+    }
+}
+
+impl From<Tenant> for TenantBrandingResponse {
+    fn from(t: Tenant) -> Self {
+        Self {
+            slug: t.slug,
+            name: t.name,
+            theme: t.theme,
         }
     }
 }

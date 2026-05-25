@@ -24,6 +24,9 @@ pub enum DomainError {
     #[error("Slug inválido: {0}")]
     InvalidSlug(String),
 
+    #[error("Validação falhou: {0}")]
+    Validation(String),
+
     // --- Erros de Infraestrutura (Encapsulados) ---
     // Note que usamos String para não acoplar o domínio aos erros do SQLx ou Argon2
     #[error("Erro interno no banco de dados: {0}")]

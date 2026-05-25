@@ -1,19 +1,12 @@
-import { Route, Routes } from "react-router"
+import { useRoutes } from "react-router"
 
-import { OnboardingLayout } from "@/presentation/layouts/onboarding.layout"
-import { LandingPage } from "@/presentation/pages/landing.page"
-import { RegisterPage } from "@/presentation/pages/register.page"
-import { AboutPage } from "@/presentation/pages/about.page" // <--- Adicione a importação
+import { compose, routes } from "@/presentation/router"
 
+/**
+ * Root component. Routes are declared as data in
+ * `src/presentation/router/routes.tsx` and composed from per-feature files
+ * under `src/presentation/pages/<area>/routes.tsx`.
+ */
 export function App() {
-  return (
-    <Routes>
-      <Route element={<OnboardingLayout />}>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        {/* Nova Rota adicionada */}
-        <Route path="/about" element={<AboutPage />} /> 
-      </Route>
-    </Routes>
-  )
+  return useRoutes(compose(routes))
 }

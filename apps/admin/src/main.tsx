@@ -1,10 +1,22 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import { StrictMode } from "react"
+import { createRoot } from "react-dom/client"
+import { BrowserRouter } from "react-router"
 
-createRoot(document.getElementById('root')!).render(
+import { ThemeProvider } from "@nexus/theme"
+import { QueryProvider } from "@nexus/query"
+
+import { App } from "./App"
+
+import "./index.css"
+
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
-  </StrictMode>,
+    <BrowserRouter>
+      <ThemeProvider>
+        <QueryProvider>
+          <App />
+        </QueryProvider>
+      </ThemeProvider>
+    </BrowserRouter>
+  </StrictMode>
 )

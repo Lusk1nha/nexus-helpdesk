@@ -9,43 +9,61 @@ import {
 import { defaultTheme, type ThemeId } from "./themes"
 
 const STORAGE_KEY = "nexus:theme"
+const USER_STORAGE_KEY = "nexus:theme-user"
 
 interface ThemeContextValue {
   theme: ThemeId
+  /** User explicitly picks a theme — persists as their personal preference. */
   setTheme: (id: ThemeId) => void
+  /** Apply a default (e.g. tenant theme) — ignored if the user already has a preference. */
+  applyDefault: (id: ThemeId) => void
+  /** Preview a theme visually without persisting anything (used by showcase mode). */
+  previewTheme: (id: ThemeId) => void
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
-function getStoredTheme(): ThemeId {
+function getInitialTheme(): ThemeId {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) return stored as ThemeId
+    // Explicit user preference wins.
+    const userPref = localStorage.getItem(USER_STORAGE_KEY)
+    if (userPref) return userPref as ThemeId
+    // Last active theme as a paint-flash reducer (may be tenant-set).
+    const cached = localStorage.getItem(STORAGE_KEY)
+    if (cached) return cached as ThemeId
   } catch {
-    /* SSR or storage blocked — fall through */
+    /* SSR or storage blocked */
   }
   return defaultTheme
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeId>(getStoredTheme)
+  const [theme, setThemeState] = useState<ThemeId>(getInitialTheme)
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
     localStorage.setItem(STORAGE_KEY, theme)
   }, [theme])
 
-  // Apply stored theme on first render (before any state update)
-  useEffect(() => {
-    document.documentElement.dataset.theme = getStoredTheme()
-  }, [])
-
   const setTheme = (id: ThemeId) => {
+    localStorage.setItem(USER_STORAGE_KEY, id)
+    setThemeState(id)
+  }
+
+  const applyDefault = (id: ThemeId) => {
+    const hasUserPref = localStorage.getItem(USER_STORAGE_KEY) != null
+    if (!hasUserPref) setThemeState(id)
+  }
+
+  const previewTheme = (id: ThemeId) => {
+    // Only update DOM and React state — no localStorage writes.
     setThemeState(id)
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <ThemeContext.Provider
+      value={{ theme, setTheme, applyDefault, previewTheme }}
+    >
       {children}
     </ThemeContext.Provider>
   )

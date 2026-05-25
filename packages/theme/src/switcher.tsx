@@ -5,29 +5,33 @@ import { themes, type ThemeId } from "./themes"
 import { cn } from "@nexus/utils"
 
 export function ThemeSwitcher({ className }: { className?: string }) {
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme, previewTheme } = useTheme()
   const [open, setOpen] = useState(false)
-
   const [activeTab, setActiveTab] = useState<"dark" | "light">("dark")
-
   const [isAutoPlaying, setIsAutoPlaying] = useState(false)
   const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(
     undefined
   )
+  // Remember the theme that was active when showcase started so we can restore it.
+  const themeBeforeShowcase = useRef<ThemeId | null>(null)
 
-  // Showcase Mode Logic
   useEffect(() => {
     if (isAutoPlaying) {
+      themeBeforeShowcase.current = theme
       intervalRef.current = setInterval(() => {
-        const randomIndex = Math.floor(Math.random() * themes.length)
-        setTheme(themes[randomIndex]?.id as ThemeId)
-      }, 2000) // Troca a cada 2 segundos
+        const idx = Math.floor(Math.random() * themes.length)
+        previewTheme(themes[idx]!.id as ThemeId)
+      }, 2000)
     } else {
-      clearInterval(intervalRef?.current)
+      clearInterval(intervalRef.current)
+      // Restore the theme that was showing before showcase started.
+      if (themeBeforeShowcase.current) {
+        previewTheme(themeBeforeShowcase.current)
+        themeBeforeShowcase.current = null
+      }
     }
-
     return () => clearInterval(intervalRef.current)
-  }, [isAutoPlaying, setTheme])
+  }, [isAutoPlaying]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className={cn("relative", className)}>
@@ -51,7 +55,6 @@ export function ThemeSwitcher({ className }: { className?: string }) {
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
 
           <div className="absolute top-full right-0 z-50 mt-1 w-64 overflow-hidden rounded-sm border border-(--border) bg-(--surface) shadow-xl shadow-black/20">
-            {/* Header com Tabs e botão de Showcase */}
             <div className="flex items-center border-b border-(--border)">
               {(["dark", "light"] as const).map((tab) => (
                 <button
@@ -69,7 +72,7 @@ export function ThemeSwitcher({ className }: { className?: string }) {
               ))}
 
               <button
-                onClick={() => setIsAutoPlaying(!isAutoPlaying)}
+                onClick={() => setIsAutoPlaying((p) => !p)}
                 className={cn(
                   "px-3 transition-colors hover:text-(--fg)",
                   isAutoPlaying ? "text-(--accent)" : "text-(--muted)"
@@ -84,7 +87,6 @@ export function ThemeSwitcher({ className }: { className?: string }) {
               </button>
             </div>
 
-            {/* Grid de temas */}
             <div className="grid max-h-64 grid-cols-2 gap-1 overflow-y-auto p-2">
               {themes
                 .filter((t) => (activeTab === "dark" ? t.isDark : !t.isDark))
@@ -95,6 +97,7 @@ export function ThemeSwitcher({ className }: { className?: string }) {
                     onClick={() => {
                       setTheme(t.id as ThemeId)
                       setIsAutoPlaying(false)
+                      setOpen(false)
                     }}
                     className={cn(
                       "flex items-center gap-2 rounded-sm px-2 py-1.5 text-left font-mono text-xs text-(--muted)",

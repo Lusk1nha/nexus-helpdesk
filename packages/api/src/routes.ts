@@ -12,6 +12,7 @@ export const API = {
     me: "api/v1/identity/me",
     users: "api/v1/identity/users",
     tenant: "api/v1/identity/tenant",
+    tenantBranding: "api/v1/identity/tenant/branding",
     apiKeys: "api/v1/identity/api-keys",
   },
   tickets: {

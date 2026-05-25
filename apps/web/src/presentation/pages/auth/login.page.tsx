@@ -1,20 +1,25 @@
 import { zodResolver } from "@hookform/resolvers/zod"
+import { EyeIcon, EyeClosedIcon } from "@phosphor-icons/react"
 import { motion } from "motion/react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router"
-import { EyeIcon, EyeClosedIcon } from "@phosphor-icons/react"
 
 import { Button, FormError, FormField, Input } from "@nexus/ui"
 
 import { useLogin } from "@/application/auth/use-login"
 import { loginSchema, type LoginInput } from "@nexus/auth"
+import { useTenantBranding } from "@/application/tenant/use-tenant-branding"
+import { useTenantSlug } from "@/application/tenant/use-tenant-slug"
 import { paths } from "@/presentation/router/paths"
 
 export function LoginPage() {
   const navigate = useNavigate()
   const login = useLogin()
   const [showPassword, setShowPassword] = useState(false)
+
+  const slug = useTenantSlug()
+  const { data: branding } = useTenantBranding(slug)
 
   const {
     register,
@@ -36,24 +41,25 @@ export function LoginPage() {
       transition={{ duration: 0.3, ease: "easeOut" }}
       className="w-full max-w-sm"
     >
-      {/* Card */}
       <div className="overflow-hidden rounded-sm border border-(--border) bg-(--surface)">
+        {/* Accent top strip */}
+        <div className="h-0.5 w-full bg-(--accent)" />
+
         {/* Card header */}
-        <div className="border-b border-(--border) px-6 pt-6 pb-4">
-          <div className="mb-4 flex items-center gap-2">
-            {/* Terminal dots */}
-            <span className="h-2.5 w-2.5 rounded-full bg-(--destructive) opacity-70" />
-            <span className="h-2.5 w-2.5 rounded-full bg-(--warning) opacity-70" />
-            <span className="h-2.5 w-2.5 rounded-full bg-(--success) opacity-70" />
+        <div className="border-b border-(--border) px-6 pt-6 pb-5">
+          <div className="mb-1 flex items-center gap-2">
+            <span className="font-mono text-xs font-semibold text-(--accent)">
+              ◈
+            </span>
+            <span className="font-mono text-xs text-(--muted)">
+              {branding?.name ?? slug ?? "nexus"}
+            </span>
           </div>
-          <p className="mb-1 font-mono text-xs text-(--muted)">
-            <span className="text-(--success)">$</span> nexus authenticate
-          </p>
           <h1 className="font-mono text-lg font-semibold text-(--fg)">
-            Sign in
+            Welcome back
           </h1>
           <p className="mt-0.5 text-xs text-(--muted)">
-            Access your helpdesk workspace
+            Sign in to your workspace
           </p>
         </div>
 
@@ -116,15 +122,14 @@ export function LoginPage() {
           </FormField>
 
           <Button type="submit" className="w-full" loading={login.isPending}>
-            {login.isPending ? "Authenticating..." : "Authenticate →"}
+            {login.isPending ? "Signing in..." : "Sign in →"}
           </Button>
         </form>
       </div>
 
-      {/* Hint below card */}
       <p className="mt-4 text-center font-mono text-xs text-(--border)">
-        <span className="text-(--muted)">tip:</span> use your company
-        credentials
+        <span className="text-(--muted)">workspace:</span>{" "}
+        {branding?.name ?? slug}
       </p>
     </motion.div>
   )

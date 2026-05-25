@@ -1,4 +1,3 @@
-
 import { AnimatePresence, motion } from "motion/react"
 import { WarningIcon } from "@phosphor-icons/react"
 import { Alert, AlertDescription } from "./alert"
@@ -24,6 +23,8 @@ export function FormError({
       {error && (
         <motion.div
           key="error"
+          role="alert"
+          aria-live="assertive"
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}

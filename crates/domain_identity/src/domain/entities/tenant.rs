@@ -57,11 +57,23 @@ pub fn validate_slug(slug: &str) -> Result<(), DomainError> {
     Ok(())
 }
 
+/// Valid theme identifiers — must stay in sync with packages/theme/src/themes.ts.
+const VALID_THEMES: &[&str] = &[
+    "midnight", "dawn", "dracula", "nord", "catppuccin", "rose-pine",
+    "cyberpunk", "forest", "tokyo-night", "oled-black", "synthwave",
+    "night-runner", "terminal", "outrun", "paper", "slate-light",
+    "serene", "ice", "coffee", "solarized-light",
+];
+
+pub const DEFAULT_THEME: &str = "midnight";
+
 #[derive(Debug, Clone)]
 pub struct Tenant {
     pub id: Uuid,
     pub name: String,
+    pub description: Option<String>,
     pub slug: String,
+    pub theme: String,
     pub plan: String,
     pub is_active: bool,
     pub created_at: OffsetDateTime,
@@ -74,7 +86,9 @@ impl Tenant {
         Self {
             id: Uuid::new_v4(),
             name,
+            description: None,
             slug,
+            theme: DEFAULT_THEME.to_string(),
             plan: "free".to_string(),
             is_active: true,
             created_at: now,
@@ -82,8 +96,34 @@ impl Tenant {
         }
     }
 
+    pub fn update_name(&mut self, new_name: String) {
+        self.name = new_name;
+        self.updated_at = OffsetDateTime::now_utc();
+    }
+
+    pub fn update_description(&mut self, new_description: Option<String>) {
+        self.description = new_description;
+        self.updated_at = OffsetDateTime::now_utc();
+    }
+
+    pub fn update_theme(&mut self, theme: String) -> Result<(), DomainError> {
+        if !VALID_THEMES.contains(&theme.as_str()) {
+            return Err(DomainError::Validation(format!(
+                "Tema '{theme}' inválido."
+            )));
+        }
+        self.theme = theme;
+        self.updated_at = OffsetDateTime::now_utc();
+        Ok(())
+    }
+
     pub fn deactivate(&mut self) {
         self.is_active = false;
+        self.updated_at = OffsetDateTime::now_utc();
+    }
+
+    pub fn reactivate(&mut self) {
+        self.is_active = true;
         self.updated_at = OffsetDateTime::now_utc();
     }
 }

@@ -3,14 +3,20 @@ import { Navigate, Outlet } from "react-router"
 import { ThemeSwitcher } from "@nexus/theme"
 
 import { useIsAuthenticated } from "@/application/auth/use-session"
+import { useTenantSlug } from "@/application/tenant/use-tenant-slug"
+import { NoTenantPage } from "@/presentation/pages/no-tenant/no-tenant.page"
 import { paths } from "@/presentation/router/paths"
 
 /**
  * Wraps public auth pages (login, register).
  * Redirects to /app/tickets if the user is already authenticated.
+ * Shows NoTenantPage if accessed without a tenant subdomain.
  */
 export function AuthLayout() {
+  const slug = useTenantSlug()
   const isAuthenticated = useIsAuthenticated()
+
+  if (!slug) return <NoTenantPage />
 
   if (isAuthenticated) {
     return <Navigate to={paths.app.tickets} replace />
@@ -35,7 +41,7 @@ export function AuthLayout() {
           <span className="font-semibold text-(--accent)">◈</span>
           <span className="text-(--muted)">nexus</span>
           <span className="text-(--border)">/</span>
-          <span className="text-(--fg)">helpdesk</span>
+          <span className="text-(--fg)">{slug}</span>
         </div>
         <ThemeSwitcher />
       </header>
