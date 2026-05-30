@@ -3,7 +3,7 @@ import { EyeIcon, EyeClosedIcon } from "@phosphor-icons/react"
 import { motion } from "motion/react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
-import { useNavigate } from "react-router"
+import { Link, useNavigate } from "react-router"
 
 import { Button, FormError, FormField, Input } from "@nexus/ui"
 
@@ -124,7 +124,24 @@ export function LoginPage() {
           <Button type="submit" className="w-full" loading={login.isPending}>
             {login.isPending ? "Signing in..." : "Sign in →"}
           </Button>
+
+          <p className="text-center font-mono text-[11px] text-(--muted)">
+            Forgot your password? Contact your workspace admin to reset it.
+          </p>
         </form>
+
+        {/* Footer: customer signup */}
+        <div className="border-t border-(--border) px-6 py-4 text-center">
+          <span className="font-mono text-xs text-(--muted)">
+            New here?{" "}
+          </span>
+          <Link
+            to={paths.register}
+            className="font-mono text-xs text-(--accent) hover:underline"
+          >
+            Create an account
+          </Link>
+        </div>
       </div>
 
       <p className="mt-4 text-center font-mono text-xs text-(--border)">

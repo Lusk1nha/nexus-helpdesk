@@ -49,8 +49,10 @@ pub mod ticketing;
         ticketing::handlers::add_message_handler,
         ticketing::handlers::approve_ai_response_handler,
         ticketing::handlers::reject_ai_response_handler,
+        ticketing::handlers::assign_ticket_handler,
         // Identity
         identity::handlers::register_tenant_handler,
+        identity::handlers::signup_handler,
         identity::handlers::check_slug_handler,
         identity::handlers::login_handler,
         identity::handlers::refresh_token_handler,
@@ -85,6 +87,7 @@ pub mod ticketing;
             // Identity
             identity::contracts::RegisterTenantPayload,
             identity::contracts::RegisterTenantResponse,
+            identity::contracts::SignupPayload,
             identity::contracts::CheckSlugResponse,
             identity::contracts::LoginPayload,
             identity::contracts::LoginResponse,

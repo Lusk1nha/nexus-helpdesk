@@ -25,20 +25,27 @@ pub fn routes() -> Router<AppState> {
 /// SSE stream for a specific ticket.
 ///
 /// Emits `message_added` and `status_changed` events as they happen.
-/// Any authenticated user with access to the ticket (same tenant) may subscribe.
+/// Customers may only subscribe to their own tickets; agents/admins may
+/// subscribe to any ticket in their tenant.
 pub async fn ticket_events_handler(
     State(state): State<AppState>,
     AuthUser(claims): AuthUser,
     Path(ticket_id): Path<Uuid>,
 ) -> Result<Sse<impl tokio_stream::Stream<Item = Result<Event, Infallible>>>, ApiError> {
-    // Verify the ticket belongs to the caller's tenant.
+    // Verify the ticket belongs to the caller's tenant, and — for customers —
+    // that they own it. Agents/admins may subscribe to any ticket in the tenant.
     use domain_ticketing::application::use_cases::get_ticket::GetTicketCommand;
+    let customer_filter = match claims.role {
+        Role::Customer => Some(claims.sub),
+        Role::Agent | Role::Admin => None,
+    };
     state
         .ticketing
         .get_ticket
         .execute(GetTicketCommand {
             ticket_id,
             tenant_id: claims.tenant_id,
+            customer_filter,
         })
         .await?;
 
@@ -49,6 +56,7 @@ pub async fn ticket_events_handler(
             let event_name = match &event {
                 crate::realtime::TicketSseEvent::MessageAdded { .. } => "message_added",
                 crate::realtime::TicketSseEvent::StatusChanged { .. } => "status_changed",
+                crate::realtime::TicketSseEvent::AssigneeChanged { .. } => "assignee_changed",
             };
             Some(Ok(Event::default().event(event_name).data(data)))
         }

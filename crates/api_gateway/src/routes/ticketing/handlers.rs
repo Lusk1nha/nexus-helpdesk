@@ -17,13 +17,25 @@ use crate::{
 
 use domain_identity::domain::entities::role::Role;
 use domain_ticketing::application::use_cases::{
-    add_message::AddMessageCommand, create_ticket::CreateTicketCommand,
-    get_ticket::GetTicketCommand, list_ticket_messages::ListTicketMessagesCommand,
-    list_tickets::ListTicketsCommand, update_ticket_status::UpdateTicketStatusCommand,
+    add_message::AddMessageCommand, assign_ticket::AssignTicketCommand,
+    create_ticket::CreateTicketCommand, get_ticket::GetTicketCommand,
+    list_ticket_messages::ListTicketMessagesCommand, list_tickets::ListTicketsCommand,
+    update_ticket_status::UpdateTicketStatusCommand,
 };
 use domain_ticketing::domain::entities::message::SenderType;
-use domain_ticketing::domain::entities::ticket::TicketStatus;
+use domain_ticketing::domain::entities::ticket::{TicketPriority, TicketStatus};
 use domain_ticketing::domain::ports::TicketEventPublisher;
+
+use crate::utils::jwt::Claims;
+
+/// Customers may only access their own tickets; agents/admins access any ticket
+/// in the tenant. Returns the customer id to scope by, or `None` for full access.
+fn customer_filter_for(claims: &Claims) -> Option<Uuid> {
+    match claims.role {
+        Role::Customer => Some(claims.sub),
+        Role::Agent | Role::Admin => None,
+    }
+}
 
 // ─── Create ──────────────────────────────────────────────────────────────────
 
@@ -45,6 +57,16 @@ pub async fn create_ticket_handler(
 ) -> Result<(StatusCode, Json<ApiResponse<CreateTicketResponse>>), ApiError> {
     payload.validate().map_err(ApiError::Validation)?;
 
+    let priority = payload
+        .priority
+        .as_deref()
+        .map(|p| {
+            p.parse::<TicketPriority>()
+                .map_err(|_| ApiError::Internal(format!("Prioridade inválida: '{p}'")))
+        })
+        .transpose()?
+        .unwrap_or(TicketPriority::Normal);
+
     let ticket = state
         .ticketing
         .create_ticket
@@ -53,6 +75,8 @@ pub async fn create_ticket_handler(
             customer_id: claims.sub,
             title: payload.title,
             description: payload.description,
+            priority,
+            category: payload.category.filter(|c| !c.trim().is_empty()),
         })
         .await?;
 
@@ -95,12 +119,16 @@ pub async fn list_tickets_handler(
         })
         .transpose()?;
 
+    // Customers may only see their own tickets; agents/admins see all.
+    let customer_filter = customer_filter_for(&claims);
+
     let tickets = state
         .ticketing
         .list_tickets
         .execute(ListTicketsCommand {
             tenant_id: claims.tenant_id,
             status_filter,
+            customer_filter,
         })
         .await?;
 
@@ -133,6 +161,7 @@ pub async fn get_ticket_handler(
         .execute(GetTicketCommand {
             ticket_id,
             tenant_id: claims.tenant_id,
+            customer_filter: customer_filter_for(&claims),
         })
         .await?;
 
@@ -226,6 +255,8 @@ pub async fn approve_ai_response_handler(
             .execute(ListTicketMessagesCommand {
                 ticket_id: ticket.id,
                 tenant_id: ticket.tenant_id,
+                // System-side indexing for RAG; not scoped to a customer.
+                customer_filter: None,
             })
             .await;
 
@@ -310,6 +341,49 @@ pub async fn reject_ai_response_handler(
     Ok((StatusCode::OK, Json(ApiResponse::success(ticket.into()))))
 }
 
+// ─── Assign (agent self-assignment) ────────────────────────────────────────────
+
+#[utoipa::path(
+    post, path = "/api/v1/tickets/{id}/assign",
+    tag = "Ticketing",
+    params(("id" = Uuid, Path, description = "ID do ticket")),
+    responses(
+        (status = 200, description = "Ticket atribuído ao agente", body = TicketResponse),
+        (status = 401, description = "Não autorizado"),
+        (status = 403, description = "Apenas agentes/admins podem assumir tickets"),
+        (status = 404, description = "Ticket não encontrado")
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn assign_ticket_handler(
+    State(state): State<AppState>,
+    AuthUser(claims): AuthUser,
+    Path(ticket_id): Path<Uuid>,
+) -> Result<(StatusCode, Json<ApiResponse<TicketResponse>>), ApiError> {
+    // Customers cannot take ownership of tickets — only agents/admins.
+    if matches!(claims.role, Role::Customer) {
+        return Err(ApiError::Forbidden(
+            "Apenas agentes podem assumir tickets.".to_string(),
+        ));
+    }
+
+    let ticket = state
+        .ticketing
+        .assign_ticket
+        .execute(AssignTicketCommand {
+            ticket_id,
+            tenant_id: claims.tenant_id,
+            assignee_id: claims.sub,
+        })
+        .await?;
+
+    tracing::info!(user_id = %claims.sub, ticket_id = %ticket.id, "ticket self-assigned via API");
+    state
+        .realtime
+        .publish_assignee_changed(ticket.id, ticket.assignee_id);
+    Ok((StatusCode::OK, Json(ApiResponse::success(ticket.into()))))
+}
+
 // ─── Messages ─────────────────────────────────────────────────────────────────
 
 #[utoipa::path(
@@ -335,6 +409,7 @@ pub async fn list_ticket_messages_handler(
         .execute(ListTicketMessagesCommand {
             ticket_id,
             tenant_id: claims.tenant_id,
+            customer_filter: customer_filter_for(&claims),
         })
         .await?;
 
@@ -378,6 +453,7 @@ pub async fn add_message_handler(
             sender_id: claims.sub,
             sender_type,
             content: payload.content,
+            customer_filter: customer_filter_for(&claims),
         })
         .await?;
 

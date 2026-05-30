@@ -7,6 +7,7 @@ use uuid::Uuid;
 use domain_ticketing::application::use_cases::create_ticket::{
     CreateTicketCommand, CreateTicketUseCase,
 };
+use domain_ticketing::domain::entities::ticket::TicketPriority;
 use domain_ticketing::domain::error::DomainError;
 
 use domain_ticketing::infrastructure::database::postgres_uow::PgTicketingUoWManager;
@@ -35,6 +36,8 @@ async fn test_create_ticket_success_persists_and_queues_to_ai() {
         customer_id,
         title: "Minha internet caiu".to_string(),
         description: "Estou sem sinal desde ontem à noite na minha filial.".to_string(),
+        priority: TicketPriority::Normal,
+        category: None,
     };
 
     // 2. Executa o Caso de Uso
@@ -107,6 +110,8 @@ async fn test_create_ticket_fails_if_description_is_empty() {
         customer_id: Uuid::new_v4(),
         title: "Problema no app".to_string(),
         description: "   ".to_string(), // Descrição em branco (apenas espaços)
+        priority: TicketPriority::Normal,
+        category: None,
     };
 
     // 2. Executa e valida o erro de domínio esperado

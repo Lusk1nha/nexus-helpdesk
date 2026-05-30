@@ -15,7 +15,12 @@ import { useSession } from "@/application/auth/use-session"
 import { useTickets } from "@/application/tickets/use-tickets"
 import { useSystemSse } from "@/application/tickets/use-ticket-sse"
 import { StatusBadge } from "@/presentation/components/status-badge"
-import type { Ticket, TicketStatus } from "@/domain/tickets/ticket"
+import { PriorityBadge } from "@/presentation/components/priority-badge"
+import type {
+  Ticket,
+  TicketPriority,
+  TicketStatus,
+} from "@/domain/tickets/ticket"
 import { paths } from "@/presentation/router/paths"
 
 import { CreateTicketModal } from "./create-ticket.modal"
@@ -28,6 +33,14 @@ const FILTERS: { label: string; value: TicketStatus | undefined }[] = [
   { label: "resolved", value: "resolved" },
   { label: "closed", value: "closed" },
 ]
+
+const PRIORITY_FILTERS: { label: string; value: TicketPriority | undefined }[] =
+  [
+    { label: "any", value: undefined },
+    { label: "high", value: "high" },
+    { label: "normal", value: "normal" },
+    { label: "low", value: "low" },
+  ]
 
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime()
@@ -57,11 +70,17 @@ function TicketCard({ ticket, index }: { ticket: Ticket; index: number }) {
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex flex-wrap items-center gap-2 mb-1">
             <span className="font-mono text-[10px] text-(--muted) shrink-0">
               #{ticket.id.slice(0, 8)}
             </span>
             <StatusBadge status={ticket.status as TicketStatus} />
+            <PriorityBadge priority={ticket.priority} />
+            {ticket.category && (
+              <span className="font-mono text-[10px] text-(--muted) rounded-sm border border-(--border) px-1.5 py-0.5">
+                {ticket.category}
+              </span>
+            )}
           </div>
           <p className="font-mono text-sm font-medium text-(--fg) truncate group-hover:text-(--accent) transition-colors">
             {ticket.title}
@@ -82,6 +101,10 @@ export function TicketsPage() {
   const user = useSession()
   const navigate = useNavigate()
   const [filter, setFilter] = useState<TicketStatus | undefined>(undefined)
+  const [priorityFilter, setPriorityFilter] = useState<
+    TicketPriority | undefined
+  >(undefined)
+  const [mineOnly, setMineOnly] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
 
   const { data: tickets, isLoading, refetch, isFetching } = useTickets(filter)
@@ -89,6 +112,14 @@ export function TicketsPage() {
   useSystemSse()
 
   const isCustomer = user?.role === "customer"
+
+  // Priority + assignment are filtered client-side on top of the
+  // server-side status filter.
+  const visibleTickets = tickets?.filter((t) => {
+    if (priorityFilter && t.priority !== priorityFilter) return false
+    if (mineOnly && t.assigneeId !== user?.userId) return false
+    return true
+  })
 
   return (
     <div className="space-y-5 max-w-3xl mx-auto">
@@ -151,6 +182,45 @@ export function TicketsPage() {
         ))}
       </motion.div>
 
+      {/* Priority filter + assignment toggle */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.12 }}
+        className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none"
+      >
+        <span className="font-mono text-[10px] text-(--muted) shrink-0 mr-1">
+          priority:
+        </span>
+        {PRIORITY_FILTERS.map((f) => (
+          <button
+            key={f.label}
+            onClick={() => setPriorityFilter(f.value)}
+            className={cn(
+              "shrink-0 rounded-sm px-2.5 py-1 font-mono text-xs transition-all",
+              priorityFilter === f.value
+                ? "bg-(--accent) text-(--accent-fg)"
+                : "border border-(--border) text-(--muted) hover:text-(--fg) hover:border-(--accent)/40"
+            )}
+          >
+            {f.label}
+          </button>
+        ))}
+        {!isCustomer && (
+          <button
+            onClick={() => setMineOnly((v) => !v)}
+            className={cn(
+              "shrink-0 rounded-sm px-2.5 py-1 font-mono text-xs transition-all ml-1",
+              mineOnly
+                ? "bg-(--accent) text-(--accent-fg)"
+                : "border border-(--border) text-(--muted) hover:text-(--fg) hover:border-(--accent)/40"
+            )}
+          >
+            assigned to me
+          </button>
+        )}
+      </motion.div>
+
       {/* Ticket list */}
       {isLoading ? (
         <div className="space-y-2">
@@ -161,7 +231,7 @@ export function TicketsPage() {
             />
           ))}
         </div>
-      ) : !tickets?.length ? (
+      ) : !visibleTickets?.length ? (
         <motion.div
           initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -191,7 +261,7 @@ export function TicketsPage() {
       ) : (
         <AnimatePresence mode="popLayout">
           <div className="space-y-2">
-            {tickets.map((ticket, i) => (
+            {visibleTickets.map((ticket, i) => (
               <TicketCard key={ticket.id} ticket={ticket} index={i} />
             ))}
           </div>
@@ -199,15 +269,18 @@ export function TicketsPage() {
       )}
 
       {/* Stats footer */}
-      {!!tickets?.length && (
+      {!!visibleTickets?.length && (
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
           className="font-mono text-[10px] text-(--border) text-center"
         >
-          {tickets.length} ticket{tickets.length !== 1 ? "s" : ""}
+          {visibleTickets.length} ticket
+          {visibleTickets.length !== 1 ? "s" : ""}
           {filter ? ` · status: ${filter}` : " · all statuses"}
+          {priorityFilter ? ` · priority: ${priorityFilter}` : ""}
+          {mineOnly ? " · assigned to me" : ""}
         </motion.p>
       )}
 

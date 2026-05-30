@@ -8,6 +8,9 @@ use crate::domain::ports::TicketingUnitOfWorkManager;
 pub struct GetTicketCommand {
     pub ticket_id: Uuid,
     pub tenant_id: Uuid,
+    /// When set, the ticket must belong to this customer or access is rejected.
+    /// Agents/admins pass `None` to access any ticket in the tenant.
+    pub customer_filter: Option<Uuid>,
 }
 
 pub struct GetTicketUseCase {
@@ -39,6 +42,16 @@ impl GetTicketUseCase {
                 "cross-tenant ticket access attempt rejected"
             );
             return Err(DomainError::UnauthorizedTenantAccess);
+        }
+
+        if let Some(customer_id) = command.customer_filter {
+            if ticket.customer_id != customer_id {
+                tracing::warn!(
+                    ticket_id = %command.ticket_id,
+                    "customer attempted to access another customer's ticket"
+                );
+                return Err(DomainError::UnauthorizedTicketAccess);
+            }
         }
 
         uow.commit().await?;

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT id, tenant_id, customer_id, title, description, status, created_at, updated_at \n            FROM tickets \n            WHERE tenant_id = $1\n            ORDER BY created_at DESC\n            ",
+  "query": "\n            SELECT id, tenant_id, customer_id, title, description, status, priority, category, assignee_id, created_at, updated_at\n            FROM tickets\n            WHERE id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -35,19 +35,48 @@
       },
       {
         "ordinal": 6,
+        "name": "priority",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "category",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 8,
+        "name": "assignee_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 9,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 7,
+        "ordinal": 10,
         "name": "updated_at",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
-      "Left": ["Uuid"]
+      "Left": [
+        "Uuid"
+      ]
     },
-    "nullable": [false, false, false, false, false, false, false, false]
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false
+    ]
   },
-  "hash": "6a37fdccfa52c1cfc2e9cb449742aaf8fbfb505b9ad77103dbd4e243616136d2"
+  "hash": "c3113860d0428b6b2964c3f79a9a6ebac763cb5b7a5c43d75c25671aa04a7dff"
 }

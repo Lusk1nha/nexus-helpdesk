@@ -30,4 +30,5 @@ pub trait TicketEventPublisher: Send + Sync {
     fn publish_message_added(&self, ticket_id: Uuid, message: &TicketMessage);
     fn publish_status_changed(&self, ticket_id: Uuid, status: &TicketStatus);
     fn publish_ticket_created(&self, ticket: &Ticket);
+    fn publish_assignee_changed(&self, ticket_id: Uuid, assignee_id: Option<Uuid>);
 }

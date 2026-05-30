@@ -36,5 +36,22 @@ export const registerSchema = z
     path: ["confirmPassword"],
   })
 
+/**
+ * Customer self-signup (apps/web). The tenant `slug` is resolved from the
+ * subdomain at submit time, so it is NOT part of this form schema.
+ */
+export const customerSignupSchema = z
+  .object({
+    fullName: z.string().min(3, "Full name must be at least 3 characters"),
+    email: z.email("Enter a valid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  })
+
 export type LoginInput = z.infer<typeof loginSchema>
 export type RegisterInput = z.infer<typeof registerSchema>
+export type CustomerSignupInput = z.infer<typeof customerSignupSchema>

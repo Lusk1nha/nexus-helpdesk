@@ -27,6 +27,15 @@ export function useRejectAi(ticketId: string) {
   })
 }
 
+export function useAssignTicket(ticketId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () =>
+      fetchApi<Ticket>(() => http.post(API.tickets.assign(ticketId)).json()),
+    onSuccess: () => invalidateTicket(qc, ticketId),
+  })
+}
+
 export function useUpdateTicketStatus(ticketId: string) {
   const qc = useQueryClient()
   return useMutation({

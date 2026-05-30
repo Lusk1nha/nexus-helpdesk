@@ -8,6 +8,9 @@ use crate::domain::ports::TicketingUnitOfWorkManager;
 pub struct ListTicketMessagesCommand {
     pub ticket_id: Uuid,
     pub tenant_id: Uuid,
+    /// When set, the ticket must belong to this customer or access is rejected.
+    /// Agents/admins pass `None` to access any ticket in the tenant.
+    pub customer_filter: Option<Uuid>,
 }
 
 pub struct ListTicketMessagesUseCase {
@@ -39,6 +42,16 @@ impl ListTicketMessagesUseCase {
         if ticket.tenant_id != command.tenant_id {
             tracing::warn!(ticket_id = %command.ticket_id, "cross-tenant message list rejected");
             return Err(DomainError::UnauthorizedTenantAccess);
+        }
+
+        if let Some(customer_id) = command.customer_filter {
+            if ticket.customer_id != customer_id {
+                tracing::warn!(
+                    ticket_id = %command.ticket_id,
+                    "customer attempted to list another customer's ticket messages"
+                );
+                return Err(DomainError::UnauthorizedTicketAccess);
+            }
         }
 
         let messages = uow.messages().find_by_ticket_id(command.ticket_id).await?;

@@ -7,6 +7,7 @@ import { BrowserRouter } from "react-router"
 import { App } from "./app"
 import { useTenantSlug } from "./application/tenant/use-tenant-slug"
 import { useTenantBranding } from "./application/tenant/use-tenant-branding"
+import { ToastProvider } from "./presentation/components/toast/toast"
 
 import "./index.css"
 
@@ -27,9 +28,11 @@ createRoot(document.getElementById("root")!).render(
     <BrowserRouter>
       <ThemeProvider>
         <QueryProvider>
-          <TenantThemeLoader>
-            <App />
-          </TenantThemeLoader>
+          <ToastProvider>
+            <TenantThemeLoader>
+              <App />
+            </TenantThemeLoader>
+          </ToastProvider>
         </QueryProvider>
       </ThemeProvider>
     </BrowserRouter>

@@ -22,6 +22,36 @@ impl ToString for TicketStatus {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TicketPriority {
+    Low,
+    Normal,
+    High,
+}
+
+impl ToString for TicketPriority {
+    fn to_string(&self) -> String {
+        match self {
+            TicketPriority::Low => "low".to_string(),
+            TicketPriority::Normal => "normal".to_string(),
+            TicketPriority::High => "high".to_string(),
+        }
+    }
+}
+
+impl std::str::FromStr for TicketPriority {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "low" => Ok(TicketPriority::Low),
+            "normal" => Ok(TicketPriority::Normal),
+            "high" => Ok(TicketPriority::High),
+            _ => Err(()),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Ticket {
     pub id: Uuid,
@@ -30,12 +60,22 @@ pub struct Ticket {
     pub title: String,
     pub description: String,
     pub status: TicketStatus,
+    pub priority: TicketPriority,
+    pub category: Option<String>,
+    pub assignee_id: Option<Uuid>, // Agente que assumiu o chamado
     pub created_at: OffsetDateTime,
     pub updated_at: OffsetDateTime,
 }
 
 impl Ticket {
-    pub fn new(tenant_id: Uuid, customer_id: Uuid, title: String, description: String) -> Self {
+    pub fn new(
+        tenant_id: Uuid,
+        customer_id: Uuid,
+        title: String,
+        description: String,
+        priority: TicketPriority,
+        category: Option<String>,
+    ) -> Self {
         let now = OffsetDateTime::now_utc();
         Self {
             id: Uuid::new_v4(),
@@ -44,9 +84,18 @@ impl Ticket {
             title,
             description,
             status: TicketStatus::Open, // Sempre nasce aberto
+            priority,
+            category,
+            assignee_id: None,
             created_at: now,
             updated_at: now,
         }
+    }
+
+    /// Um agente assume o chamado (self-assignment).
+    pub fn assign_to(&mut self, agent_id: Uuid) {
+        self.assignee_id = Some(agent_id);
+        self.updated_at = OffsetDateTime::now_utc();
     }
 
     // A máquina de estados protegida

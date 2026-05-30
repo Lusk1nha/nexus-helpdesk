@@ -157,6 +157,33 @@ impl TestApp {
         )
     }
 
+    /// Self-registers a customer under an existing tenant slug (the public
+    /// `POST /api/v1/identity/signup` flow) and returns the access token issued
+    /// on signup. The user always has `Role::Customer`.
+    #[allow(dead_code)]
+    pub async fn signup_customer(
+        &self,
+        slug: &str,
+        full_name: &str,
+        email: &str,
+        password: &str,
+    ) -> String {
+        let (status, body) = self
+            .post_json(
+                "/api/v1/identity/signup",
+                serde_json::json!({
+                    "slug": slug,
+                    "fullName": full_name,
+                    "email": email,
+                    "password": password
+                }),
+            )
+            .await;
+
+        assert_eq!(status, StatusCode::OK, "signup failed: {body}");
+        body["data"]["accessToken"].as_str().unwrap().to_string()
+    }
+
     /// Logs in and returns the access token (refresh token lives in the cookie,
     /// which most tests don't need — see `login_full()` for cookie-aware flows).
     pub async fn login(&self, email: &str, password: &str) -> String {

@@ -10,7 +10,7 @@ use domain_ticketing::application::use_cases::create_ticket::{
 };
 use domain_ticketing::application::workers::ai_worker::AiWorker;
 use domain_ticketing::domain::entities::message::TicketMessage;
-use domain_ticketing::domain::entities::ticket::{Ticket, TicketStatus};
+use domain_ticketing::domain::entities::ticket::{Ticket, TicketPriority, TicketStatus};
 use domain_ticketing::domain::ports::{TicketEventPublisher, TicketingUnitOfWorkManager as _};
 use domain_ticketing::infrastructure::database::postgres_uow::PgTicketingUoWManager;
 
@@ -32,6 +32,7 @@ impl TicketEventPublisher for NoopEventPublisher {
     fn publish_message_added(&self, _ticket_id: Uuid, _message: &TicketMessage) {}
     fn publish_status_changed(&self, _ticket_id: Uuid, _status: &TicketStatus) {}
     fn publish_ticket_created(&self, _ticket: &Ticket) {}
+    fn publish_assignee_changed(&self, _ticket_id: Uuid, _assignee_id: Option<Uuid>) {}
 }
 
 fn dummy_event_publisher() -> Arc<dyn TicketEventPublisher> {
@@ -61,6 +62,8 @@ async fn test_worker_reverts_ticket_to_open_when_ollama_is_unavailable() {
             customer_id: user_id,
             title: "Printer on fire".to_string(),
             description: "My printer is literally on fire, please help.".to_string(),
+            priority: TicketPriority::Normal,
+            category: None,
         })
         .await
         .expect("ticket creation should succeed");
@@ -130,6 +133,8 @@ async fn test_worker_saves_ai_response_and_transitions_to_awaiting_approval() {
             customer_id: user_id,
             title: "Slow internet".to_string(),
             description: "My internet speed dropped to 1 Mbps after the last update.".to_string(),
+            priority: TicketPriority::Normal,
+            category: None,
         })
         .await
         .expect("ticket creation should succeed");

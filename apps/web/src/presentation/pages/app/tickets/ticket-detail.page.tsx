@@ -8,6 +8,7 @@ import {
   ShieldIcon,
   InfoIcon,
   LockSimpleIcon,
+  HandIcon,
 } from "@phosphor-icons/react"
 import { motion, AnimatePresence } from "motion/react"
 import { useEffect, useRef, useState } from "react"
@@ -22,11 +23,13 @@ import { useTicketMessages } from "@/application/tickets/use-ticket-messages"
 import { useSendMessage } from "@/application/tickets/use-send-message"
 import {
   useApproveAi,
+  useAssignTicket,
   useRejectAi,
   useUpdateTicketStatus,
 } from "@/application/tickets/use-ticket-actions"
 import { useTicketSse } from "@/application/tickets/use-ticket-sse"
 import { StatusBadge } from "@/presentation/components/status-badge"
+import { PriorityBadge } from "@/presentation/components/priority-badge"
 import type { TicketMessage, TicketStatus } from "@/domain/tickets/ticket"
 import { paths } from "@/presentation/router/paths"
 
@@ -173,6 +176,7 @@ export function TicketDetailPage() {
   const approve = useApproveAi(id!)
   const reject = useRejectAi(id!)
   const updateStatus = useUpdateTicketStatus(id!)
+  const assign = useAssignTicket(id!)
 
   useTicketSse(id!)
 
@@ -181,6 +185,7 @@ export function TicketDetailPage() {
   }, [messages])
 
   const isAgent = user?.role === "agent" || user?.role === "admin"
+  const assignedToMe = ticket?.assigneeId === user?.userId
   const canChat = ticket?.status !== "closed" && ticket?.status !== "resolved"
   const needsApproval = ticket?.status === "awaiting_agent_approval"
   const isProcessing = ticket?.status === "processing_ai"
@@ -243,6 +248,30 @@ export function TicketDetailPage() {
                 #{ticket.id.slice(0, 8)}
               </span>
               <StatusBadge status={ticket.status as TicketStatus} />
+              <PriorityBadge priority={ticket.priority} />
+              {ticket.category && (
+                <span className="font-mono text-[10px] text-(--muted) rounded-sm border border-(--border) px-1.5 py-0.5">
+                  {ticket.category}
+                </span>
+              )}
+              {isAgent && (
+                <span
+                  className={cn(
+                    "font-mono text-[10px] rounded-sm border px-1.5 py-0.5",
+                    ticket.assigneeId
+                      ? assignedToMe
+                        ? "border-(--success)/30 text-(--success)"
+                        : "border-(--border) text-(--muted)"
+                      : "border-(--border) text-(--border)"
+                  )}
+                >
+                  {ticket.assigneeId
+                    ? assignedToMe
+                      ? "assigned to you"
+                      : "assigned"
+                    : "unassigned"}
+                </span>
+              )}
             </div>
             <h1 className="font-mono text-base font-semibold text-(--fg)">
               {ticket.title}
@@ -255,6 +284,19 @@ export function TicketDetailPage() {
           {/* Agent actions */}
           {isAgent && !needsApproval && (
             <div className="flex items-center gap-2 shrink-0">
+              {!assignedToMe &&
+                ticket.status !== "closed" &&
+                ticket.status !== "resolved" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => assign.mutate()}
+                    loading={assign.isPending}
+                  >
+                    <HandIcon className="h-3.5 w-3.5" />
+                    {ticket.assigneeId ? "take over" : "claim"}
+                  </Button>
+                )}
               {ticket.status !== "closed" && ticket.status !== "resolved" && (
                 <Button
                   size="sm"

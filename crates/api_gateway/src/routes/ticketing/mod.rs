@@ -29,4 +29,5 @@ pub fn routes() -> Router<AppState> {
             "/{id}/reject-ai",
             post(handlers::reject_ai_response_handler),
         )
+        .route("/{id}/assign", post(handlers::assign_ticket_handler))
 }

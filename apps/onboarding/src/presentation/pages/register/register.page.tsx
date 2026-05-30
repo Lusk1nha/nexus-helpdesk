@@ -35,13 +35,14 @@ export function RegisterPage() {
   const registerTenant = useRegister()
   const [showPassword, setShowPassword] = useState(false)
   const [provisionedSlug, setProvisionedSlug] = useState<string | null>(null)
+  const [slugEdited, setSlugEdited] = useState(false)
 
   const {
     register,
     handleSubmit,
     watch,
     setValue,
-    formState: { errors, isSubmitting, dirtyFields },
+    formState: { errors, isSubmitting },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
     defaultValues: { tenantName: "", tenantSlug: "" },
@@ -52,13 +53,13 @@ export function RegisterPage() {
   const tenantName = watch("tenantName")
 
   useEffect(() => {
-    if (!dirtyFields.tenantSlug) {
+    if (!slugEdited) {
       setValue("tenantSlug", generateSlug(tenantName || ""), {
         shouldValidate: false,
         shouldDirty: false,
       })
     }
-  }, [tenantName, dirtyFields.tenantSlug, setValue])
+  }, [tenantName, slugEdited, setValue])
 
   const slugCheck = useCheckSlugAvailability(currentSlug)
   const slugLocallyInvalid = Boolean(errors.tenantSlug)
@@ -240,6 +241,7 @@ export function RegisterPage() {
                           .toLowerCase()
                           .replace(/[^a-z0-9-]/g, "")
                         e.target.value = cleaned
+                        setSlugEdited(cleaned.length > 0)
                         slugRegister.onChange(e)
                       }}
                     />

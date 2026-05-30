@@ -85,6 +85,29 @@ impl From<(Tenant, User)> for RegisterTenantResponse {
     }
 }
 
+// ─── Signup (customer self-service) ────────────────────────────────────────────
+
+#[derive(Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct SignupPayload {
+    /// Tenant subdomain slug the customer is signing up under (e.g. "acme").
+    #[validate(length(min = 1, message = "O workspace é obrigatório."))]
+    #[schema(example = "acme")]
+    pub slug: String,
+
+    #[validate(length(min = 3, message = "O nome deve ter no mínimo 3 caracteres."))]
+    #[schema(example = "Maria Silva")]
+    pub full_name: String,
+
+    #[validate(email(message = "Formato de e-mail inválido."))]
+    #[schema(example = "maria@gmail.com")]
+    pub email: String,
+
+    #[validate(length(min = 8, message = "A senha deve ter no mínimo 8 caracteres."))]
+    #[schema(example = "SenhaForte123!")]
+    pub password: String,
+}
+
 // ─── Check slug availability ─────────────────────────────────────────────────
 
 #[derive(serde::Deserialize, ToSchema)]

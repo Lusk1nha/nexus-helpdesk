@@ -12,6 +12,9 @@ pub struct AddMessageCommand {
     pub sender_id: Uuid,
     pub sender_type: SenderType,
     pub content: String,
+    /// When set, the ticket must belong to this customer or access is rejected.
+    /// Agents/admins pass `None` to post on any ticket in the tenant.
+    pub customer_filter: Option<Uuid>,
 }
 
 pub struct AddMessageToTicketUseCase {
@@ -48,6 +51,16 @@ impl AddMessageToTicketUseCase {
         if ticket.tenant_id != command.tenant_id {
             tracing::warn!(ticket_id = %command.ticket_id, "cross-tenant message add rejected");
             return Err(DomainError::UnauthorizedTenantAccess);
+        }
+
+        if let Some(customer_id) = command.customer_filter {
+            if ticket.customer_id != customer_id {
+                tracing::warn!(
+                    ticket_id = %command.ticket_id,
+                    "customer attempted to post on another customer's ticket"
+                );
+                return Err(DomainError::UnauthorizedTicketAccess);
+            }
         }
 
         if ticket.status == TicketStatus::Closed {

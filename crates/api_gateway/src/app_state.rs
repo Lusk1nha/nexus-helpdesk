@@ -6,7 +6,7 @@ use std::sync::Arc;
 use tokio::sync::mpsc::Sender;
 
 use domain_ticketing::application::{
-    AddMessageToTicketUseCase, AiTask, CreateTicketUseCase, GetTicketUseCase,
+    AddMessageToTicketUseCase, AiTask, AssignTicketUseCase, CreateTicketUseCase, GetTicketUseCase,
     ListTicketMessagesUseCase, ListTicketsUseCase, UpdateTicketStatusUseCase,
 };
 use domain_ticketing::infrastructure::database::postgres_uow::PgTicketingUoWManager;
@@ -15,7 +15,8 @@ use domain_identity::application::use_cases::{
     AuthenticateApiKeyUseCase, ChangeUserRoleUseCase, CheckSlugAvailabilityUseCase,
     CreateApiKeyUseCase, GetTenantUseCase, InviteUserUseCase, IssueRefreshTokenUseCase,
     ListApiKeysUseCase, ListUsersUseCase, LoginUseCase, LogoutUseCase, RefreshSessionUseCase,
-    RegisterTenantUseCase, ResetPasswordUseCase, RevokeApiKeyUseCase, UpdateUserStatusUseCase,
+    RegisterTenantUseCase, ResetPasswordUseCase, RevokeApiKeyUseCase, SelfRegisterCustomerUseCase,
+    UpdateUserStatusUseCase,
 };
 use domain_identity::infrastructure::{
     database::postgres_uow::PgUnitOfWorkManager, security::argon2_hasher::Argon2Hasher,
@@ -26,6 +27,7 @@ use crate::realtime::RealtimeHub;
 
 pub struct IdentityUseCases {
     pub register_tenant: Arc<RegisterTenantUseCase>,
+    pub self_register_customer: Arc<SelfRegisterCustomerUseCase>,
     pub check_slug: Arc<CheckSlugAvailabilityUseCase>,
     pub login: Arc<LoginUseCase>,
     pub reset_password: Arc<ResetPasswordUseCase>,
@@ -52,6 +54,7 @@ pub struct TicketingUseCases {
     pub update_ticket_status: Arc<UpdateTicketStatusUseCase>,
     pub add_message: Arc<AddMessageToTicketUseCase>,
     pub list_ticket_messages: Arc<ListTicketMessagesUseCase>,
+    pub assign_ticket: Arc<AssignTicketUseCase>,
 }
 
 #[derive(Clone)]
@@ -77,6 +80,10 @@ impl AppState {
 
         // Identity use cases
         let register_tenant = Arc::new(RegisterTenantUseCase::new(
+            identity_uow_manager.clone(),
+            password_hasher.clone(),
+        ));
+        let self_register_customer = Arc::new(SelfRegisterCustomerUseCase::new(
             identity_uow_manager.clone(),
             password_hasher.clone(),
         ));
@@ -114,6 +121,7 @@ impl AppState {
 
         let identity_cases = Arc::new(IdentityUseCases {
             register_tenant,
+            self_register_customer,
             check_slug,
             login,
             reset_password,
@@ -146,7 +154,9 @@ impl AppState {
         let add_message = Arc::new(AddMessageToTicketUseCase::new(
             ticketing_uow_manager.clone(),
         ));
-        let list_ticket_messages = Arc::new(ListTicketMessagesUseCase::new(ticketing_uow_manager));
+        let list_ticket_messages =
+            Arc::new(ListTicketMessagesUseCase::new(ticketing_uow_manager.clone()));
+        let assign_ticket = Arc::new(AssignTicketUseCase::new(ticketing_uow_manager));
 
         let ticketing_cases = Arc::new(TicketingUseCases {
             create_ticket,
@@ -155,6 +165,7 @@ impl AppState {
             update_ticket_status,
             add_message,
             list_ticket_messages,
+            assign_ticket,
         });
 
         Self {

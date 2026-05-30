@@ -11,9 +11,9 @@ use super::contracts::{
     AdminResetPasswordPayload, ApiKeyResponse, ChangeUserRolePayload, CheckSlugQuery,
     CheckSlugResponse, CreateApiKeyPayload, CreateApiKeyResponse, GetMeResponse, InviteUserPayload,
     InviteUserResponse, LoginPayload, LoginResponse, LogoutPayload, RefreshTokenResponse,
-    RegisterTenantPayload, RegisterTenantResponse, ResetPasswordResponse, TenantBrandingQuery,
-    TenantBrandingResponse, TenantMemberResponse, TenantResponse, UpdateTenantPayload,
-    UpdateUserStatusPayload,
+    RegisterTenantPayload, RegisterTenantResponse, ResetPasswordResponse, SignupPayload,
+    TenantBrandingQuery, TenantBrandingResponse, TenantMemberResponse, TenantResponse,
+    UpdateTenantPayload, UpdateUserStatusPayload,
 };
 use crate::{
     app_state::AppState,
@@ -31,8 +31,8 @@ use domain_identity::application::use_cases::{
     CheckSlugAvailabilityCommand, CreateApiKeyCommand, GetTenantBySlugCommand,
     IssueRefreshTokenCommand, ListApiKeysCommand, LoginCommand, LogoutCommand,
     RefreshSessionCommand, ResetPasswordCommand, RevokeApiKeyCommand,
-    change_user_role::ChangeUserRoleCommand, get_tenant::GetTenantCommand,
-    invite_user::InviteUserCommand, list_users::ListUsersCommand,
+    SelfRegisterCustomerCommand, change_user_role::ChangeUserRoleCommand,
+    get_tenant::GetTenantCommand, invite_user::InviteUserCommand, list_users::ListUsersCommand,
     register_tenant::RegisterTenantCommand, update_tenant::UpdateTenantCommand,
     update_user_status::UpdateUserStatusCommand,
 };
@@ -113,6 +113,90 @@ pub async fn register_tenant_handler(
     let resp: RegisterTenantResponse = result.into();
     tracing::info!(tenant_id = %resp.tenant_id, slug = %resp.tenant_slug, "tenant registered via API");
     Ok((StatusCode::CREATED, Json(ApiResponse::success(resp))))
+}
+
+// ─── Signup (customer self-service) ────────────────────────────────────────────
+
+#[utoipa::path(
+    post, path = "/api/v1/identity/signup",
+    tag = "Identity",
+    request_body = SignupPayload,
+    responses(
+        (status = 200, description = "Cliente cadastrado e autenticado — retorna JWT", body = LoginResponse),
+        (status = 400, description = "Erro de validação"),
+        (status = 404, description = "Workspace (tenant) não encontrado"),
+        (status = 409, description = "E-mail já em uso")
+    )
+)]
+pub async fn signup_handler(
+    State(state): State<AppState>,
+    jar: CookieJar,
+    Json(payload): Json<SignupPayload>,
+) -> Result<(CookieJar, Json<ApiResponse<LoginResponse>>), ApiError> {
+    payload.validate()?;
+
+    let (tenant, user) = state
+        .identity
+        .self_register_customer
+        .execute(SelfRegisterCustomerCommand {
+            tenant_slug: payload.slug,
+            email: payload.email,
+            full_name: payload.full_name,
+            plain_password: payload.password,
+        })
+        .await?;
+
+    // Newly-created customers are always `Role::Customer` within this tenant.
+    let role = domain_identity::domain::entities::Role::Customer;
+
+    let access = sign_access_token(
+        user.id,
+        tenant.id,
+        role.clone(),
+        &state.config.jwt_secret,
+        &state.config.jwt_issuer,
+        state.config.access_token_ttl_minutes,
+    )
+    .map_err(|e| ApiError::Internal(format!("Falha ao assinar access token: {e}")))?;
+
+    let refresh = sign_refresh_token(
+        user.id,
+        tenant.id,
+        role.clone(),
+        &state.config.jwt_secret,
+        &state.config.jwt_issuer,
+        state.config.refresh_token_ttl_days,
+    )
+    .map_err(|e| ApiError::Internal(format!("Falha ao assinar refresh token: {e}")))?;
+
+    state
+        .identity
+        .issue_refresh_token
+        .execute(IssueRefreshTokenCommand {
+            jti: refresh.jti,
+            user_id: user.id,
+            tenant_id: tenant.id,
+            token_hash: sha256_hex(&refresh.value),
+            expires_at: refresh.expires_at,
+        })
+        .await?;
+
+    let access_ttl_secs = (state.config.access_token_ttl_minutes as i64) * 60;
+
+    tracing::info!(user_id = %user.id, tenant_id = %tenant.id, "customer signup + login via API");
+
+    let updated_jar = jar.add(build_refresh_cookie(refresh.value, &state.config));
+
+    Ok((
+        updated_jar,
+        Json(ApiResponse::success(LoginResponse {
+            access_token: access.value,
+            access_token_expires_in: access_ttl_secs,
+            user_id: user.id,
+            tenant_id: tenant.id,
+            role,
+        })),
+    ))
 }
 
 // ─── Check slug availability ─────────────────────────────────────────────────

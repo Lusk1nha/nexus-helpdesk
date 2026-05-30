@@ -66,7 +66,8 @@ impl IntoResponse for ApiError {
             | ApiError::Ticketing(TicketingError::MessageNotFound) => {
                 (StatusCode::NOT_FOUND, "Recurso não encontrado.".to_string())
             }
-            ApiError::Ticketing(err @ TicketingError::UnauthorizedTenantAccess) => {
+            ApiError::Ticketing(err @ TicketingError::UnauthorizedTenantAccess)
+            | ApiError::Ticketing(err @ TicketingError::UnauthorizedTicketAccess) => {
                 (StatusCode::FORBIDDEN, err.to_string())
             }
             ApiError::Ticketing(TicketingError::AiEngineError(msg)) => {

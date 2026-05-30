@@ -32,6 +32,10 @@ pub enum TicketSseEvent {
         ticket_id: Uuid,
         new_status: String,
     },
+    AssigneeChanged {
+        ticket_id: Uuid,
+        assignee_id: Option<Uuid>,
+    },
 }
 
 /// System-wide events broadcast to agent/admin dashboards.
@@ -141,6 +145,16 @@ impl TicketEventPublisher for RealtimeHub {
             tenant_id: Uuid::nil(),
             new_status: status_str,
         });
+    }
+
+    fn publish_assignee_changed(&self, ticket_id: Uuid, assignee_id: Option<Uuid>) {
+        let channels = self.ticket_channels.read().unwrap();
+        if let Some(tx) = channels.get(&ticket_id) {
+            let _ = tx.send(TicketSseEvent::AssigneeChanged {
+                ticket_id,
+                assignee_id,
+            });
+        }
     }
 
     fn publish_ticket_created(&self, ticket: &Ticket) {

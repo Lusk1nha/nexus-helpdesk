@@ -14,6 +14,7 @@ const SEG = {
   login: "login",
   register: "register",
   app: "app",
+  dashboard: "dashboard",
   tickets: "tickets",
   knowledge: "knowledge",
   admin: "admin",
@@ -27,9 +28,11 @@ export const paths = {
   home: "/",
 
   login: `/${SEG.login}`,
+  register: `/${SEG.register}`,
 
   app: {
     root: `/${SEG.app}`,
+    dashboard: `/${SEG.app}/${SEG.dashboard}`,
     tickets: `/${SEG.app}/${SEG.tickets}`,
     ticketDetail: (id: string) => `/${SEG.app}/${SEG.tickets}/${id}`,
     knowledge: `/${SEG.app}/${SEG.knowledge}`,

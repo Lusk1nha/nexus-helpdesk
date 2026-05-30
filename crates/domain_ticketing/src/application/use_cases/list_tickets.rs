@@ -8,6 +8,9 @@ use crate::domain::ports::TicketingUnitOfWorkManager;
 pub struct ListTicketsCommand {
     pub tenant_id: Uuid,
     pub status_filter: Option<TicketStatus>,
+    /// When set, only tickets opened by this customer are returned.
+    /// Agents/admins pass `None` to see every ticket in the tenant.
+    pub customer_filter: Option<Uuid>,
 }
 
 pub struct ListTicketsUseCase {
@@ -28,6 +31,10 @@ impl ListTicketsUseCase {
         let mut uow = self.uow_manager.begin().await?;
 
         let mut tickets = uow.tickets().list_by_tenant(command.tenant_id).await?;
+
+        if let Some(customer_id) = command.customer_filter {
+            tickets.retain(|t| t.customer_id == customer_id);
+        }
 
         if let Some(status) = command.status_filter {
             tickets.retain(|t| t.status == status);

@@ -85,7 +85,16 @@ impl FromRequestParts<AppState> for AuthUser {
             .filter(|value| value.starts_with("Bearer "))
             .map(|value| value.trim_start_matches("Bearer ").to_string());
 
-        if let Some(token) = bearer {
+        // EventSource doesn't support custom headers, so SSE endpoints pass
+        // the token as ?token=<jwt>. Accept it as a fallback.
+        let query_token = parts.uri.query().and_then(|q| {
+            q.split('&').find_map(|pair| {
+                let (k, v) = pair.split_once('=')?;
+                (k == "token").then(|| v.to_string())
+            })
+        });
+
+        if let Some(token) = bearer.or(query_token) {
             return verify_jwt(&token, &state.config.jwt_secret, &state.config.jwt_issuer)
                 .map(AuthUser)
                 .map_err(|e| {

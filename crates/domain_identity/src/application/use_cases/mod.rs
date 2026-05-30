@@ -14,6 +14,7 @@ pub mod refresh_session;
 pub mod register_tenant;
 pub mod reset_password;
 pub mod revoke_api_key;
+pub mod self_register_customer;
 pub mod update_tenant;
 pub mod update_user_status;
 
@@ -35,5 +36,6 @@ pub use refresh_session::{RefreshSessionCommand, RefreshSessionResult, RefreshSe
 pub use register_tenant::{RegisterTenantCommand, RegisterTenantUseCase};
 pub use reset_password::{ResetPasswordCommand, ResetPasswordUseCase};
 pub use revoke_api_key::{RevokeApiKeyCommand, RevokeApiKeyUseCase};
+pub use self_register_customer::{SelfRegisterCustomerCommand, SelfRegisterCustomerUseCase};
 pub use update_user_status::{UpdateUserStatusCommand, UpdateUserStatusUseCase};
 pub use update_tenant::{UpdateTenantCommand, UpdateTenantUseCase};

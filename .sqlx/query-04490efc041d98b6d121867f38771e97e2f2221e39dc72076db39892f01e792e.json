@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE tenants\n            SET name = $1, description = $2, slug = $3, theme = $4, plan = $5, is_active = $6, updated_at = $7\n            WHERE id = $8\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Text",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Bool",
+        "Timestamptz",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "04490efc041d98b6d121867f38771e97e2f2221e39dc72076db39892f01e792e"
+}

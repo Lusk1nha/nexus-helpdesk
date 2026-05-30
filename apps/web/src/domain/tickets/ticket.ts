@@ -5,6 +5,8 @@ export type TicketStatus =
   | "resolved"
   | "closed"
 
+export type TicketPriority = "low" | "normal" | "high"
+
 export interface Ticket {
   id: string
   tenantId: string
@@ -12,6 +14,9 @@ export interface Ticket {
   title: string
   description: string
   status: TicketStatus
+  priority: TicketPriority
+  category: string | null
+  assigneeId: string | null
   createdAt: string
   updatedAt: string
 }
@@ -31,4 +36,6 @@ export interface TicketMessage {
 export interface CreateTicketInput {
   title: string
   description: string
+  priority?: TicketPriority
+  category?: string
 }

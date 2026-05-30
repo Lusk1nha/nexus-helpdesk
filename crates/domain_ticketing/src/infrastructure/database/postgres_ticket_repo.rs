@@ -4,7 +4,7 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use uuid::Uuid;
 
-use crate::domain::entities::ticket::{Ticket, TicketStatus};
+use crate::domain::entities::ticket::{Ticket, TicketPriority, TicketStatus};
 use crate::domain::error::DomainError;
 use crate::domain::ports::TicketRepository;
 
@@ -32,11 +32,12 @@ impl PgTicketRepository {
 impl TicketRepository for PgTicketRepository {
     async fn create(&self, ticket: &Ticket) -> Result<(), DomainError> {
         let status_str = ticket.status.to_string();
+        let priority_str = ticket.priority.to_string();
 
         let query = sqlx::query!(
             r#"
-            INSERT INTO tickets (id, tenant_id, customer_id, title, description, status, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            INSERT INTO tickets (id, tenant_id, customer_id, title, description, status, priority, category, assignee_id, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             "#,
             ticket.id,
             ticket.tenant_id,
@@ -44,6 +45,9 @@ impl TicketRepository for PgTicketRepository {
             ticket.title,
             ticket.description,
             status_str,
+            priority_str,
+            ticket.category,
+            ticket.assignee_id,
             ticket.created_at,
             ticket.updated_at
         );
@@ -63,16 +67,20 @@ impl TicketRepository for PgTicketRepository {
 
     async fn update(&self, ticket: &Ticket) -> Result<(), DomainError> {
         let status_str = ticket.status.to_string();
+        let priority_str = ticket.priority.to_string();
 
         let query = sqlx::query!(
             r#"
-            UPDATE tickets 
-            SET title = $1, description = $2, status = $3, updated_at = $4
-            WHERE id = $5
+            UPDATE tickets
+            SET title = $1, description = $2, status = $3, priority = $4, category = $5, assignee_id = $6, updated_at = $7
+            WHERE id = $8
             "#,
             ticket.title,
             ticket.description,
             status_str,
+            priority_str,
+            ticket.category,
+            ticket.assignee_id,
             ticket.updated_at,
             ticket.id
         );
@@ -92,8 +100,8 @@ impl TicketRepository for PgTicketRepository {
     async fn find_by_id(&self, id: Uuid) -> Result<Option<Ticket>, DomainError> {
         let query = sqlx::query!(
             r#"
-            SELECT id, tenant_id, customer_id, title, description, status, created_at, updated_at 
-            FROM tickets 
+            SELECT id, tenant_id, customer_id, title, description, status, priority, category, assignee_id, created_at, updated_at
+            FROM tickets
             WHERE id = $1
             "#,
             id
@@ -123,6 +131,11 @@ impl TicketRepository for PgTicketRepository {
                     }
                 };
 
+                let priority = r
+                    .priority
+                    .parse::<TicketPriority>()
+                    .unwrap_or(TicketPriority::Normal);
+
                 Ok(Some(Ticket {
                     id: r.id,
                     tenant_id: r.tenant_id,
@@ -130,6 +143,9 @@ impl TicketRepository for PgTicketRepository {
                     title: r.title,
                     description: r.description,
                     status,
+                    priority,
+                    category: r.category,
+                    assignee_id: r.assignee_id,
                     created_at: r.created_at,
                     updated_at: r.updated_at,
                 }))
@@ -141,8 +157,8 @@ impl TicketRepository for PgTicketRepository {
     async fn list_by_tenant(&self, tenant_id: Uuid) -> Result<Vec<Ticket>, DomainError> {
         let query = sqlx::query!(
             r#"
-            SELECT id, tenant_id, customer_id, title, description, status, created_at, updated_at 
-            FROM tickets 
+            SELECT id, tenant_id, customer_id, title, description, status, priority, category, assignee_id, created_at, updated_at
+            FROM tickets
             WHERE tenant_id = $1
             ORDER BY created_at DESC
             "#,
@@ -169,6 +185,11 @@ impl TicketRepository for PgTicketRepository {
                 _ => continue,
             };
 
+            let priority = r
+                .priority
+                .parse::<TicketPriority>()
+                .unwrap_or(TicketPriority::Normal);
+
             tickets.push(Ticket {
                 id: r.id,
                 tenant_id: r.tenant_id,
@@ -176,6 +197,9 @@ impl TicketRepository for PgTicketRepository {
                 title: r.title,
                 description: r.description,
                 status,
+                priority,
+                category: r.category,
+                assignee_id: r.assignee_id,
                 created_at: r.created_at,
                 updated_at: r.updated_at,
             });

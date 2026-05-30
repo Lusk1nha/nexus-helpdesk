@@ -1,17 +1,22 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { XIcon } from "@phosphor-icons/react"
 import { AnimatePresence, motion } from "motion/react"
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { Button, FormError, FormField, Input, Textarea } from "@nexus/ui"
 import { cn } from "@nexus/utils"
 
 import { useCreateTicket } from "@/application/tickets/use-create-ticket"
+import type { TicketPriority } from "@/domain/tickets/ticket"
+
+const PRIORITIES: TicketPriority[] = ["low", "normal", "high"]
 
 const schema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().min(1, "Description is required"),
+  priority: z.enum(["low", "normal", "high"]),
+  category: z.string().max(50, "Category is too long").optional(),
 })
 type FormData = z.infer<typeof schema>
 
@@ -30,13 +35,22 @@ export function CreateTicketModal({
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<FormData>({ resolver: zodResolver(schema) })
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: { priority: "normal" },
+  })
 
   const onSubmit = async (data: FormData) => {
-    const result = await create.mutateAsync(data)
+    const result = await create.mutateAsync({
+      title: data.title,
+      description: data.description,
+      priority: data.priority,
+      category: data.category?.trim() || undefined,
+    })
     reset()
     onCreated(result.ticketId)
   }
@@ -138,6 +152,47 @@ export function CreateTicketModal({
                     {...register("description")}
                   />
                 </FormField>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField label="Priority" htmlFor="priority">
+                    <Controller
+                      control={control}
+                      name="priority"
+                      render={({ field }) => (
+                        <div className="flex items-center gap-1">
+                          {PRIORITIES.map((p) => (
+                            <button
+                              key={p}
+                              type="button"
+                              onClick={() => field.onChange(p)}
+                              className={cn(
+                                "flex-1 rounded-sm px-2 py-1.5 font-mono text-xs transition-all",
+                                field.value === p
+                                  ? "bg-(--accent) text-(--accent-fg)"
+                                  : "border border-(--border) text-(--muted) hover:text-(--fg) hover:border-(--accent)/40"
+                              )}
+                            >
+                              {p}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    />
+                  </FormField>
+
+                  <FormField
+                    label="Category"
+                    htmlFor="category"
+                    error={errors.category?.message}
+                  >
+                    <Input
+                      id="category"
+                      placeholder="e.g. billing (optional)"
+                      error={!!errors.category}
+                      {...register("category")}
+                    />
+                  </FormField>
+                </div>
 
                 <div className="flex items-center justify-end gap-2 pt-1">
                   <Button

@@ -1,6 +1,7 @@
 import {
   BookOpenIcon,
   ChatTextIcon,
+  GaugeIcon,
   ListIcon,
   ShieldIcon,
   SignOutIcon,
@@ -18,6 +19,8 @@ import {
   useLogout,
   useSession,
 } from "@/application/auth/use-session"
+import { useAuthInit } from "@/application/auth/use-auth-init"
+import { useTokenRefreshScheduler } from "@/application/auth/use-token-refresh"
 import { useTenantSlug } from "@/application/tenant/use-tenant-slug"
 import { useTenantBranding } from "@/application/tenant/use-tenant-branding"
 import { NoTenantPage } from "@/presentation/pages/no-tenant/no-tenant.page"
@@ -46,6 +49,7 @@ function SidebarContent({
   }
 
   const navItems = [
+    { to: paths.app.dashboard, icon: GaugeIcon, label: "overview" },
     { to: paths.app.tickets, icon: ChatTextIcon, label: "tickets" },
     ...(user?.role !== "customer"
       ? [{ to: paths.app.knowledge, icon: BookOpenIcon, label: "knowledge" }]
@@ -145,9 +149,13 @@ function SidebarContent({
 export function AppLayout() {
   const slug = useTenantSlug()
   const isAuthenticated = useIsAuthenticated()
+  const authReady = useAuthInit()
   const [mobileOpen, setMobileOpen] = useState(false)
 
+  useTokenRefreshScheduler()
+
   if (!slug) return <NoTenantPage />
+  if (!authReady) return null
   if (!isAuthenticated) return <Navigate to={paths.login} replace />
 
   return (

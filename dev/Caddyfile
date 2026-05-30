@@ -4,7 +4,9 @@
 # Em produção, remova o prefixo e o Caddy emite certificados automaticamente.
 
 http://api.nexus.localhost {
-    reverse_proxy localhost:8080
+    reverse_proxy localhost:8080 {
+        flush_interval -1
+    }
 }
 
 http://onboarding.nexus.localhost {

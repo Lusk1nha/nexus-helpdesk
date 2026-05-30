@@ -6,6 +6,7 @@ export const API = {
   identity: {
     login: "api/v1/identity/login",
     register: "api/v1/identity/register",
+    signup: "api/v1/identity/signup",
     checkSlug: "api/v1/identity/check-slug",
     refresh: "api/v1/identity/refresh",
     logout: "api/v1/identity/logout",
@@ -23,6 +24,7 @@ export const API = {
     messages: (id: string) => `api/v1/tickets/${id}/messages`,
     approveAi: (id: string) => `api/v1/tickets/${id}/approve-ai`,
     rejectAi: (id: string) => `api/v1/tickets/${id}/reject-ai`,
+    assign: (id: string) => `api/v1/tickets/${id}/assign`,
   },
   knowledge: {
     list: "api/v1/knowledge",

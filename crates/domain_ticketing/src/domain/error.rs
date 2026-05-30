@@ -14,6 +14,9 @@ pub enum DomainError {
     #[error("Acesso negado: Este ticket pertence a outra empresa (Tenant).")]
     UnauthorizedTenantAccess,
 
+    #[error("Acesso negado: Este ticket pertence a outro cliente.")]
+    UnauthorizedTicketAccess,
+
     #[error("Operação inválida: O ticket '{0}' já está encerrado e não pode ser modificado.")]
     TicketAlreadyClosed(Uuid),
 

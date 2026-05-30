@@ -64,7 +64,8 @@ async fn list_tickets_returns_only_tenant_tickets() {
         .post_json(
             "/api/v1/identity/register",
             serde_json::json!({
-                "tenantName": "Tenant Alpha", "adminFullName": "Admin A",
+                "tenantName": "Tenant Alpha", "tenantSlug": "tenant-alpha",
+                "adminFullName": "Admin A",
                 "adminEmail": "a@tenant.com", "adminPassword": "StrongPass123!"
             }),
         )
@@ -85,7 +86,8 @@ async fn list_tickets_returns_only_tenant_tickets() {
         .post_json(
             "/api/v1/identity/register",
             serde_json::json!({
-                "tenantName": "Tenant Beta", "adminFullName": "Admin B",
+                "tenantName": "Tenant Beta", "tenantSlug": "tenant-beta",
+                "adminFullName": "Admin B",
                 "adminEmail": "b@other.com", "adminPassword": "StrongPass123!"
             }),
         )
@@ -181,7 +183,8 @@ async fn get_ticket_from_other_tenant_returns_403() {
         .post_json(
             "/api/v1/identity/register",
             serde_json::json!({
-                "tenantName": "Owner Corp", "adminFullName": "Owner",
+                "tenantName": "Owner Corp", "tenantSlug": "owner-corp",
+                "adminFullName": "Owner",
                 "adminEmail": "owner@test.com", "adminPassword": "StrongPass123!"
             }),
         )
@@ -202,7 +205,8 @@ async fn get_ticket_from_other_tenant_returns_403() {
         .post_json(
             "/api/v1/identity/register",
             serde_json::json!({
-                "tenantName": "Intruder Corp", "adminFullName": "Intruder",
+                "tenantName": "Intruder Corp", "tenantSlug": "intruder-corp",
+                "adminFullName": "Intruder",
                 "adminEmail": "intruder@other.com", "adminPassword": "StrongPass123!"
             }),
         )
@@ -373,4 +377,151 @@ async fn cannot_add_message_to_closed_ticket() {
         .await;
 
     assert_eq!(status, StatusCode::BAD_REQUEST);
+}
+
+// ─── Customer ownership scoping (same tenant) ───────────────────────────────────
+
+/// Registers a tenant (admin) and two self-service customers under it, then
+/// has the first customer open a ticket. Returns (admin_token, customer_b_token,
+/// ticket_id) — where customer B does NOT own the ticket.
+async fn setup_two_customers_one_ticket(app: &common::TestApp) -> (String, String, String) {
+    // Tenant + admin. `register_tenant` derives the slug from the email
+    // local-part, so "owner@scope.com" → slug "t-owner".
+    let (_tenant_id, _admin_id) = app
+        .register_tenant("owner@scope.com", "StrongPass123!")
+        .await;
+    let admin_token = app.login("owner@scope.com", "StrongPass123!").await;
+    let slug = "t-owner";
+
+    let customer_a_token = app
+        .signup_customer(slug, "Customer A", "cust-a@scope.com", "StrongPass123!")
+        .await;
+    let customer_b_token = app
+        .signup_customer(slug, "Customer B", "cust-b@scope.com", "StrongPass123!")
+        .await;
+
+    let (_, created) = app
+        .post_json_authed(
+            "/api/v1/tickets",
+            serde_json::json!({ "title": "A's private ticket", "description": "only mine" }),
+            &customer_a_token,
+        )
+        .await;
+    let ticket_id = created["data"]["ticketId"].as_str().unwrap().to_string();
+
+    (admin_token, customer_b_token, ticket_id)
+}
+
+#[tokio::test]
+async fn customer_cannot_get_another_customers_ticket_in_same_tenant() {
+    let app = spawn_test_app().await;
+    let (_admin_token, customer_b_token, ticket_id) = setup_two_customers_one_ticket(&app).await;
+
+    let (status, _) = app
+        .get_json(
+            &format!("/api/v1/tickets/{ticket_id}"),
+            Some(&customer_b_token),
+        )
+        .await;
+    assert_eq!(status, StatusCode::FORBIDDEN);
+}
+
+#[tokio::test]
+async fn customer_cannot_list_another_customers_ticket_messages() {
+    let app = spawn_test_app().await;
+    let (_admin_token, customer_b_token, ticket_id) = setup_two_customers_one_ticket(&app).await;
+
+    let (status, _) = app
+        .get_json(
+            &format!("/api/v1/tickets/{ticket_id}/messages"),
+            Some(&customer_b_token),
+        )
+        .await;
+    assert_eq!(status, StatusCode::FORBIDDEN);
+}
+
+#[tokio::test]
+async fn customer_cannot_add_message_to_another_customers_ticket() {
+    let app = spawn_test_app().await;
+    let (_admin_token, customer_b_token, ticket_id) = setup_two_customers_one_ticket(&app).await;
+
+    let (status, _) = app
+        .post_json_authed(
+            &format!("/api/v1/tickets/{ticket_id}/messages"),
+            serde_json::json!({ "content": "Sneaking into someone else's ticket." }),
+            &customer_b_token,
+        )
+        .await;
+    assert_eq!(status, StatusCode::FORBIDDEN);
+}
+
+#[tokio::test]
+async fn customer_can_still_access_their_own_ticket() {
+    let app = spawn_test_app().await;
+
+    app.register_tenant("owner@self.com", "StrongPass123!").await;
+    let customer_token = app
+        .signup_customer("t-owner", "Mine", "mine@self.com", "StrongPass123!")
+        .await;
+
+    let (_, created) = app
+        .post_json_authed(
+            "/api/v1/tickets",
+            serde_json::json!({ "title": "My own ticket", "description": "belongs to me" }),
+            &customer_token,
+        )
+        .await;
+    let ticket_id = created["data"]["ticketId"].as_str().unwrap();
+
+    let (get_status, _) = app
+        .get_json(&format!("/api/v1/tickets/{ticket_id}"), Some(&customer_token))
+        .await;
+    assert_eq!(get_status, StatusCode::OK);
+
+    let (msg_status, _) = app
+        .get_json(
+            &format!("/api/v1/tickets/{ticket_id}/messages"),
+            Some(&customer_token),
+        )
+        .await;
+    assert_eq!(msg_status, StatusCode::OK);
+
+    let (add_status, _) = app
+        .post_json_authed(
+            &format!("/api/v1/tickets/{ticket_id}/messages"),
+            serde_json::json!({ "content": "Following up on my own ticket." }),
+            &customer_token,
+        )
+        .await;
+    assert_eq!(add_status, StatusCode::CREATED);
+}
+
+#[tokio::test]
+async fn admin_retains_full_access_to_any_customer_ticket() {
+    let app = spawn_test_app().await;
+    let (admin_token, _customer_b_token, ticket_id) = setup_two_customers_one_ticket(&app).await;
+
+    // Agents/admins are not scoped to ownership — the admin can read and reply to
+    // a ticket opened by any customer in the tenant.
+    let (get_status, _) = app
+        .get_json(&format!("/api/v1/tickets/{ticket_id}"), Some(&admin_token))
+        .await;
+    assert_eq!(get_status, StatusCode::OK);
+
+    let (msg_status, _) = app
+        .get_json(
+            &format!("/api/v1/tickets/{ticket_id}/messages"),
+            Some(&admin_token),
+        )
+        .await;
+    assert_eq!(msg_status, StatusCode::OK);
+
+    let (add_status, _) = app
+        .post_json_authed(
+            &format!("/api/v1/tickets/{ticket_id}/messages"),
+            serde_json::json!({ "content": "Agent replying to the customer." }),
+            &admin_token,
+        )
+        .await;
+    assert_eq!(add_status, StatusCode::CREATED);
 }

@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::application::workers::AiTask;
 use crate::domain::entities::message::{SenderType, TicketMessage};
-use crate::domain::entities::ticket::Ticket;
+use crate::domain::entities::ticket::{Ticket, TicketPriority};
 use crate::domain::error::DomainError;
 use crate::domain::ports::TicketingUnitOfWorkManager;
 
@@ -13,6 +13,8 @@ pub struct CreateTicketCommand {
     pub customer_id: Uuid,
     pub title: String,
     pub description: String,
+    pub priority: TicketPriority,
+    pub category: Option<String>,
 }
 
 pub struct CreateTicketUseCase {
@@ -46,6 +48,8 @@ impl CreateTicketUseCase {
             command.customer_id,
             command.title.clone(),
             command.description.clone(),
+            command.priority,
+            command.category.clone(),
         );
 
         let message = TicketMessage::new_human(

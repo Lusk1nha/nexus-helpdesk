@@ -18,6 +18,14 @@ pub struct CreateTicketPayload {
     #[validate(length(min = 1, message = "A descrição não pode estar vazia."))]
     #[schema(example = "Minha impressora parou de funcionar depois da última atualização.")]
     pub description: String,
+
+    /// Prioridade do chamado: "low" | "normal" | "high". Default: "normal".
+    #[schema(example = "normal", nullable = true)]
+    pub priority: Option<String>,
+
+    /// Categoria livre opcional (ex.: "billing", "bug", "account").
+    #[schema(example = "bug", nullable = true)]
+    pub category: Option<String>,
 }
 
 #[derive(Serialize, ToSchema)]
@@ -52,6 +60,12 @@ pub struct TicketResponse {
     pub description: String,
     #[schema(example = "open")]
     pub status: String,
+    #[schema(example = "normal")]
+    pub priority: String,
+    #[schema(example = "bug", nullable = true)]
+    pub category: Option<String>,
+    #[schema(value_type = String, nullable = true)]
+    pub assignee_id: Option<Uuid>,
     #[schema(value_type = String)]
     pub created_at: OffsetDateTime,
     #[schema(value_type = String)]
@@ -67,6 +81,9 @@ impl From<Ticket> for TicketResponse {
             title: t.title,
             description: t.description,
             status: t.status.to_string(),
+            priority: t.priority.to_string(),
+            category: t.category,
+            assignee_id: t.assignee_id,
             created_at: t.created_at,
             updated_at: t.updated_at,
         }
